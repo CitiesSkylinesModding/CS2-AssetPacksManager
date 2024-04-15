@@ -1,13 +1,16 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Colossal;
 using Colossal.Logging;
 using Game;
 using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
+using Game.Debug;
+using Game.Simulation;
 using JetBrains.Annotations;
+using Unity.Entities;
+using Hash128 = Colossal.Hash128;
 
 namespace AssetImporter
 {
@@ -30,7 +33,7 @@ namespace AssetImporter
                 ModPath = Path.GetDirectoryName(asset.path);
             }
 
-            //var dir = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/StreamingAssets~";
+            //var dir = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
             var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
             //LoadFromDirectory(dir);
             //CopyDirectoryToInstalled(dir);
@@ -48,22 +51,65 @@ namespace AssetImporter
         private void LoadFromDirectory(string assetsDir)
         {
             Logger.Info("Assets before import: " + AssetDatabase.game.count);
-            foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
+            DumpAssets("1");
+
+            var hash = Hash128.Parse(File.ReadAllText("C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/77463_4/assets/Circle Lot/CircleLot.Prefab.cid"));
+            var path = ".cache/Mods/mods_subscribed/77463_4/assets/Circle Lot";
+
+            var ret = AssetDatabase.user.AddAsset<PrefabAsset>(
+                AssetDataPath.Create(path, "CircleLot"), hash);
+
+            //AssetDataPath assetDataPath = AssetDataPath.Create("CustomAssets/CircleLot/CircleLot", "CircleLot");
+            //PrefabAsset prefabAsset = new(
+
+            Logger.Info("Added Prefab: " + ret.name + " with unique name " + ret.uniqueName);
+
+
+            /*foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
             {
                 Logger.Info("Found " + file.FullName);
-                var hash = Hash128.Parse(File.ReadAllText(file.FullName + ".cid"));
 
-                var ret = AssetDatabase.game.AddAsset<PrefabAsset>(AssetDataPath.Create(file.FullName), hash);
+                //var prefabName = Path.GetFileNameWithoutExtension(file.FullName);
+
+                //var hash = Hash128.Parse(File.ReadAllText(file.FullName + ".cid"));
+                var hash = Hash128.Parse(File.ReadAllText(file.FullName + ".cid");
+                var path = ".cache/Mods/mods_subscribed/77463_4/assets/Circle Lot";
+
+                var ret = AssetDatabase.user.AddAsset<PrefabAsset>(
+                    AssetDataPath.Create(path, "CircleLot"), hash);
+
+                //AssetDataPath assetDataPath = AssetDataPath.Create("CustomAssets/CircleLot/CircleLot", "CircleLot");
+                //PrefabAsset prefabAsset = new(
+
                 Logger.Info("Added Prefab: " + ret.name + " with unique name " + ret.uniqueName);
-
                 Logger.Info("Loaded " + file.FullName + " with hash " + hash);
+            }*/
+            DumpAssets("2");
+            Logger.Info(AssetDatabase.user.AllAssets().Last().name);
+            Logger.Info("Assets after import: " + AssetDatabase.user.count);
+        }
+
+        private void DumpAssets(string name)
+        {
+            var x = AssetDatabase.user.AllAssets().GetEnumerator();
+            string s = "";
+            while (x.MoveNext())
+            {
+                s += x.Current?.name + " " + x.Current?.database.name + "\n";
             }
-            Logger.Info("Assets after import: " + AssetDatabase.game.count);
+
+            var path = "C:/Users/Konsi/Documents/CS2-Modding/CS2-AssetImporter/AssetsDump" + name + ".txt";
+
+            // Create file
+            using (StreamWriter sw = File.CreateText(path))
+            {
+                sw.Write(s);
+            }
         }
 
         private void CopyDirectoryToInstalled(string assetsDir)
         {
-            var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/StreamingAssets~";
+            var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
             foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
             {
                 Logger.Info("Copying " + file.FullName);
@@ -77,7 +123,7 @@ namespace AssetImporter
         {
             Logger.Info("Copying from subscribed mods.");
             var modsPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed";
-            var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/StreamingAssets~";
+            var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
             foreach (var mod in new DirectoryInfo(modsPath).GetDirectories())
             {
                 //foreach (var assetDir in new DirectoryInfo(mod.FullName).GetDirectories("assets_"))

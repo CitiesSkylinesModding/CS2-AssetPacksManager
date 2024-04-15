@@ -6,7 +6,7 @@
         <Configurations>Debug;Release</Configurations>
 
         <!--The folder where Game.dll is located. Set it only if the game is not installed in the default location, otherwise keep it empty-->
-        <CustomManagedPath>C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed</CustomManagedPath>
+        <CustomManagedPath>D:\Games\steamapps\common\Cities Skylines II\Cities2_Data\Managed</CustomManagedPath>
 
         <!--Path to the text file where PDX account data is stored which is required to publish the mod-->
         <!--Keep it outside of project in order to not commit it or share accidentally-->
@@ -25,7 +25,7 @@
 
     <ItemGroup>
         <Reference Include="Colossal.AssetPipeline">
-          <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.AssetPipeline.dll</HintPath>
+          <HintPath>D:\Games\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.AssetPipeline.dll</HintPath>
         </Reference>
         <Reference Include="Game">
             <Private>false</Private>
