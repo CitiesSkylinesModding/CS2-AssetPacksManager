@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssetsLoader", "AssetsLoader\AssetsLoader.csproj", "{88156B0A-906D-487C-9964-58418780F8C4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{88156B0A-906D-487C-9964-58418780F8C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88156B0A-906D-487C-9964-58418780F8C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88156B0A-906D-487C-9964-58418780F8C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88156B0A-906D-487C-9964-58418780F8C4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
