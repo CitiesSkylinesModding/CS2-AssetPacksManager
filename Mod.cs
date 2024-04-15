@@ -32,10 +32,10 @@ namespace AssetImporter
 
             //var dir = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/StreamingAssets~";
             var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
-            LoadFromDirectory(dir);
+            //LoadFromDirectory(dir);
             //CopyDirectoryToInstalled(dir);
             //Logger.Info("Loaded Directory: " + dir);
-            //CopyFromSubscribedMods();
+            CopyFromSubscribedMods();
             
             m_Setting = new Setting(this);
             m_Setting.RegisterInOptionsUI();
@@ -44,20 +44,21 @@ namespace AssetImporter
             AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));
         }
 
+        // Not working yet
         private void LoadFromDirectory(string assetsDir)
         {
+            Logger.Info("Assets before import: " + AssetDatabase.game.count);
             foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
             {
                 Logger.Info("Found " + file.FullName);
                 var hash = Hash128.Parse(File.ReadAllText(file.FullName + ".cid"));
-                Logger.Info("Assets before import1: " + AssetDatabase.game.AllAssets().Count());
-                Logger.Info("Assets before import2: " + AssetDatabase.game.count);
-                AssetDatabase.game.AddAsset<PrefabAsset>(AssetDataPath.Create(file.FullName), hash);
-                Logger.Info("Assets after import1: " + AssetDatabase.game.AllAssets().Count());
-                Logger.Info("Assets after import2: " + AssetDatabase.game.count);
+
+                var ret = AssetDatabase.game.AddAsset<PrefabAsset>(AssetDataPath.Create(file.FullName), hash);
+                Logger.Info("Added Prefab: " + ret.name + " with unique name " + ret.uniqueName);
 
                 Logger.Info("Loaded " + file.FullName + " with hash " + hash);
             }
+            Logger.Info("Assets after import: " + AssetDatabase.game.count);
         }
 
         private void CopyDirectoryToInstalled(string assetsDir)
