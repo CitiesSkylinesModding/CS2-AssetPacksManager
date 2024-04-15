@@ -6,9 +6,9 @@ using Game.UI;
 using Game.UI.Widgets;
 using System.Collections.Generic;
 
-namespace AssetsLoader
+namespace AssetImporter
 {
-    [FileLocation(nameof(global::AssetsLoader))]
+    [FileLocation(nameof(AssetImporter))]
     [SettingsUIGroupOrder(kButtonGroup, kToggleGroup, kSliderGroup, kDropdownGroup)]
     [SettingsUIShowGroupName(kButtonGroup, kToggleGroup, kSliderGroup, kDropdownGroup)]
     public class Setting : ModSetting
@@ -27,7 +27,7 @@ namespace AssetsLoader
         [SettingsUISection(kSection, kButtonGroup)]
         public bool Button
         {
-            set { AssetsLoader.Logger.Info("Button clicked"); }
+            set { Mod.Logger.Info("Button clicked"); }
         }
 
         [SettingsUIButton]
@@ -35,7 +35,7 @@ namespace AssetsLoader
         [SettingsUISection(kSection, kButtonGroup)]
         public bool ButtonWithConfirmation
         {
-            set { AssetsLoader.Logger.Info("ButtonWithConfirmation clicked"); }
+            set { Mod.Logger.Info("ButtonWithConfirmation clicked"); }
         }
 
         [SettingsUISection(kSection, kToggleGroup)]
