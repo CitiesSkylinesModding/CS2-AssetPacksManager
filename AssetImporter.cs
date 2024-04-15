@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Colossal;
 using Colossal.Logging;
 using Game;
@@ -27,7 +28,31 @@ namespace AssetsLoader
                 Logger.Info($"Current mod asset at {asset.path}");
                 ModPath = Path.GetDirectoryName(asset.path);
             }
+
+            //var dir = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/StreamingAssets~";
+            var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
+            LoadFromDirectory(dir);
+            //LoadFromInstalledMods();
             
+            m_Setting = new Setting(this);
+            m_Setting.RegisterInOptionsUI();
+            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
+
+            AssetDatabase.global.LoadSettings(nameof(global::AssetsLoader), m_Setting, new Setting(this));
+        }
+
+        private void LoadFromDirectory(string assetsDir)
+        {
+            foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
+            {
+                var hash = Hash128.Parse(File.ReadAllText(file.FullName + ".cid"));
+                AssetDatabase.game.AddAsset<PrefabAsset>(AssetDataPath.Create(file.FullName), hash);
+                Logger.Info("Loaded " + file.FullName + " with hash " + hash);
+            }
+        }
+
+        private void LoadFromInstalledMods()
+        {
             foreach (var modInfo in GameManager.instance.modManager)
             {
                 if (modInfo.asset.isEnabled)
@@ -42,20 +67,10 @@ namespace AssetsLoader
                     if (Directory.Exists(assetsDir))
                     {
                         Logger.Info($"Load \"{modInfo.name}\"'s assets.");
-                        foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
-                        {
-                            var hash = new Hash128(File.ReadAllText(file.FullName + ".cid"));
-                            AssetDatabase.game.AddAsset<PrefabAsset>(AssetDataPath.Create(file.FullName), hash);
-                        }
+                        LoadFromDirectory(assetsDir);
                     }
                 }
             }
-            
-            m_Setting = new Setting(this);
-            m_Setting.RegisterInOptionsUI();
-            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
-
-            AssetDatabase.global.LoadSettings(nameof(global::AssetsLoader), m_Setting, new Setting(this));
         }
 
         public void OnDispose()
