@@ -141,9 +141,8 @@ namespace AssetImporter
         private void CopyFromSubscribedMods()
         {
             Logger.Info("Copying from subscribed mods.");
-            var modsPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed";
-            var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
-
+            var modsPath = EnvPath.kCacheDataPath + "/Mods/mods_subscribed";
+            var assetPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
 
 
             int copiedFiles = 0;
@@ -153,7 +152,7 @@ namespace AssetImporter
                 if (assetDir.Exists)
                 {
                     Logger.Info($"Copying assets from {mod.Name}");
-                    copiedFiles += CopyDirectory(assetDir.FullName, streamingPath, true);
+                    copiedFiles += CopyDirectory(assetDir.FullName, assetPath, true);
                 }
             }
 
