@@ -37,7 +37,7 @@ namespace AssetImporter
                 ModPath = Path.GetDirectoryName(asset.path);
             }
 
-            Logger.Info("kCacheDataPath: " + EnvPath.kCacheDataPath);
+            /*Logger.Info("kCacheDataPath: " + EnvPath.kCacheDataPath);
             Logger.Info("kAssetDataPath: " + EnvPath.kAssetDataPath);
             Logger.Info("kGameDataPath: " + EnvPath.kGameDataPath);
             Logger.Info("kStreamingDataPath: " + EnvPath.kStreamingDataPath);
@@ -46,20 +46,21 @@ namespace AssetImporter
             Logger.Info("kLocalModsPath: " + EnvPath.kLocalModsPath);
             Logger.Info("kVTDataPath: " + EnvPath.kVTDataPath);
             Logger.Info("kVTPathName: " + EnvPath.kVTPathName);
-            Logger.Info("kVTSubPath: " + EnvPath.kVTSubPath);
-            prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
-            var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
+            Logger.Info("kVTSubPath: " + EnvPath.kVTSubPath);*/
+            //prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
+            //var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
             //LoadFromDirectory(dir);
             //CopyDirectoryToInstalled(dir);
             //Logger.Info("Loaded Directory: " + dir);
-            //CopyFromSubscribedMods();
+
+            CopyFromMods();
 
 
-            m_Setting = new Setting(this);
+            /*m_Setting = new Setting(this);
             m_Setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
 
-            AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));
+            AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));*/
         }
 
         // Loads all asset in a directory into the Asset Database
@@ -138,15 +139,26 @@ namespace AssetImporter
             }
         }
 
-        private void CopyFromSubscribedMods()
+        private void CopyFromMods()
         {
-            Logger.Info("Copying from subscribed mods.");
-            var modsPath = EnvPath.kCacheDataPath + "/Mods/mods_subscribed";
-            var assetPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
-
-
             int copiedFiles = 0;
-            foreach (var mod in new DirectoryInfo(modsPath).GetDirectories())
+            copiedFiles += CopyFromLocalMods();
+            copiedFiles += CopyFromSubscribedMods();
+
+            Logger.Info("Changed files: " + copiedFiles);
+            if (copiedFiles > 0)
+            {
+                // Assets now get loaded without required restart?
+                //SendAssetChangedNotification();
+            }
+        }
+
+        private int CopyFromDirectory(string directory)
+        {
+            var assetPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
+            int copiedFiles = 0;
+
+            foreach (var mod in new DirectoryInfo(directory).GetDirectories())
             {
                 var assetDir = new DirectoryInfo(Path.Combine(mod.FullName, "assets"));
                 if (assetDir.Exists)
@@ -156,20 +168,39 @@ namespace AssetImporter
                 }
             }
 
-            Logger.Info("Changed files: " + copiedFiles);
-            if (copiedFiles > 0)
-            {
-                SendAssetChangedNotification();
-            }
+            return copiedFiles;
+        }
+
+
+        private int CopyFromLocalMods()
+        {
+            Logger.Info("Assets within local Mods are automatically loaded");
+            return 0;
+            Logger.Info("Copying from local mods.");
+            var localModsPath = EnvPath.kLocalModsPath;
+
+            return CopyFromDirectory(localModsPath);
+        }
+
+
+        private int CopyFromSubscribedMods()
+        {
+            Logger.Info("Copying from subscribed mods.");
+            var subscribedModsPath = EnvPath.kCacheDataPath + "/Mods/mods_subscribed";
+
+            return CopyFromDirectory(subscribedModsPath);
         }
 
         private async void SendAssetChangedNotification()
         {
-            Logger.Info("Assets have been changed, please restart the game to apply changes.");
-            Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
+            Logger.Info("Assets have been changed. Waiting for mod manager initialization to show warning");
+            //Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
 
-            // Delay by 5 seconds
-            await Task.Delay(500);
+            // Delay by 0.5 seconds, because we have to wait for the mod manager to initialize
+            while (!GameManager.instance.modManager.isInitialized)
+            {
+                await Task.Delay(10);
+            }
 
             GameManager.instance.modManager.RequireRestart();
             Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
