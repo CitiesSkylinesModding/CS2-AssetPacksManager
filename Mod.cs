@@ -39,6 +39,9 @@ namespace AssetImporter
             //CopyDirectoryToInstalled(dir);
             //Logger.Info("Loaded Directory: " + dir);
             CopyFromSubscribedMods();
+
+            // Maybe this is needed?
+            // DefaultAssetFactory.instance.AddSupportedType<PrefabAsset>(".Prefab", (Func<PrefabAsset>) (() => new PrefabAsset()));
             
             m_Setting = new Setting(this);
             m_Setting.RegisterInOptionsUI();
@@ -124,40 +127,59 @@ namespace AssetImporter
             Logger.Info("Copying from subscribed mods.");
             var modsPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed";
             var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
+            int copiedFiles = 0;
             foreach (var mod in new DirectoryInfo(modsPath).GetDirectories())
             {
-                //foreach (var assetDir in new DirectoryInfo(mod.FullName).GetDirectories("assets_"))
                 var assetDir = new DirectoryInfo(Path.Combine(mod.FullName, "assets"));
                 if (assetDir.Exists)
                 {
                     Logger.Info($"Copying assets from {mod.Name}");
-                    //CopyDirectoryToInstalled(assetDir.FullName);
-                    // Copy directory recursively
-                    CopyDirectory(assetDir.FullName, streamingPath, true);
+                    copiedFiles += CopyDirectory(assetDir.FullName, streamingPath, true);
                 }
-
             }
+
+            Logger.Info("Changed files: " + copiedFiles);
+            if (copiedFiles > 0)
+            {
+                SendAssetChangedNotification();
+            }
+        }
+
+        private void SendAssetChangedNotification()
+        {
+            Logger.Info("Assets have been changed, please restart the game to apply changes.");
+            Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
+
+            // Delay by 5 seconds
+
+
+            GameManager.instance.modManager.RequireRestart();
+            Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
         }
 
 
 
-        static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+        static int CopyDirectory(string sourceDir, string destinationDir, bool recursive)
         {
+            int copiedFiles = 0;
             Logger.Info("Copying directory: " + sourceDir + " to " + destinationDir);
             var dir = new DirectoryInfo(sourceDir);
             if (!dir.Exists)
                 Logger.Error($"Source directory not found: {dir.FullName}");
-            if (Directory.Exists(destinationDir))
-                Directory.Delete(destinationDir);
+            if (!Directory.Exists(destinationDir))
+                Directory.CreateDirectory(destinationDir);
 
-            Directory.CreateDirectory(destinationDir);
             DirectoryInfo[] dirs = dir.GetDirectories();
             Directory.CreateDirectory(destinationDir);
             foreach (FileInfo file in dir.GetFiles())
             {
                 string targetFilePath = Path.Combine(destinationDir, file.Name);
-                file.CopyTo(targetFilePath);
-                Logger.Info("Copied file: " + targetFilePath);
+                if (!File.Exists(targetFilePath))
+                {
+                    file.CopyTo(targetFilePath);
+                    Logger.Info("Copied file: " + targetFilePath);
+                    copiedFiles++;
+                }
             }
 
             // If recursive and copying subdirectories, recursively call this method
@@ -166,9 +188,11 @@ namespace AssetImporter
                 foreach (DirectoryInfo subDir in dirs)
                 {
                     string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-                    CopyDirectory(subDir.FullName, newDestinationDir, true);
+                    copiedFiles += CopyDirectory(subDir.FullName, newDestinationDir, true);
                 }
             }
+
+            return copiedFiles;
         }
 
         private void LoadFromInstalledMods()
