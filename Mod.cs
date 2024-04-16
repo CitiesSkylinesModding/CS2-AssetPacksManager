@@ -29,8 +29,6 @@ namespace AssetImporter
 
         public void OnLoad(UpdateSystem updateSystem)
         {
-            Logger.Info(nameof(OnLoad));
-
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
             {
                 Logger.Info($"Current mod asset at {asset.path}");
@@ -149,7 +147,7 @@ namespace AssetImporter
             if (copiedFiles > 0)
             {
                 // Assets now get loaded without required restart?
-                //SendAssetChangedNotification();
+                SendAssetChangedNotification();
             }
         }
 
