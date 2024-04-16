@@ -8,12 +8,11 @@ using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
 using Colossal.PSI.Environment;
-using Game.Debug;
 using Game.Prefabs;
-using Game.Simulation;
 using JetBrains.Annotations;
-using Unity.Entities;
 using Hash128 = Colossal.Hash128;
+using Colossal.PSI.Common;
+using static Colossal.AssetPipeline.Diagnostic.Report;
 
 namespace AssetImporter
 {
@@ -37,30 +36,12 @@ namespace AssetImporter
                 ModPath = Path.GetDirectoryName(asset.path);
             }
 
-            /*Logger.Info("kCacheDataPath: " + EnvPath.kCacheDataPath);
-            Logger.Info("kAssetDataPath: " + EnvPath.kAssetDataPath);
-            Logger.Info("kGameDataPath: " + EnvPath.kGameDataPath);
-            Logger.Info("kStreamingDataPath: " + EnvPath.kStreamingDataPath);
-            Logger.Info("kTempDataPath: " + EnvPath.kTempDataPath);
-            Logger.Info("kCachePathName: " + EnvPath.kCachePathName);
-            Logger.Info("kLocalModsPath: " + EnvPath.kLocalModsPath);
-            Logger.Info("kVTDataPath: " + EnvPath.kVTDataPath);
-            Logger.Info("kVTPathName: " + EnvPath.kVTPathName);
-            Logger.Info("kVTSubPath: " + EnvPath.kVTSubPath);*/
-            //prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
-            //var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
-            //LoadFromDirectory(dir);
-            //CopyDirectoryToInstalled(dir);
-            //Logger.Info("Loaded Directory: " + dir);
-
-            CopyFromMods();
-
-
-            /*m_Setting = new Setting(this);
-            m_Setting.RegisterInOptionsUI();
-            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
-
-            AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));*/
+            var copied = CopyFromMods();
+            Logger.Info($"Copied {copied} assets");
+            if (copied > 0)
+            {
+                SendAssetChangedNotification();
+            }
         }
 
         // Loads all asset in a directory into the Asset Database
@@ -139,23 +120,23 @@ namespace AssetImporter
             }
         }
 
-        private void CopyFromMods()
-        {
-            int copiedFiles = 0;
-            copiedFiles += CopyFromLocalMods();
-            copiedFiles += CopyFromSubscribedMods();
+        //private void CopyFromMods()
+        //{
+        //    int copiedFiles = 0;
+        //    copiedFiles += CopyFromLocalMods();
+        //    copiedFiles += CopyFromSubscribedMods();
 
-            Logger.Info("Changed files: " + copiedFiles);
-            if (copiedFiles > 0)
-            {
-                // Assets now get loaded without required restart?
-                //SendAssetChangedNotification();
-            }
-        }
+        //    Logger.Info("Changed files: " + copiedFiles);
+        //    if (copiedFiles > 0)
+        //    {
+        //        // Assets now get loaded without required restart?
+        //        //SendAssetChangedNotification();
+        //    }
+        //}
 
         private int CopyFromDirectory(string directory)
         {
-            var assetPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
+            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
             int copiedFiles = 0;
 
             foreach (var mod in new DirectoryInfo(directory).GetDirectories())
@@ -171,6 +152,38 @@ namespace AssetImporter
             return copiedFiles;
         }
 
+        private int CopyFromMods(bool overwrite = false)
+        {
+            int copiedFiles = 0;
+            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+            foreach (var modInfo in GameManager.instance.modManager)
+            {
+                if (modInfo.asset.isEnabled)
+                {
+                    var modDir = Path.GetDirectoryName(modInfo.asset.path);
+                    if (modDir == null)
+                    {
+                        continue;
+                    }
+
+                    if (modDir.Contains($"{EnvPath.kUserDataPath}/Mods"))
+                    {
+                        Logger.Info($"Skipping local mod {modInfo.name}");
+                        continue;
+                    }
+
+                    var mod = new DirectoryInfo(modDir);
+                    var assetDir = new DirectoryInfo(Path.Combine(mod.FullName, "assets"));
+                    if (assetDir.Exists)
+                    {
+                        Logger.Info($"Copying assets from {mod.Name}");
+                        copiedFiles += CopyDirectory(assetDir.FullName, assetPath, true);
+                    }
+                }
+            }
+
+            return copiedFiles;
+        }
 
         private int CopyFromLocalMods()
         {
@@ -186,7 +199,7 @@ namespace AssetImporter
         private int CopyFromSubscribedMods()
         {
             Logger.Info("Copying from subscribed mods.");
-            var subscribedModsPath = EnvPath.kCacheDataPath + "/Mods/mods_subscribed";
+            var subscribedModsPath = $"{EnvPath.kCacheDataPath}/Mods/mods_subscribed";
 
             return CopyFromDirectory(subscribedModsPath);
         }
@@ -208,17 +221,32 @@ namespace AssetImporter
 
 
 
-        static int CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+        static int CopyDirectory(string sourceDir, string destinationDir, bool recursive = false)
         {
             int copiedFiles = 0;
             Logger.Info("Copying directory: " + sourceDir + " to " + destinationDir);
             var dir = new DirectoryInfo(sourceDir);
-            if (!dir.Exists)
-                Logger.Error($"Source directory not found: {dir.FullName}");
-            if (!Directory.Exists(destinationDir))
-                Directory.CreateDirectory(destinationDir);
 
-            DirectoryInfo[] dirs = dir.GetDirectories();
+            if (!dir.Exists)
+            {
+                Logger.Error($"Source directory not found: {dir.FullName}");
+            }
+
+            if (!Directory.Exists(destinationDir))
+            {
+
+                Directory.CreateDirectory(destinationDir);
+            }
+
+            if (recursive)
+            {
+                foreach (var subDir in dir.GetDirectories())
+                {
+                    string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+                    copiedFiles += CopyDirectory(subDir.FullName, newDestinationDir, true);
+                }
+            }
+
             Directory.CreateDirectory(destinationDir);
             foreach (FileInfo file in dir.GetFiles())
             {
@@ -228,16 +256,6 @@ namespace AssetImporter
                     file.CopyTo(targetFilePath);
                     Logger.Info("Copied file: " + targetFilePath);
                     copiedFiles++;
-                }
-            }
-
-            // If recursive and copying subdirectories, recursively call this method
-            if (recursive)
-            {
-                foreach (DirectoryInfo subDir in dirs)
-                {
-                    string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-                    copiedFiles += CopyDirectory(subDir.FullName, newDestinationDir, true);
                 }
             }
 
