@@ -30,6 +30,9 @@
         <Reference Include="Game">
             <Private>false</Private>
         </Reference>
+        <Reference Include="Colossal.PSI.Common.dll">
+            <Private>false</Private>
+        </Reference>
         <Reference Include="Colossal.Core">
             <Private>false</Private>
         </Reference>

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Colossal.Logging;
 using Game;
 using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
+using Colossal.PSI.Environment;
 using Game.Debug;
+using Game.Prefabs;
 using Game.Simulation;
 using JetBrains.Annotations;
 using Unity.Entities;
@@ -22,6 +25,7 @@ namespace AssetImporter
         [CanBeNull] public string ModPath { get; set; }
 
         private Setting m_Setting;
+        private PrefabSystem prefabSystem;
 
         public void OnLoad(UpdateSystem updateSystem)
         {
@@ -33,16 +37,24 @@ namespace AssetImporter
                 ModPath = Path.GetDirectoryName(asset.path);
             }
 
-            //var dir = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
+            Logger.Info("kCacheDataPath: " + EnvPath.kCacheDataPath);
+            Logger.Info("kAssetDataPath: " + EnvPath.kAssetDataPath);
+            Logger.Info("kGameDataPath: " + EnvPath.kGameDataPath);
+            Logger.Info("kStreamingDataPath: " + EnvPath.kStreamingDataPath);
+            Logger.Info("kTempDataPath: " + EnvPath.kTempDataPath);
+            Logger.Info("kCachePathName: " + EnvPath.kCachePathName);
+            Logger.Info("kLocalModsPath: " + EnvPath.kLocalModsPath);
+            Logger.Info("kVTDataPath: " + EnvPath.kVTDataPath);
+            Logger.Info("kVTPathName: " + EnvPath.kVTPathName);
+            Logger.Info("kVTSubPath: " + EnvPath.kVTSubPath);
+            prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
             var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
             //LoadFromDirectory(dir);
             //CopyDirectoryToInstalled(dir);
             //Logger.Info("Loaded Directory: " + dir);
-            CopyFromSubscribedMods();
+            //CopyFromSubscribedMods();
 
-            // Maybe this is needed?
-            // DefaultAssetFactory.instance.AddSupportedType<PrefabAsset>(".Prefab", (Func<PrefabAsset>) (() => new PrefabAsset()));
-            
+
             m_Setting = new Setting(this);
             m_Setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
@@ -50,9 +62,13 @@ namespace AssetImporter
             AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));
         }
 
+        // Loads all asset in a directory into the Asset Database
         // Not working yet
         private void LoadFromDirectory(string assetsDir)
         {
+            // Maybe this is needed?
+            // DefaultAssetFactory.instance.AddSupportedType<PrefabAsset>(".Prefab", (Func<PrefabAsset>) (() => new PrefabAsset()));
+
             Logger.Info("Assets before import: " + AssetDatabase.game.count);
             DumpAssets("1");
 
@@ -127,6 +143,9 @@ namespace AssetImporter
             Logger.Info("Copying from subscribed mods.");
             var modsPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed";
             var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
+
+
+
             int copiedFiles = 0;
             foreach (var mod in new DirectoryInfo(modsPath).GetDirectories())
             {
@@ -145,13 +164,13 @@ namespace AssetImporter
             }
         }
 
-        private void SendAssetChangedNotification()
+        private async void SendAssetChangedNotification()
         {
             Logger.Info("Assets have been changed, please restart the game to apply changes.");
             Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
 
             // Delay by 5 seconds
-
+            await Task.Delay(500);
 
             GameManager.instance.modManager.RequireRestart();
             Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
