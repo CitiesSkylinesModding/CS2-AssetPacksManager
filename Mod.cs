@@ -137,23 +137,47 @@ namespace AssetImporter
             }
         }
 
-        private void CopyFromMods()
+        private void CopyFromMods(bool overwrite = false)
         {
             int copiedFiles = 0;
-            copiedFiles += CopyFromLocalMods();
-            copiedFiles += CopyFromSubscribedMods();
+
+            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+            foreach (var modInfo in GameManager.instance.modManager)
+            {
+                if (modInfo.asset.isEnabled)
+                {
+                    var modDir = Path.GetDirectoryName(modInfo.asset.path);
+                    if (modDir == null)
+                    {
+                        continue;
+                    }
+
+                    if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods"))
+                    {
+                        Logger.Info($"Skipping local mod {modInfo.name}");
+                        continue;
+                    }
+
+                    var mod = new DirectoryInfo(modDir);
+                    var assetDir = new DirectoryInfo(Path.Combine(mod.FullName, "assets"));
+                    if (assetDir.Exists)
+                    {
+                        Logger.Info($"Copying assets from {mod.Name}");
+                        copiedFiles += CopyDirectory(assetDir.FullName, assetPath, true);
+                    }
+                }
+            }
 
             Logger.Info("Changed files: " + copiedFiles);
             if (copiedFiles > 0)
             {
-                // Assets now get loaded without required restart?
                 SendAssetChangedNotification();
             }
         }
 
         private int CopyFromDirectory(string directory)
         {
-            var assetPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
+            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
             int copiedFiles = 0;
 
             foreach (var mod in new DirectoryInfo(directory).GetDirectories())
@@ -169,25 +193,6 @@ namespace AssetImporter
             return copiedFiles;
         }
 
-
-        private int CopyFromLocalMods()
-        {
-            Logger.Info("Assets within local Mods are automatically loaded");
-            return 0;
-            Logger.Info("Copying from local mods.");
-            var localModsPath = EnvPath.kLocalModsPath;
-
-            return CopyFromDirectory(localModsPath);
-        }
-
-
-        private int CopyFromSubscribedMods()
-        {
-            Logger.Info("Copying from subscribed mods.");
-            var subscribedModsPath = EnvPath.kCacheDataPath + "/Mods/mods_subscribed";
-
-            return CopyFromDirectory(subscribedModsPath);
-        }
 
         private async void SendAssetChangedNotification()
         {
@@ -257,7 +262,7 @@ namespace AssetImporter
                     var assetsDir = Path.Combine(modDir, "assets");
                     if (Directory.Exists(assetsDir))
                     {
-                        Logger.Info($"Load \"{modInfo.name}\"'s assets.");
+                        Logger.Info($"Load {modInfo.name}'s assets.");
                         LoadFromDirectory(assetsDir);
                     }
                 }
