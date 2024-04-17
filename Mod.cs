@@ -8,6 +8,7 @@ using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
 using Colossal.PSI.Environment;
+using Colossal.UI;
 using Game.Debug;
 using Game.Prefabs;
 using Game.Simulation;
@@ -51,6 +52,7 @@ namespace AssetImporter
             //CopyDirectoryToInstalled(dir);
             //Logger.Info("Loaded Directory: " + dir);
 
+            UIManager.defaultUISystem.AddHostLocation("customassets", $"{EnvPath.kUserDataPath}/CustomAssets");
             CopyFromMods();
 
 
@@ -152,11 +154,11 @@ namespace AssetImporter
                         continue;
                     }
 
-                    if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods"))
+                    /*if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods"))
                     {
                         Logger.Info($"Skipping local mod {modInfo.name}");
                         continue;
-                    }
+                    }*/
 
                     var mod = new DirectoryInfo(modDir);
                     var assetDir = new DirectoryInfo(Path.Combine(mod.FullName, "assets"));
