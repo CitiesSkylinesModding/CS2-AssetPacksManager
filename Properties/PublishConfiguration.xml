@@ -37,7 +37,7 @@ The code of this mod was created by Konsi and Nullpinter
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
-	<ForumLink Value="" />
+	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-importer.1666781/" />
 	<!--Version of the mod-->
 	<ModVersion Value="0.1.0" />
 	<!--Recommended version of the base game to use the mod-->
@@ -50,6 +50,6 @@ The code of this mod was created by Konsi and Nullpinter
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetImporter" />
-	<ExternalLink Type="discord" Url="https://discord.gg/vd7HXnpPJf" />
+	<ExternalLink Type="discord" Url="https://discord.gg/UkKAfRqfCn" />
 	<ExternalLink Type="paypal" Url="https://www.paypal.com/paypalme/KonstantinSchwarze" />
 </Publish>
