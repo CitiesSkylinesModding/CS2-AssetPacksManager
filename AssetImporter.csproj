@@ -13,10 +13,12 @@
         <!--The file should contain 2 lines:-->
         <!--Your.PDX@Account.login-->
         <!--Your-PDX-Account-Pa$$word-->
-        <PDXAccountDataPath>$(USERPROFILE)\Documents\Paradox Interactive\pdx_account.txt</PDXAccountDataPath>
+        <PDXAccountDataPath>$(USERPROFILE)\Desktop\pdx_account.txt</PDXAccountDataPath>
 
         <!--The file where mod information which is required for publishing mod on PDX mods are stored-->
         <PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
+        <AssemblyVersion>0.1.0</AssemblyVersion>
+        <FileVersion>0.1.0</FileVersion>
     </PropertyGroup>
 
     <!--Imports must be after PropertyGroup block-->
