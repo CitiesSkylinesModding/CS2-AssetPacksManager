@@ -13,6 +13,10 @@ There is also a notification in the main menu to restart the game if needed.
 ## Resources for Asset Creation
 This section will include videos, knowledge bases and other resources to help you create your own assets.
 
+## Published Asset Packs
+- [Car Props Asset Pack](https://mods.paradoxplaza.com/mods/78904/Windows)
+- [Mio Road Assets Pack](https://mods.paradoxplaza.com/mods/78908/Windows)
+
 ## DISCLAIMER
 
 Unofficial Custom Assets are highly experimental. They WILL crash your game at some point or throw errors. Create redundand copies of your savefiles and use at your own risk. There has not been a lot of testing done on custom assets, and I'm publishing this project to get feedback from the community.
