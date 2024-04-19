@@ -20,14 +20,16 @@ There is also a notification in the main menu to restart the game if needed.
 ## Resources for Asset Creation
 This section will include videos, knowledge bases and other resources to help you create your own assets.
 
-## Published Asset Packs
-- [Car Props Asset Pack](https://mods.paradoxplaza.com/mods/78904/Windows)
-- [Mio Road Assets Pack](https://mods.paradoxplaza.com/mods/78908/Windows)
-
 
 ## Available Asset Packs
 - [Template to make your own Asset Packs](https://github.com/kosch104/CS2-CustomAssetPack)
 - [Car Props Asset Pack](https://github.com/kosch104/CS2AP-CarProps)
+- [Mio Road Assets Pack](https://mods.paradoxplaza.com/mods/78908/Windows)
+- [Mio Circular Assets Pack](https://mods.paradoxplaza.com/mods/78963/Windows)
+- [Drive-In Cinema Asset](https://mods.paradoxplaza.com/mods/78969/Windows)
+- [Modular Subway Station Assets Pack](https://mods.paradoxplaza.com/mods/78967/Windows)
+- [Super Elementary School Upgrade Asset](https://mods.paradoxplaza.com/mods/78974/Windows)
+- [StarQ VP EU Gas Station](https://mods.paradoxplaza.com/mods/79021/Windows)
 
 
 ## Credit

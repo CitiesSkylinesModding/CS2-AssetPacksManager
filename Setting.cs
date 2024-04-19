@@ -9,14 +9,24 @@ using System.Collections.Generic;
 namespace AssetImporter
 {
     [FileLocation(nameof(AssetImporter))]
+    [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup)]
+    [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup)]
     public class Setting : ModSetting
     {
+
+        public const string kSection = "Main";
+        public const string kSettingsGroup = "Settings";
+        public const string kActionsGroup = "Actions";
         public Setting(IMod mod) : base(mod)
         {
         }
 
+        [SettingsUISection(kSection, kSettingsGroup)]
+        public bool DisableAssetUpdates { get; set; } = false;
+
         [SettingsUIButton]
         [SettingsUIConfirmation]
+        [SettingsUISection(kSection, kActionsGroup)]
         public bool DeleteImportedAssets
         {
             set { Mod.DeleteImportedAssets(); }
@@ -24,13 +34,11 @@ namespace AssetImporter
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
+        [SettingsUISection(kSection, kActionsGroup)]
         public bool ReimportAssets
         {
             set { Mod.CopyFromMods(true); }
         }
-
-
-        public bool DisableAssetUpdates { get; set; } = false;
 
         public override void SetDefaults()
         {
@@ -53,6 +61,10 @@ namespace AssetImporter
             return new Dictionary<string, string>
             {
                 {m_Setting.GetSettingsLocaleID(), nameof(AssetImporter)},
+                { m_Setting.GetOptionTabLocaleID(Setting.kSection), "Main" },
+
+                { m_Setting.GetOptionGroupLocaleID(Setting.kSettingsGroup), "Settings" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kActionsGroup), "Actions" },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableAssetUpdates)), "Disable Asset Updates"},
                 {
