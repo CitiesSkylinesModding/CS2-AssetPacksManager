@@ -9,75 +9,32 @@ using System.Collections.Generic;
 namespace AssetImporter
 {
     [FileLocation(nameof(AssetImporter))]
-    [SettingsUIGroupOrder(kButtonGroup, kToggleGroup, kSliderGroup, kDropdownGroup)]
-    [SettingsUIShowGroupName(kButtonGroup, kToggleGroup, kSliderGroup, kDropdownGroup)]
     public class Setting : ModSetting
     {
-        public const string kSection = "Main";
-
-        public const string kButtonGroup = "Button";
-        public const string kToggleGroup = "Toggle";
-        public const string kSliderGroup = "Slider";
-        public const string kDropdownGroup = "Dropdown";
-
         public Setting(IMod mod) : base(mod)
         {
         }
 
-        [SettingsUISection(kSection, kButtonGroup)]
-        public bool Button
+        [SettingsUIButton]
+        [SettingsUIConfirmation]
+        public bool DeleteImportedAssets
         {
-            set { Mod.Logger.Info("Button clicked"); }
+            set { Mod.DeleteImportedAssets(); }
         }
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
-        [SettingsUISection(kSection, kButtonGroup)]
-        public bool ButtonWithConfirmation
+        public bool ReimportAssets
         {
-            set { Mod.Logger.Info("ButtonWithConfirmation clicked"); }
+            set { Mod.CopyFromMods(true); }
         }
 
-        [SettingsUISection(kSection, kToggleGroup)]
-        public bool Toggle { get; set; }
 
-        [SettingsUISlider(min = 0, max = 100, step = 1, scalarMultiplier = 1, unit = Unit.kDataMegabytes)]
-        [SettingsUISection(kSection, kSliderGroup)]
-        public int IntSlider { get; set; }
-
-        [SettingsUIDropdown(typeof(Setting), nameof(GetIntDropdownItems))]
-        [SettingsUISection(kSection, kDropdownGroup)]
-        public int IntDropdown { get; set; }
-
-        [SettingsUISection(kSection, kDropdownGroup)]
-        public SomeEnum EnumDropdown { get; set; } = SomeEnum.Value1;
-
-        public DropdownItem<int>[] GetIntDropdownItems()
-        {
-            var items = new List<DropdownItem<int>>();
-
-            for (var i = 0; i < 3; i += 1)
-            {
-                items.Add(new DropdownItem<int>()
-                {
-                    value = i,
-                    displayName = i.ToString(),
-                });
-            }
-
-            return items.ToArray();
-        }
+        public bool DisableAssetUpdates { get; set; } = false;
 
         public override void SetDefaults()
         {
-            throw new System.NotImplementedException();
-        }
-
-        public enum SomeEnum
-        {
-            Value1,
-            Value2,
-            Value3,
+            DisableAssetUpdates = false;
         }
     }
 
@@ -95,57 +52,33 @@ namespace AssetImporter
         {
             return new Dictionary<string, string>
             {
-                {m_Setting.GetSettingsLocaleID(), "Mod settings sample"},
-                {m_Setting.GetOptionTabLocaleID(Setting.kSection), "Main"},
+                {m_Setting.GetSettingsLocaleID(), nameof(AssetImporter)},
 
-                {m_Setting.GetOptionGroupLocaleID(Setting.kButtonGroup), "Buttons"},
-                {m_Setting.GetOptionGroupLocaleID(Setting.kToggleGroup), "Toggle"},
-                {m_Setting.GetOptionGroupLocaleID(Setting.kSliderGroup), "Sliders"},
-                {m_Setting.GetOptionGroupLocaleID(Setting.kDropdownGroup), "Dropdowns"},
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.Button)), "Button"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableAssetUpdates)), "Disable Asset Updates"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.Button)),
-                    $"Simple single button. It should be bool property with only setter or use [{nameof(SettingsUIButtonAttribute)}] to make button from bool property with setter and getter"
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableAssetUpdates)),
+                    $"Disables overwriting of assets if the same asset is importing again. This will prevent the asset from being updated/patched and should be used for compatibility only."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.ButtonWithConfirmation)), "Button with confirmation"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteImportedAssets)), "Delete all imported Assets"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.ButtonWithConfirmation)),
-                    $"Button can show confirmation message. Use [{nameof(SettingsUIConfirmationAttribute)}]"
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteImportedAssets)),
+                    $"Deletes all locally imported assets. This action cannot be undone and WILL break your save game if used improperly."
                 },
                 {
-                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.ButtonWithConfirmation)),
-                    "is it confirmation text which you want to show here?"
-                },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.Toggle)), "Toggle"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.Toggle)),
-                    $"Use bool property with setter and getter to get toggable option"
+                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteImportedAssets)),
+                    $"Are you sure to delete the CustomAssets folder? This action is irreversible and will break your save game if used improperly. Please make sure to backup your game before proceeding.\n\nYour active asset packs will be reinstalled after restarting the game."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.IntSlider)), "Int slider"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.ReimportAssets)), "Re-Import subscribed assets"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.IntSlider)),
-                    $"Use int property with getter and setter and [{nameof(SettingsUISliderAttribute)}] to get int slider"
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.ReimportAssets)),
+                    $"Copies all the downloaded asset packs to your game directory again. This will overwrite any existing assets"
                 },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.IntDropdown)), "Int dropdown"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.IntDropdown)),
-                    $"Use int property with getter and setter and [{nameof(SettingsUIDropdownAttribute)}(typeof(SomeType), nameof(SomeMethod))] to get int dropdown: Method must be static or instance of your setting class with 0 parameters and returns {typeof(DropdownItem<int>).Name}"
+                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.ReimportAssets)),
+                    $"Are you sure you want to re-import all asset packs?"
                 },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnumDropdown)), "Simple enum dropdown"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnumDropdown)),
-                    $"Use any enum property with getter and setter to get enum dropdown"
-                },
-
-                {m_Setting.GetEnumValueLocaleID(Setting.SomeEnum.Value1), "Value 1"},
-                {m_Setting.GetEnumValueLocaleID(Setting.SomeEnum.Value2), "Value 2"},
-                {m_Setting.GetEnumValueLocaleID(Setting.SomeEnum.Value3), "Value 3"},
             };
         }
 

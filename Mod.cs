@@ -15,6 +15,7 @@ using Game.Simulation;
 using JetBrains.Annotations;
 using Unity.Entities;
 using Hash128 = Colossal.Hash128;
+using StreamReader = System.IO.StreamReader;
 
 namespace AssetImporter
 {
@@ -25,7 +26,7 @@ namespace AssetImporter
 
         [CanBeNull] public string ModPath { get; set; }
 
-        private Setting m_Setting;
+        public static Setting m_Setting;
         private PrefabSystem prefabSystem;
 
         public void OnLoad(UpdateSystem updateSystem)
@@ -52,15 +53,25 @@ namespace AssetImporter
             //CopyDirectoryToInstalled(dir);
             //Logger.Info("Loaded Directory: " + dir);
 
+            m_Setting = new Setting(this);
+            m_Setting.RegisterInOptionsUI();
+            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
+            AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));
+            m_Setting.Apply();
+
             UIManager.defaultUISystem.AddHostLocation("customassets", $"{EnvPath.kUserDataPath}/CustomAssets");
             CopyFromMods();
 
+        }
 
-            /*m_Setting = new Setting(this);
-            m_Setting.RegisterInOptionsUI();
-            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
-
-            AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));*/
+        public static void DeleteImportedAssets()
+        {
+            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+            if (Directory.Exists(assetPath))
+            {
+                Directory.Delete(assetPath, true);
+                Logger.Info("Deleted CustomAssets directory");
+            }
         }
 
         // Loads all asset in a directory into the Asset Database
@@ -139,7 +150,7 @@ namespace AssetImporter
             }
         }
 
-        private void CopyFromMods(bool overwrite = false)
+        public static void CopyFromMods(bool force = false)
         {
             int copiedFiles = 0;
 
@@ -165,7 +176,7 @@ namespace AssetImporter
                     if (assetDir.Exists)
                     {
                         Logger.Info($"Copying assets from {mod.Name}");
-                        copiedFiles += CopyDirectory(assetDir.FullName, assetPath, true);
+                        copiedFiles += CopyDirectory(assetDir.FullName, assetPath, true, true);
                     }
                 }
             }
@@ -196,7 +207,7 @@ namespace AssetImporter
         }
 
 
-        private async void SendAssetChangedNotification()
+        private static async void SendAssetChangedNotification()
         {
             Logger.Info("Assets have been changed. Waiting for mod manager initialization to show warning");
             //Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
@@ -213,7 +224,7 @@ namespace AssetImporter
 
 
 
-        static int CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+        static int CopyDirectory(string sourceDir, string destinationDir, bool recursive, bool force = false)
         {
             int copiedFiles = 0;
             Logger.Info("Copying directory: " + sourceDir + " to " + destinationDir);
@@ -234,6 +245,30 @@ namespace AssetImporter
                     Logger.Info("Copied file: " + targetFilePath);
                     copiedFiles++;
                 }
+                else
+                {
+                    // Check if file is different
+                    if (!m_Setting.DisableAssetUpdates || force)
+                    {
+                        //Logger.Info("Checking file: " + targetFilePath + " for updates.");
+                        using (StreamReader sr = new StreamReader(file.FullName))
+                        {
+                            var content = sr.ReadToEnd();
+                            sr.Close();
+                            using (StreamReader sr2 = new StreamReader(targetFilePath))
+                            {
+                                var existingContent = sr2.ReadToEnd();
+                                sr2.Close();
+                                if (content != existingContent)
+                                {
+                                    file.CopyTo(targetFilePath, true);
+                                    Logger.Info("Asset Update, overwriting file: " + targetFilePath);
+                                    copiedFiles++;
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // If recursive and copying subdirectories, recursively call this method
@@ -242,7 +277,7 @@ namespace AssetImporter
                 foreach (DirectoryInfo subDir in dirs)
                 {
                     string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-                    copiedFiles += CopyDirectory(subDir.FullName, newDestinationDir, true);
+                    copiedFiles += CopyDirectory(subDir.FullName, newDestinationDir, true, force);
                 }
             }
 
