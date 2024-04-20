@@ -1,4 +1,5 @@
-﻿using Colossal;
+﻿using System;
+using Colossal;
 using Colossal.IO.AssetDatabase;
 using Game.Modding;
 using Game.Settings;
@@ -17,12 +18,17 @@ namespace AssetImporter
         public const string kSection = "Main";
         public const string kSettingsGroup = "Settings";
         public const string kActionsGroup = "Actions";
+        public static Setting instance;
         public Setting(IMod mod) : base(mod)
         {
+            SetDefaults();
         }
 
+        [SettingsUIHidden]
+        public bool HiddenSetting { get; set; }
+
         [SettingsUISection(kSection, kSettingsGroup)]
-        public bool DisableAssetUpdates { get; set; } = false;
+        public bool DisableAssetUpdates { get; set; }
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
@@ -42,6 +48,7 @@ namespace AssetImporter
 
         public override void SetDefaults()
         {
+            HiddenSetting = true;
             DisableAssetUpdates = false;
         }
     }

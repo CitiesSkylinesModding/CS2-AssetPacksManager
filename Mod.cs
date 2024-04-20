@@ -26,7 +26,6 @@ namespace AssetImporter
 
         [CanBeNull] public string ModPath { get; set; }
 
-        public static Setting m_Setting;
         private PrefabSystem prefabSystem;
 
         public void OnLoad(UpdateSystem updateSystem)
@@ -53,11 +52,12 @@ namespace AssetImporter
             //CopyDirectoryToInstalled(dir);
             //Logger.Info("Loaded Directory: " + dir);
 
-            m_Setting = new Setting(this);
-            m_Setting.RegisterInOptionsUI();
-            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
-            AssetDatabase.global.LoadSettings(nameof(AssetImporter), m_Setting, new Setting(this));
-            m_Setting.Apply();
+            Setting setting = new (this);
+            setting.RegisterInOptionsUI();
+            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
+            AssetDatabase.global.LoadSettings(nameof(AssetImporter), setting, new Setting(this));
+            setting.HiddenSetting = false;
+            Setting.instance = setting;
 
             UIManager.defaultUISystem.AddHostLocation("customassets", $"{EnvPath.kUserDataPath}/CustomAssets");
             CopyFromMods();
@@ -248,7 +248,7 @@ namespace AssetImporter
                 else
                 {
                     // Check if file is different
-                    if (!m_Setting.DisableAssetUpdates || force)
+                    if (!Setting.instance.DisableAssetUpdates || force)
                     {
                         //Logger.Info("Checking file: " + targetFilePath + " for updates.");
                         using (StreamReader sr = new StreamReader(file.FullName))
@@ -309,10 +309,10 @@ namespace AssetImporter
         public void OnDispose()
         {
             Logger.Info(nameof(OnDispose));
-            if (m_Setting != null)
+            if (Setting.instance != null)
             {
-                m_Setting.UnregisterInOptionsUI();
-                m_Setting = null;
+                Setting.instance.UnregisterInOptionsUI();
+                Setting.instance = null;
             }
         }
     }
