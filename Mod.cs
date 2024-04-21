@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using Colossal.PSI.Environment;
 using Colossal.UI;
 using Game.Debug;
 using Game.Prefabs;
+using Game.PSI;
 using Game.Simulation;
 using JetBrains.Annotations;
 using Unity.Entities;
@@ -60,8 +62,118 @@ namespace AssetImporter
             Setting.instance = setting;
 
             UIManager.defaultUISystem.AddHostLocation("customassets", $"{EnvPath.kUserDataPath}/CustomAssets");
-            CopyFromMods();
 
+
+            //Colossal.IO.AssetDatabase.AssetDatabase.databases
+            //SyncAssets();
+        }
+
+        public static void SyncAssets()
+        {
+            var expectedFiles = CollectExpectedAssets();
+            Logger.Info("Expected files: " + expectedFiles.Count);
+            var changedFiles = ApplySync(expectedFiles);
+            if (changedFiles > 0)
+            {
+                SendAssetChangedNotification(changedFiles);
+            }
+        }
+
+        public static List<FileInfo> CollectExpectedAssets()
+        {
+            List<FileInfo> expectedAssets = new();
+
+            foreach (var modInfo in GameManager.instance.modManager)
+            {
+                if (modInfo.asset.isEnabled)
+                {
+                    var modDir = Path.GetDirectoryName(modInfo.asset.path);
+                    if (modDir == null)
+                        continue;
+                    if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods") && !Setting.instance.EnableLocalAssetPacks)
+                    {
+                        Logger.Info($"Skipping local mod {modInfo.name}");
+                        continue;
+                    }
+
+                    var mod = new DirectoryInfo(modDir);
+                    var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
+                    if (assetDir.Exists)
+                    {
+                        Logger.Info($"Copying assets from {mod.Name}");
+                        expectedAssets.AddRange(CollectAssetsRecursively(assetDir.FullName));
+                    }
+                }
+            }
+
+            return expectedAssets;
+        }
+
+        private static List<FileInfo> CollectAssetsRecursively(string directory)
+        {
+            List<FileInfo> files = new();
+            var dir = new DirectoryInfo(directory);
+            if (!dir.Exists)
+                Logger.Error($"Source directory not found: {dir.FullName}");
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                files.Add(file);
+            }
+            foreach (DirectoryInfo subDir in dirs)
+            {
+                files.AddRange(CollectAssetsRecursively(subDir.FullName));
+            }
+            return files;
+        }
+
+        public static int ApplySync(List<FileInfo> expectedFiles)
+        {
+            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+            int changedFiles = 0;
+            List<string> checkedFiles = new();
+
+            foreach (var file in expectedFiles)
+            {
+                var targetFilePath = Path.Combine(assetPath, file.Name);
+                if (!File.Exists(targetFilePath))
+                {
+                    file.CopyTo(targetFilePath);
+                    Logger.Info($"Added file: {targetFilePath}");
+                    changedFiles++;
+                    checkedFiles.Add(targetFilePath);
+                }
+                else
+                {
+                    // Check if file is different
+                    using StreamReader updatedReader = new StreamReader(file.FullName);
+                    var updatedContent = updatedReader.ReadToEnd();
+                    updatedReader.Close();
+                    using StreamReader existingReader = new StreamReader(targetFilePath);
+                    var existingContent = existingReader.ReadToEnd();
+                    existingReader.Close();
+                    if (updatedContent != existingContent)
+                    {
+                        file.CopyTo(targetFilePath, true);
+                        Logger.Info($"Updated file: {targetFilePath}");
+                        changedFiles++;
+                    }
+                    checkedFiles.Add(targetFilePath);
+                }
+            }
+
+            foreach (string file in Directory.EnumerateFiles(assetPath, "*.*", SearchOption.AllDirectories))
+            {
+                if (expectedFiles.All(f => f.FullName != file) && !checkedFiles.Contains(file))
+                {
+                    File.Delete(file);
+                    Logger.Info($"Deleted file: {file}");
+                    changedFiles++;
+                }
+            }
+
+            return changedFiles;
         }
 
         public static void DeleteImportedAssets()
@@ -74,236 +186,20 @@ namespace AssetImporter
             }
         }
 
-        // Loads all asset in a directory into the Asset Database
-        // Not working yet
-        private void LoadFromDirectory(string assetsDir)
-        {
-            // Maybe this is needed?
-            // DefaultAssetFactory.instance.AddSupportedType<PrefabAsset>(".Prefab", (Func<PrefabAsset>) (() => new PrefabAsset()));
-
-            Logger.Info("Assets before import: " + AssetDatabase.game.count);
-            DumpAssets("1");
-
-            var hash = Hash128.Parse(File.ReadAllText("C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/77463_4/assets/Circle Lot/CircleLot.Prefab.cid"));
-            var path = ".cache/Mods/mods_subscribed/77463_4/assets/Circle Lot";
-
-            var ret = AssetDatabase.user.AddAsset<PrefabAsset>(
-                AssetDataPath.Create(path, "CircleLot"), hash);
-
-            //AssetDataPath assetDataPath = AssetDataPath.Create("CustomAssets/CircleLot/CircleLot", "CircleLot");
-            //PrefabAsset prefabAsset = new(
-
-            Logger.Info("Added Prefab: " + ret.name + " with unique name " + ret.uniqueName);
-
-
-            /*foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
-            {
-                Logger.Info("Found " + file.FullName);
-
-                //var prefabName = Path.GetFileNameWithoutExtension(file.FullName);
-
-                //var hash = Hash128.Parse(File.ReadAllText(file.FullName + ".cid"));
-                var hash = Hash128.Parse(File.ReadAllText(file.FullName + ".cid");
-                var path = ".cache/Mods/mods_subscribed/77463_4/assets/Circle Lot";
-
-                var ret = AssetDatabase.user.AddAsset<PrefabAsset>(
-                    AssetDataPath.Create(path, "CircleLot"), hash);
-
-                //AssetDataPath assetDataPath = AssetDataPath.Create("CustomAssets/CircleLot/CircleLot", "CircleLot");
-                //PrefabAsset prefabAsset = new(
-
-                Logger.Info("Added Prefab: " + ret.name + " with unique name " + ret.uniqueName);
-                Logger.Info("Loaded " + file.FullName + " with hash " + hash);
-            }*/
-            DumpAssets("2");
-            Logger.Info(AssetDatabase.user.AllAssets().Last().name);
-            Logger.Info("Assets after import: " + AssetDatabase.user.count);
-        }
-
-        private void DumpAssets(string name)
-        {
-            var x = AssetDatabase.user.AllAssets().GetEnumerator();
-            string s = "";
-            while (x.MoveNext())
-            {
-                s += x.Current?.name + " " + x.Current?.database.name + "\n";
-            }
-
-            var path = "C:/Users/Konsi/Documents/CS2-Modding/CS2-AssetImporter/AssetsDump" + name + ".txt";
-
-            // Create file
-            using (StreamWriter sw = File.CreateText(path))
-            {
-                sw.Write(s);
-            }
-        }
-
-        private void CopyDirectoryToInstalled(string assetsDir)
-        {
-            var streamingPath = "C:/Users/" + Environment.UserName + "/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets";
-            foreach (var file in new DirectoryInfo(assetsDir).GetFiles("*.Prefab"))
-            {
-                Logger.Info("Copying " + file.FullName);
-                File.Copy(file.FullName, Path.Combine(streamingPath, file.Name));
-                File.Copy(file.FullName + ".cid", Path.Combine(streamingPath, file.Name + ".cid"));
-                Logger.Info("Copied " + file.FullName);
-            }
-        }
-
-        public static void CopyFromMods(bool force = false)
-        {
-            int copiedFiles = 0;
-
-            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
-            foreach (var modInfo in GameManager.instance.modManager)
-            {
-                if (modInfo.asset.isEnabled)
-                {
-                    var modDir = Path.GetDirectoryName(modInfo.asset.path);
-                    if (modDir == null)
-                    {
-                        continue;
-                    }
-
-                    /*if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods"))
-                    {
-                        Logger.Info($"Skipping local mod {modInfo.name}");
-                        continue;
-                    }*/
-
-                    var mod = new DirectoryInfo(modDir);
-                    var assetDir = new DirectoryInfo(Path.Combine(mod.FullName, "assets"));
-                    if (assetDir.Exists)
-                    {
-                        Logger.Info($"Copying assets from {mod.Name}");
-                        copiedFiles += CopyDirectory(assetDir.FullName, assetPath, true, true);
-                    }
-                }
-            }
-
-            Logger.Info("Changed files: " + copiedFiles);
-            if (copiedFiles > 0)
-            {
-                SendAssetChangedNotification();
-            }
-        }
-
-        private int CopyFromDirectory(string directory)
-        {
-            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
-            int copiedFiles = 0;
-
-            foreach (var mod in new DirectoryInfo(directory).GetDirectories())
-            {
-                var assetDir = new DirectoryInfo(Path.Combine(mod.FullName, "assets"));
-                if (assetDir.Exists)
-                {
-                    Logger.Info($"Copying assets from {mod.Name}");
-                    copiedFiles += CopyDirectory(assetDir.FullName, assetPath, true);
-                }
-            }
-
-            return copiedFiles;
-        }
-
-
-        private static async void SendAssetChangedNotification()
+        private static async void SendAssetChangedNotification(int assetsChanged)
         {
             Logger.Info("Assets have been changed. Waiting for mod manager initialization to show warning");
             //Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
 
-            // Delay by 0.5 seconds, because we have to wait for the mod manager to initialize
+            // Delay by 100 ms, because we have to wait for the mod manager to initialize
             while (!GameManager.instance.modManager.isInitialized)
             {
-                await Task.Delay(10);
+                await Task.Delay(100);
             }
 
-            GameManager.instance.modManager.RequireRestart();
+            NotificationSystem.Push("asset-importer", "Asset Importer",$"{assetsChanged} custom assets have been updated. Restart the game to apply changes");
+            //GameManager.instance.modManager.RequireRestart();
             Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
-        }
-
-
-
-        static int CopyDirectory(string sourceDir, string destinationDir, bool recursive, bool force = false)
-        {
-            int copiedFiles = 0;
-            Logger.Info("Copying directory: " + sourceDir + " to " + destinationDir);
-            var dir = new DirectoryInfo(sourceDir);
-            if (!dir.Exists)
-                Logger.Error($"Source directory not found: {dir.FullName}");
-            if (!Directory.Exists(destinationDir))
-                Directory.CreateDirectory(destinationDir);
-
-            DirectoryInfo[] dirs = dir.GetDirectories();
-            Directory.CreateDirectory(destinationDir);
-            foreach (FileInfo file in dir.GetFiles())
-            {
-                string targetFilePath = Path.Combine(destinationDir, file.Name);
-                if (!File.Exists(targetFilePath))
-                {
-                    file.CopyTo(targetFilePath);
-                    Logger.Info("Copied file: " + targetFilePath);
-                    copiedFiles++;
-                }
-                else
-                {
-                    // Check if file is different
-                    if (!Setting.instance.DisableAssetUpdates || force)
-                    {
-                        //Logger.Info("Checking file: " + targetFilePath + " for updates.");
-                        using (StreamReader sr = new StreamReader(file.FullName))
-                        {
-                            var content = sr.ReadToEnd();
-                            sr.Close();
-                            using (StreamReader sr2 = new StreamReader(targetFilePath))
-                            {
-                                var existingContent = sr2.ReadToEnd();
-                                sr2.Close();
-                                if (content != existingContent)
-                                {
-                                    file.CopyTo(targetFilePath, true);
-                                    Logger.Info("Asset Update, overwriting file: " + targetFilePath);
-                                    copiedFiles++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // If recursive and copying subdirectories, recursively call this method
-            if (recursive)
-            {
-                foreach (DirectoryInfo subDir in dirs)
-                {
-                    string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-                    copiedFiles += CopyDirectory(subDir.FullName, newDestinationDir, true, force);
-                }
-            }
-
-            return copiedFiles;
-        }
-
-        private void LoadFromInstalledMods()
-        {
-            foreach (var modInfo in GameManager.instance.modManager)
-            {
-                if (modInfo.asset.isEnabled)
-                {
-                    var modDir = Path.GetDirectoryName(modInfo.asset.path);
-                    if (modDir == null)
-                    {
-                        continue;
-                    }
-
-                    var assetsDir = Path.Combine(modDir, "assets");
-                    if (Directory.Exists(assetsDir))
-                    {
-                        Logger.Info($"Load {modInfo.name}'s assets.");
-                        LoadFromDirectory(assetsDir);
-                    }
-                }
-            }
         }
 
         public void OnDispose()

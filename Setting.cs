@@ -16,7 +16,7 @@ namespace AssetImporter
     {
 
         public const string kSection = "Main";
-        public const string kSettingsGroup = "Settings";
+        public const string kSettingsGroup = "Synchronization";
         public const string kActionsGroup = "Actions";
         public static Setting instance;
         public Setting(IMod mod) : base(mod)
@@ -27,8 +27,12 @@ namespace AssetImporter
         [SettingsUIHidden]
         public bool HiddenSetting { get; set; }
 
+
         [SettingsUISection(kSection, kSettingsGroup)]
-        public bool DisableAssetUpdates { get; set; }
+        public bool EnableLocalAssetPacks { get; set; }
+
+        [SettingsUISection(kSection, kSettingsGroup)]
+        public bool EnableSubscribedAssetPacks { get; set; }
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
@@ -41,15 +45,16 @@ namespace AssetImporter
         [SettingsUIButton]
         [SettingsUIConfirmation]
         [SettingsUISection(kSection, kActionsGroup)]
-        public bool ReimportAssets
+        public bool SyncAssets
         {
-            set { Mod.CopyFromMods(true); }
+            set { Mod.SyncAssets(); }
         }
 
         public override void SetDefaults()
         {
             HiddenSetting = true;
-            DisableAssetUpdates = false;
+            EnableLocalAssetPacks = true;
+            EnableSubscribedAssetPacks = true;
         }
     }
 
@@ -70,14 +75,20 @@ namespace AssetImporter
                 {m_Setting.GetSettingsLocaleID(), nameof(AssetImporter)},
                 { m_Setting.GetOptionTabLocaleID(Setting.kSection), "Main" },
 
-                { m_Setting.GetOptionGroupLocaleID(Setting.kSettingsGroup), "Settings" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kSettingsGroup), "Synchronization" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kActionsGroup), "Actions" },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableAssetUpdates)), "Disable Asset Updates"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableLocalAssetPacks)), "Enable Local Asset Packs"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableAssetUpdates)),
-                    $"Disables overwriting of assets if the same asset is importing again. This will prevent the asset from being updated/patched and should be used for compatibility only."
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableLocalAssetPacks)),
+                    $"Enables the import of locally installed mods (Mods in the user/Mods folder)."
                 },
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableSubscribedAssetPacks)), "Enable Subscribed Asset Packs"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableSubscribedAssetPacks)),
+                    $"Enables the import of subscribed asset packs."
+                },
+
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteImportedAssets)), "Delete all imported Assets"},
                 {
@@ -89,13 +100,13 @@ namespace AssetImporter
                     $"Are you sure to delete the CustomAssets folder? This action is irreversible and will break your save game if used improperly. Please make sure to backup your game before proceeding.\n\nYour active asset packs will be reinstalled after restarting the game."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.ReimportAssets)), "Re-Import subscribed assets"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.SyncAssets)), "Re-Import subscribed assets"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.ReimportAssets)),
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.SyncAssets)),
                     $"Copies all the downloaded asset packs to your game directory again. This will overwrite any existing assets"
                 },
                 {
-                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.ReimportAssets)),
+                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.SyncAssets)),
                     $"Are you sure you want to re-import all asset packs?"
                 },
             };
