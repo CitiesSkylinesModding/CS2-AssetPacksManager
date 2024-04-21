@@ -45,15 +45,35 @@ namespace AssetImporter
             setting.HiddenSetting = false;
             Setting.instance = setting;
 
-            UIManager.defaultUISystem.AddHostLocation("customassets", $"{EnvPath.kUserDataPath}/CustomAssets");
+            var assetPath = $"{EnvPath.kGameDataPath}/StreamingAssets/Mods/CustomAssets";
+            if (!Directory.Exists(assetPath))
+            {
+                Directory.CreateDirectory(assetPath);
+            }
+
+            UIManager.defaultUISystem.AddHostLocation("customassets", assetPath);
 
 
-            var path1 = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
-            AssetDatabase.game.AddAsset<PrefabAsset>(path1, Guid.NewGuid());
+            //var path1 = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
+            //AssetDatabase.game.AddAsset<PrefabAsset>(path1, Guid.NewGuid());
             // Maybe Prefab instead of PrefabAsset
 
             //AssetDatabase.user.AddAsset(path);
-            //SyncAssets();
+            SyncAssets();
+        }
+
+        private static void TryAddPrefab(string targetFilePath)
+        {
+            Logger.Info("TryAddPrefab: " + targetFilePath);
+            if (targetFilePath.EndsWith(".prefab"))
+            {
+                var path = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
+                var cidFilename = targetFilePath + ".cid";
+                using StreamReader sr = new StreamReader(cidFilename);
+                var guid = new Guid(sr.ReadToEnd());
+                sr.Close();
+                AssetDatabase.game.AddAsset<PrefabAsset>(path, guid);
+            }
         }
 
         public static void SyncAssets()
@@ -118,7 +138,7 @@ namespace AssetImporter
 
         public static int ApplySync(List<FileInfo> expectedFiles)
         {
-            var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+            var assetPath = $"{EnvPath.kGameDataPath}/StreamingAssets/Mods/CustomAssets";
             int changedFiles = 0;
             List<string> checkedFiles = new();
 
@@ -131,6 +151,7 @@ namespace AssetImporter
                     Logger.Info($"Added file: {targetFilePath}");
                     changedFiles++;
                     checkedFiles.Add(targetFilePath);
+                    TryAddPrefab(targetFilePath);
                 }
                 else
                 {
@@ -164,7 +185,7 @@ namespace AssetImporter
             return changedFiles;
         }
 
-        public static void DeleteImportedAssets()
+        /*public static void DeleteImportedAssets()
         {
             var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
             if (Directory.Exists(assetPath))
@@ -172,7 +193,7 @@ namespace AssetImporter
                 Directory.Delete(assetPath, true);
                 Logger.Info("Deleted CustomAssets directory");
             }
-        }
+        }*/
 
         private static async void SendAssetChangedNotification(int assetsChanged)
         {

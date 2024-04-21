@@ -39,7 +39,7 @@ namespace AssetImporter
         [SettingsUISection(kSection, kActionsGroup)]
         public bool DeleteImportedAssets
         {
-            set { Mod.DeleteImportedAssets(); }
+            set { /*Mod.DeleteImportedAssets();*/ }
         }
 
         [SettingsUIButton]
