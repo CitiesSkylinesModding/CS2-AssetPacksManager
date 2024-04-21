@@ -38,22 +38,6 @@ namespace AssetImporter
                 ModPath = Path.GetDirectoryName(asset.path);
             }
 
-            /*Logger.Info("kCacheDataPath: " + EnvPath.kCacheDataPath);
-            Logger.Info("kAssetDataPath: " + EnvPath.kAssetDataPath);
-            Logger.Info("kGameDataPath: " + EnvPath.kGameDataPath);
-            Logger.Info("kStreamingDataPath: " + EnvPath.kStreamingDataPath);
-            Logger.Info("kTempDataPath: " + EnvPath.kTempDataPath);
-            Logger.Info("kCachePathName: " + EnvPath.kCachePathName);
-            Logger.Info("kLocalModsPath: " + EnvPath.kLocalModsPath);
-            Logger.Info("kVTDataPath: " + EnvPath.kVTDataPath);
-            Logger.Info("kVTPathName: " + EnvPath.kVTPathName);
-            Logger.Info("kVTSubPath: " + EnvPath.kVTSubPath);*/
-            //prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
-            //var dir = "C:/Users/" + Environment.UserName + "/Desktop/assets";
-            //LoadFromDirectory(dir);
-            //CopyDirectoryToInstalled(dir);
-            //Logger.Info("Loaded Directory: " + dir);
-
             Setting setting = new (this);
             setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
@@ -64,7 +48,11 @@ namespace AssetImporter
             UIManager.defaultUISystem.AddHostLocation("customassets", $"{EnvPath.kUserDataPath}/CustomAssets");
 
 
-            //Colossal.IO.AssetDatabase.AssetDatabase.databases
+            var path1 = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
+            AssetDatabase.game.AddAsset<PrefabAsset>(path1, Guid.NewGuid());
+            // Maybe Prefab instead of PrefabAsset
+
+            //AssetDatabase.user.AddAsset(path);
             //SyncAssets();
         }
 
