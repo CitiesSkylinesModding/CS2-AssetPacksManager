@@ -30,11 +30,11 @@ namespace AssetImporter
 
         private PrefabSystem prefabSystem;
 
-        private static string assetPath;
+        private static string assetPath = $"{EnvPath.kGameDataPath}/StreamingAssets/Mods/CustomAssets";
 
         public void OnLoad(UpdateSystem updateSystem)
         {
-            assetPath = $"{EnvPath.kGameDataPath}/StreamingAssets/Mods/CustomAssets";
+
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
             {
                 Logger.Info($"Current mod asset at {asset.path}");
@@ -52,31 +52,79 @@ namespace AssetImporter
             Logger.Info("Added custom assets COUI location");
 
 
+            Logger.Info("Assets.");
+            var path1= AssetDataPath.Create("Mods/CustomAssets/SmallFireHouse01", "SmallFireHouse01");
+            using StreamReader sr1 = new StreamReader("D:/Games/steamapps/common/Cities Skylines II/Cities2_Data/StreamingAssets/Mods/CustomAssets/SmallFireHouse01/SmallFireHouse01.Prefab.cid");
+            var guid1 = new Guid(sr1.ReadToEnd());
+            AssetDatabase.game.AddAsset<PrefabAsset>(path1, Guid.NewGuid());
+
+            var path3= AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01.Prefab");
+            AssetDatabase.game.AddAsset<PrefabAsset>(path3, Guid.NewGuid());
+
+            var path2= AssetDataPath.Create("Mods/CustomAssets/Mixed Residential Fire Station", "Mixed Residential Fire Station");
+            using StreamReader sr2 = new StreamReader("D:/Games/steamapps/common/Cities Skylines II/Cities2_Data/StreamingAssets/Mods/CustomAssets/Mixed Residential Fire Station/Mixed Residential Fire Station.Prefab.cid");
+            var guid2 = new Guid(sr2.ReadToEnd());
+            AssetDatabase.game.AddAsset<PrefabAsset>(path2, guid2);
+            Logger.Info("Assets.");
+
+            DumpAssets("Test");
+
+
             //var path1 = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
             //AssetDatabase.game.AddAsset<PrefabAsset>(path1, Guid.NewGuid());
             // Maybe Prefab instead of PrefabAsset
 
             //AssetDatabase.user.AddAsset(path);
-            SyncAssets();
+            //SyncAssets();
         }
+
+        public static int ix = 0;
 
         private static void TryAddPrefab(string targetFilePath)
         {
-            if (string.IsNullOrEmpty(targetFilePath))
-            {
-                Logger.Info("TryAddPrefab: targetFilePath is null");
-                return;
-            }
+            return;
             Logger.Info("TryAddPrefab: " + targetFilePath);
-            /*if (targetFilePath.EndsWith(".prefab"))
+            if (targetFilePath.EndsWith(".Prefab"))
             {
-                var path = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
+                var relativePath = @"Mods\CustomAssets" + targetFilePath.Replace(assetPath, "");
+                var fileNameInFolder = Path.GetFileNameWithoutExtension(relativePath);
+                var pathWithoutFileName = relativePath.Replace(fileNameInFolder + ".Prefab", "");
+                pathWithoutFileName = pathWithoutFileName.Replace(" ", "_");
+
+
+                // TODO Remove spaces from prefab name and see if that was the issue
+                Logger.Info("Try Adding Prefab with path: " + pathWithoutFileName);
+                Logger.Info("Try Adding Prefab with name: " + fileNameInFolder);
+                var path = AssetDataPath.Create(pathWithoutFileName, fileNameInFolder);
                 var cidFilename = targetFilePath + ".cid";
                 using StreamReader sr = new StreamReader(cidFilename);
                 var guid = new Guid(sr.ReadToEnd());
                 sr.Close();
                 AssetDatabase.game.AddAsset<PrefabAsset>(path, guid);
-            }*/
+                Logger.Info("Prefab added successfully");
+            }
+
+            DumpAssets("Dump" + ix);
+            ix++;
+        }
+
+
+        private static void DumpAssets(string name)
+        {
+            var x = AssetDatabase.game.AllAssets().GetEnumerator();
+            string s = "";
+            while (x.MoveNext())
+            {
+                s += x.Current?.name + " " + x.Current?.database.name + "\n";
+            }
+
+            var path = "C:/Users/Konsi/Documents/CS2-Modding/CS2-AssetImporter/AssetsDump" + name + ".txt";
+
+            // Create file
+            using (StreamWriter sw = File.CreateText(path))
+            {
+                sw.Write(s);
+            }
         }
 
         public static void SyncAssets()
@@ -157,15 +205,19 @@ namespace AssetImporter
 
         public static int ApplySync(List<FileInfo> expectedFiles)
         {
+            Logger.Info("Applying sync");
             int changedFiles = 0;
             List<string> checkedFiles = new();
 
             foreach (var file in expectedFiles)
             {
+                Logger.Info("Syncing file: " + file.FullName);
                 var targetFilePath = file.FullName.Split([@"\assets\"], StringSplitOptions.None)[1];
                 targetFilePath = Path.Combine(assetPath, targetFilePath);
+                Logger.Info("Target: " + targetFilePath);
                 if (!File.Exists(targetFilePath))
                 {
+                    Logger.Info("File not existing, copying...");
                     Directory.CreateDirectory(Path.GetDirectoryName(targetFilePath));
                     file.CopyTo(targetFilePath);
                     Logger.Info($"Added file: {targetFilePath}");
@@ -175,6 +227,7 @@ namespace AssetImporter
                 }
                 else
                 {
+                    Logger.Info("File existing, verifying...");
                     // Check if file is different
                     using StreamReader updatedReader = new StreamReader(file.FullName);
                     var updatedContent = updatedReader.ReadToEnd();
@@ -182,11 +235,17 @@ namespace AssetImporter
                     using StreamReader existingReader = new StreamReader(targetFilePath);
                     var existingContent = existingReader.ReadToEnd();
                     existingReader.Close();
+                    Logger.Info("Comparing content...");
                     if (updatedContent != existingContent)
                     {
+                        Logger.Info("Content is different, updating...");
                         file.CopyTo(targetFilePath, true);
                         Logger.Info($"Updated file: {targetFilePath}");
                         changedFiles++;
+                    }
+                    else
+                    {
+                        Logger.Info("Content is the same, skipping...");
                     }
                     checkedFiles.Add(targetFilePath);
                     TryAddPrefab(targetFilePath);
