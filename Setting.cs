@@ -18,6 +18,7 @@ namespace AssetImporter
         public const string kSection = "Main";
         public const string kSettingsGroup = "Synchronization";
         public const string kActionsGroup = "Actions";
+        public const string kMiscGroup = "Misc";
         public static Setting instance;
         public Setting(IMod mod) : base(mod)
         {
@@ -34,12 +35,21 @@ namespace AssetImporter
         [SettingsUISection(kSection, kSettingsGroup)]
         public bool EnableSubscribedAssetPacks { get; set; }
 
+        [SettingsUISection(kSection, kSettingsGroup)]
+        public bool DeleteUnusedFiles { get; set; }
+
+        [SettingsUISection(kSection, kMiscGroup)]
+        public bool EnableVerboseLogging { get; set; }
+
+        [SettingsUISection(kSection, kMiscGroup)]
+        public bool AutoHideNotifications { get; set; }
+
         [SettingsUIButton]
         [SettingsUIConfirmation]
         [SettingsUISection(kSection, kActionsGroup)]
         public bool DeleteImportedAssets
         {
-            set { /*Mod.DeleteImportedAssets();*/ }
+            set { Mod.DeleteImportedAssets(); }
         }
 
         [SettingsUIButton]
@@ -55,6 +65,9 @@ namespace AssetImporter
             HiddenSetting = true;
             EnableLocalAssetPacks = true;
             EnableSubscribedAssetPacks = true;
+            DeleteUnusedFiles = true;
+            EnableVerboseLogging = false;
+            AutoHideNotifications = true;
         }
     }
 
@@ -83,21 +96,39 @@ namespace AssetImporter
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableLocalAssetPacks)),
                     $"Enables the import of locally installed mods (Mods in the user/Mods folder)."
                 },
+
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableSubscribedAssetPacks)), "Enable Subscribed Asset Packs"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableSubscribedAssetPacks)),
                     $"Enables the import of subscribed asset packs."
                 },
 
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteUnusedFiles)), "Delete unused files"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteUnusedFiles)),
+                    $"Deletes all unused files in the CustomAssets folder."
+                },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteImportedAssets)), "Delete all imported Assets"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableVerboseLogging)), "Enable Verbose Logging"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableVerboseLogging)),
+                    $"Enables additional log messages for debugging purposes."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AutoHideNotifications)), "Auto Hide Notifications"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.AutoHideNotifications)),
+                    $"Automatically hides Asset Importer Notifications after 30 seconds."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteImportedAssets)), "Delete imported assets"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteImportedAssets)),
-                    $"Deletes all locally imported assets. This action cannot be undone and WILL break your save game if used improperly."
+                    $"Deletes all imported asset packs from your game directory. Please manually sync assets to re-import them. You will need to restart the game after syncing assets. If you don't choose to sync manually, you will have to restart the game **TWICE**."
                 },
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteImportedAssets)),
-                    $"Are you sure to delete the CustomAssets folder? This action is irreversible and will break your save game if used improperly. Please make sure to backup your game before proceeding.\n\nYour active asset packs will be reinstalled after restarting the game."
+                    $"Are you sure you want to delete all imported asset packs? \nPlease manually sync assets to re-import them. You will need to restart the game after syncing assets. If you don't choose to sync manually, you will have to restart the game **TWICE**."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.SyncAssets)), "Re-Import subscribed assets"},

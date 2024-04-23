@@ -30,8 +30,8 @@ namespace AssetImporter
 
         private PrefabSystem prefabSystem;
 
-        private static string assetPath = $"{EnvPath.kGameDataPath}/StreamingAssets/Mods/CustomAssets";
-
+        private static string assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+        
         public void OnLoad(UpdateSystem updateSystem)
         {
 
@@ -48,26 +48,12 @@ namespace AssetImporter
             setting.HiddenSetting = false;
             Setting.instance = setting;
 
+            if (!Directory.Exists(assetPath))
+            {
+                Directory.CreateDirectory(assetPath);
+            }
             UIManager.defaultUISystem.AddHostLocation("customassets", assetPath);
-            Logger.Info("Added custom assets COUI location");
-
-
-            Logger.Info("Assets.");
-            var path1= AssetDataPath.Create("Mods/CustomAssets/SmallFireHouse01", "SmallFireHouse01");
-            using StreamReader sr1 = new StreamReader("D:/Games/steamapps/common/Cities Skylines II/Cities2_Data/StreamingAssets/Mods/CustomAssets/SmallFireHouse01/SmallFireHouse01.Prefab.cid");
-            var guid1 = new Guid(sr1.ReadToEnd());
-            AssetDatabase.game.AddAsset<PrefabAsset>(path1, Guid.NewGuid());
-
-            var path3= AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01.Prefab");
-            AssetDatabase.game.AddAsset<PrefabAsset>(path3, Guid.NewGuid());
-
-            var path2= AssetDataPath.Create("Mods/CustomAssets/Mixed Residential Fire Station", "Mixed Residential Fire Station");
-            using StreamReader sr2 = new StreamReader("D:/Games/steamapps/common/Cities Skylines II/Cities2_Data/StreamingAssets/Mods/CustomAssets/Mixed Residential Fire Station/Mixed Residential Fire Station.Prefab.cid");
-            var guid2 = new Guid(sr2.ReadToEnd());
-            AssetDatabase.game.AddAsset<PrefabAsset>(path2, guid2);
-            Logger.Info("Assets.");
-
-            DumpAssets("Test");
+            Log("Added custom assets COUI location");
 
 
             //var path1 = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
@@ -75,15 +61,21 @@ namespace AssetImporter
             // Maybe Prefab instead of PrefabAsset
 
             //AssetDatabase.user.AddAsset(path);
-            //SyncAssets();
+
+            SyncAssets();
         }
 
-        public static int ix = 0;
+        private static void Log(string message, bool alwaysLog = false)
+        {
+            if (Setting.instance.EnableVerboseLogging || alwaysLog)
+                Logger.Info(message);
+        }
+
 
         private static void TryAddPrefab(string targetFilePath)
         {
             return;
-            Logger.Info("TryAddPrefab: " + targetFilePath);
+            Log("TryAddPrefab: " + targetFilePath);
             if (targetFilePath.EndsWith(".Prefab"))
             {
                 var relativePath = @"Mods\CustomAssets" + targetFilePath.Replace(assetPath, "");
@@ -92,20 +84,16 @@ namespace AssetImporter
                 pathWithoutFileName = pathWithoutFileName.Replace(" ", "_");
 
 
-                // TODO Remove spaces from prefab name and see if that was the issue
-                Logger.Info("Try Adding Prefab with path: " + pathWithoutFileName);
-                Logger.Info("Try Adding Prefab with name: " + fileNameInFolder);
+                Log("Try Adding Prefab with path: " + pathWithoutFileName);
+                Log("Try Adding Prefab with name: " + fileNameInFolder);
                 var path = AssetDataPath.Create(pathWithoutFileName, fileNameInFolder);
                 var cidFilename = targetFilePath + ".cid";
                 using StreamReader sr = new StreamReader(cidFilename);
                 var guid = new Guid(sr.ReadToEnd());
                 sr.Close();
                 AssetDatabase.game.AddAsset<PrefabAsset>(path, guid);
-                Logger.Info("Prefab added successfully");
+                Log("Prefab added successfully");
             }
-
-            DumpAssets("Dump" + ix);
-            ix++;
         }
 
 
@@ -129,16 +117,16 @@ namespace AssetImporter
 
         public static void SyncAssets()
         {
-            Logger.Info("Starting Asset Sync");
-            Logger.Info("Asset Path: " + assetPath);
+            Log("Starting Asset Sync", true);
+            Log("Asset Path: " + assetPath);
             if (!Directory.Exists(assetPath))
             {
-                Logger.Info("Creating CustomAssets directory");
+                Log("Creating CustomAssets directory");
                 Directory.CreateDirectory(assetPath);
             }
 
             var expectedFiles = CollectExpectedAssets();
-            Logger.Info("Expected files: " + expectedFiles.Count);
+            Log("Expected files: " + expectedFiles.Count);
             var changedFiles = ApplySync(expectedFiles);
             if (changedFiles > 0)
             {
@@ -148,12 +136,12 @@ namespace AssetImporter
 
         public static List<FileInfo> CollectExpectedAssets()
         {
-            Logger.Info("Collecing expected assets");
+            Log("Collecting expected assets", true);
             List<FileInfo> expectedAssets = new();
 
             foreach (var modInfo in GameManager.instance.modManager)
             {
-                Logger.Info("Checking mod: " + modInfo.name);
+                Log("Checking mod: " + modInfo.name);
                 if (modInfo.asset.isEnabled)
                 {
                     var modDir = Path.GetDirectoryName(modInfo.asset.path);
@@ -161,7 +149,7 @@ namespace AssetImporter
                         continue;
                     if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods") && !Setting.instance.EnableLocalAssetPacks)
                     {
-                        Logger.Info($"Skipping local mod {modInfo.name} (" + modInfo.assemblyFullName + ")");
+                        Log($"Skipping local mod {modInfo.name} (" + modInfo.assemblyFullName + ")");
                         continue;
                     }
                     if (!Setting.instance.EnableSubscribedAssetPacks)
@@ -171,13 +159,13 @@ namespace AssetImporter
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
-                        Logger.Info($"Copying assets from {mod.Name} (" + modInfo.name + ")");
+                        Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
                         expectedAssets.AddRange(CollectAssetsRecursively(assetDir.FullName));
                     }
                 }
                 else
                 {
-                    Logger.Info($"Skipping disabled mod {modInfo.name} (" + modInfo.name + ")");
+                    Log($"Skipping disabled mod {modInfo.name} (" + modInfo.name + ")");
                 }
             }
 
@@ -203,31 +191,40 @@ namespace AssetImporter
             return files;
         }
 
+        private static int createdFiles;
+        private static int updatedFiles;
+        private static int deletedFiles;
+
         public static int ApplySync(List<FileInfo> expectedFiles)
         {
-            Logger.Info("Applying sync");
+            createdFiles = 0;
+            updatedFiles = 0;
+            deletedFiles = 0;
+
+            Log("Applying sync", true);
             int changedFiles = 0;
             List<string> checkedFiles = new();
 
             foreach (var file in expectedFiles)
             {
-                Logger.Info("Syncing file: " + file.FullName);
+                Log("Syncing file: " + file.FullName);
                 var targetFilePath = file.FullName.Split([@"\assets\"], StringSplitOptions.None)[1];
                 targetFilePath = Path.Combine(assetPath, targetFilePath);
-                Logger.Info("Target: " + targetFilePath);
+                Log("Target: " + targetFilePath);
                 if (!File.Exists(targetFilePath))
                 {
-                    Logger.Info("File not existing, copying...");
+                    Log("File not existing, copying...");
                     Directory.CreateDirectory(Path.GetDirectoryName(targetFilePath));
                     file.CopyTo(targetFilePath);
-                    Logger.Info($"Added file: {targetFilePath}");
+                    Log($"Added file: {targetFilePath}");
                     changedFiles++;
                     checkedFiles.Add(targetFilePath);
-                    TryAddPrefab(targetFilePath);
+                    createdFiles++;
+                    //TryAddPrefab(targetFilePath);
                 }
                 else
                 {
-                    Logger.Info("File existing, verifying...");
+                    Log("File existing, verifying...");
                     // Check if file is different
                     using StreamReader updatedReader = new StreamReader(file.FullName);
                     var updatedContent = updatedReader.ReadToEnd();
@@ -235,20 +232,21 @@ namespace AssetImporter
                     using StreamReader existingReader = new StreamReader(targetFilePath);
                     var existingContent = existingReader.ReadToEnd();
                     existingReader.Close();
-                    Logger.Info("Comparing content...");
+                    Log("Comparing content...");
                     if (updatedContent != existingContent)
                     {
-                        Logger.Info("Content is different, updating...");
+                        Log("Content is different, updating...");
                         file.CopyTo(targetFilePath, true);
-                        Logger.Info($"Updated file: {targetFilePath}");
+                        Log($"Updated file: {targetFilePath}");
+                        updatedFiles++;
                         changedFiles++;
                     }
                     else
                     {
-                        Logger.Info("Content is the same, skipping...");
+                        Log("Content is the same, skipping...");
                     }
                     checkedFiles.Add(targetFilePath);
-                    TryAddPrefab(targetFilePath);
+                    //TryAddPrefab(targetFilePath);
                 }
             }
 
@@ -257,28 +255,33 @@ namespace AssetImporter
                 if (expectedFiles.All(f => f.FullName != file) && !checkedFiles.Contains(file))
                 {
                     File.Delete(file);
-                    Logger.Info($"Deleted file: {file}");
+                    Log($"Deleted file: {file}");
                     changedFiles++;
+                    deletedFiles++;
                 }
             }
 
             return changedFiles;
         }
 
-        /*public static void DeleteImportedAssets()
+        public static void DeleteImportedAssets()
         {
             var assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
             if (Directory.Exists(assetPath))
             {
                 Directory.Delete(assetPath, true);
-                Logger.Info("Deleted CustomAssets directory");
+                Log("Deleted CustomAssets directory");
             }
-        }*/
+            NotificationSystem.Pop("asset-importer");
+            NotificationSystem.Push("asset-importer", "Deleted imported assets", "Imported assets have been deleted. Click here to sync", onClicked:() => SyncAssets());
+            if (Setting.instance.AutoHideNotifications)
+                NotificationSystem.Pop("asset-importer", 30f);
+        }
 
         private static async void SendAssetChangedNotification(int assetsChanged)
         {
-            Logger.Info("Assets have been changed. Waiting for mod manager initialization to show warning");
-            //Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
+            Log("Assets have been changed. Waiting for mod manager initialization to show warning", true);
+            //Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
 
             // Delay by 100 ms, because we have to wait for the mod manager to initialize
             while (!GameManager.instance.modManager.isInitialized)
@@ -286,14 +289,17 @@ namespace AssetImporter
                 await Task.Delay(100);
             }
 
-            NotificationSystem.Push("asset-importer", "Asset Importer",$"{assetsChanged} custom assets have been updated. Restart the game to apply changes");
+            NotificationSystem.Pop("asset-importer");
+            NotificationSystem.Push("asset-importer", $"Asset Importer ({createdFiles} created, {updatedFiles} updated, {deletedFiles} deleted)",$"Custom Assets have been changed. Restart the game to apply changes");
+            if (Setting.instance.AutoHideNotifications)
+                NotificationSystem.Pop("asset-importer", 30f);
             //GameManager.instance.modManager.RequireRestart();
-            Logger.Info("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
+            Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired, true);
         }
 
         public void OnDispose()
         {
-            Logger.Info(nameof(OnDispose));
+            Log(nameof(OnDispose));
             if (Setting.instance != null)
             {
                 Setting.instance.UnregisterInOptionsUI();
