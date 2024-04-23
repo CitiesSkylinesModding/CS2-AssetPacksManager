@@ -4,7 +4,7 @@
 Unofficial Custom Assets are highly experimental. They WILL crash your game at some point or throw errors. Create redundand copies of your savefiles and use at your own risk. There has not been a lot of testing done on custom assets, and I'm publishing this project to get feedback from the community.
 
 
-## Asset Importer
+## Asset Packs Manager (Formerly Asset Importer)
 This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the GitHub Page to find a list of currently available Asset Packs.
 
 
@@ -30,6 +30,11 @@ This section will include videos, knowledge bases and other resources to help yo
 - [Modular Subway Station Assets Pack](https://mods.paradoxplaza.com/mods/78967/Windows)
 - [Super Elementary School Upgrade Asset](https://mods.paradoxplaza.com/mods/78974/Windows)
 - [StarQ VP EU Gas Station](https://mods.paradoxplaza.com/mods/79021/Windows)
+- [Mini Elementary School](https://mods.paradoxplaza.com/mods/79313/Windows)
+- [Parking Pack](https://mods.paradoxplaza.com/mods/79326/Windows)
+- [Beach Pack](https://mods.paradoxplaza.com/mods/79222/Windows)
+- [Elevated Subway Station](https://mods.paradoxplaza.com/mods/79358/Windows)
+- [Mio Overpass Asset Pack](https://mods.paradoxplaza.com/mods/79201/Windows)
 
 
 ## Credit

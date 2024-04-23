@@ -12,7 +12,7 @@
 
 Unofficial Custom Assets are highly experimental. They WILL crash your game at some point or throw errors. Create redundant copies of your save files and use at your own risk. There has not been a lot of testing done on custom assets, and I'm publishing this project to get feedback from the community.
 
-## Asset Importer
+## Asset Packs Manager (Formerly Asset Importer)
 This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the GitHub Page to find a list of currently available Asset Packs.
 Be careful using Custom Assets and this mod. It is a very early stage
 
@@ -37,7 +37,7 @@ The code of this mod was created by Konsi and Nullpinter
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
-	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-importer.1666781/" />
+	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
 	<ModVersion Value="0.3.0" />
 	<!--Recommended version of the base game to use the mod-->
@@ -53,7 +53,7 @@ The code of this mod was created by Konsi and Nullpinter
 - Improved code structure
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
-	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetImporter" />
+	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />
 	<ExternalLink Type="discord" Url="https://discord.gg/UkKAfRqfCn" />
 	<ExternalLink Type="paypal" Url="https://www.paypal.com/paypalme/KonstantinSchwarze" />
 </Publish>
