@@ -19,11 +19,11 @@ using Unity.Entities;
 using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
 
-namespace AssetImporter
+namespace AssetPacksManager
 {
     public class Mod : IMod
     {
-        public static readonly ILog Logger = LogManager.GetLogger($"{nameof(AssetImporter)}.{nameof(Mod)}")
+        public static readonly ILog Logger = LogManager.GetLogger($"{nameof(AssetPacksManager)}.{nameof(Mod)}")
             .SetShowsErrorsInUI(false);
 
         [CanBeNull] public string ModPath { get; set; }
@@ -44,7 +44,7 @@ namespace AssetImporter
             Setting setting = new (this);
             setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
-            AssetDatabase.global.LoadSettings(nameof(AssetImporter), setting, new Setting(this));
+            AssetDatabase.global.LoadSettings(nameof(AssetPacksManager), setting, new Setting(this));
             setting.HiddenSetting = false;
             Setting.instance = setting;
 
@@ -250,14 +250,17 @@ namespace AssetImporter
                 }
             }
 
-            foreach (string file in Directory.EnumerateFiles(assetPath, "*.*", SearchOption.AllDirectories))
+            if (Setting.instance.DeleteUnusedFiles)
             {
-                if (expectedFiles.All(f => f.FullName != file) && !checkedFiles.Contains(file))
+                foreach (string file in Directory.EnumerateFiles(assetPath, "*.*", SearchOption.AllDirectories))
                 {
-                    File.Delete(file);
-                    Log($"Deleted file: {file}");
-                    changedFiles++;
-                    deletedFiles++;
+                    if (expectedFiles.All(f => f.FullName != file) && !checkedFiles.Contains(file))
+                    {
+                        File.Delete(file);
+                        Log($"Deleted file: {file}");
+                        changedFiles++;
+                        deletedFiles++;
+                    }
                 }
             }
 
@@ -272,10 +275,11 @@ namespace AssetImporter
                 Directory.Delete(assetPath, true);
                 Log("Deleted CustomAssets directory");
             }
-            NotificationSystem.Pop("asset-importer");
-            NotificationSystem.Push("asset-importer", "Deleted imported assets", "Imported assets have been deleted. Click here to sync", onClicked:() => SyncAssets());
+            float delay = 30f;
+            NotificationSystem.Pop("asset-packs-manager");
             if (Setting.instance.AutoHideNotifications)
-                NotificationSystem.Pop("asset-importer", 30f);
+                delay = 10000f;
+            NotificationSystem.Pop("asset-packs-manager", delay, title:"Deleted imported assets", text:"Imported assets have been deleted. Click here to sync", onClicked:() => SyncAssets());
         }
 
         private static async void SendAssetChangedNotification(int assetsChanged)
@@ -289,12 +293,13 @@ namespace AssetImporter
                 await Task.Delay(100);
             }
 
-            NotificationSystem.Pop("asset-importer");
-            NotificationSystem.Push("asset-importer", $"Asset Importer ({createdFiles} created, {updatedFiles} updated, {deletedFiles} deleted)",$"Custom Assets have been changed. Restart the game to apply changes");
+            float delay = 30f;
+            NotificationSystem.Pop("asset-packs-manager");
             if (Setting.instance.AutoHideNotifications)
-                NotificationSystem.Pop("asset-importer", 30f);
+                delay = 10000f;
+            NotificationSystem.Pop("asset-packs-manager", delay, title:$"Asset Importer ({createdFiles} created, {updatedFiles} updated, {deletedFiles} deleted)", text: $"Custom Assets have been changed. Restart the game to apply changes");
             //GameManager.instance.modManager.RequireRestart();
-            Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired, true);
+            //Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired, true);
         }
 
         public void OnDispose()

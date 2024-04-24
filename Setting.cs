@@ -7,9 +7,9 @@ using Game.UI;
 using Game.UI.Widgets;
 using System.Collections.Generic;
 
-namespace AssetImporter
+namespace AssetPacksManager
 {
-    [FileLocation(nameof(AssetImporter))]
+    [FileLocation(nameof(AssetPacksManager))]
     [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup)]
     [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup)]
     public class Setting : ModSetting
@@ -63,7 +63,7 @@ namespace AssetImporter
         public override void SetDefaults()
         {
             HiddenSetting = true;
-            EnableLocalAssetPacks = true;
+            EnableLocalAssetPacks = false;
             EnableSubscribedAssetPacks = true;
             DeleteUnusedFiles = true;
             EnableVerboseLogging = false;
@@ -85,7 +85,7 @@ namespace AssetImporter
         {
             return new Dictionary<string, string>
             {
-                {m_Setting.GetSettingsLocaleID(), nameof(AssetImporter)},
+                {m_Setting.GetSettingsLocaleID(), nameof(AssetPacksManager)},
                 { m_Setting.GetOptionTabLocaleID(Setting.kSection), "Main" },
 
                 { m_Setting.GetOptionGroupLocaleID(Setting.kSettingsGroup), "Synchronization" },
@@ -124,7 +124,7 @@ namespace AssetImporter
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteImportedAssets)), "Delete imported assets"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteImportedAssets)),
-                    $"Deletes all imported asset packs from your game directory. Please manually sync assets to re-import them. You will need to restart the game after syncing assets. If you don't choose to sync manually, you will have to restart the game **TWICE**."
+                    $"Deletes all imported asset packs from your game directory. Please manually sync assets to re-import them. You will need to restart the game after syncing assets. If you don't choose to sync manually, you will have to restart the game TWICE."
                 },
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteImportedAssets)),

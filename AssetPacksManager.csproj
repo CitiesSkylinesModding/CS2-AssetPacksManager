@@ -15,12 +15,15 @@
         <!--Your-PDX-Account-Pa$$word-->
         <PDXAccountDataPath>$(USERPROFILE)\Desktop\pdx_account.txt</PDXAccountDataPath>
 
+        <!--<AdditionalFilesDirectory>Resources</AdditionalFilesDirectory>-->
+
         <!--The file where mod information which is required for publishing mod on PDX mods are stored-->
         <PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
-        <AssemblyVersion>0.3.0</AssemblyVersion>
-        <FileVersion>0.3.0</FileVersion>
+        <AssemblyVersion>0.3.1</AssemblyVersion>
+        <FileVersion>0.3.1</FileVersion>
         <LangVersion>default</LangVersion>
-        <Version>0.3.0</Version>
+        <Version>0.3.1</Version>
+        <Authors>Konsi</Authors>
     </PropertyGroup>
 
     <!--Imports must be after PropertyGroup block-->

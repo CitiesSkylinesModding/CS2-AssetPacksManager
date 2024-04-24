@@ -34,24 +34,22 @@ The code of this mod was created by Konsi and Nullpinter
 	<!--Thumbnail-->
 	<Thumbnail Value="Properties/Thumbnail.png" />
 	<!--Screenshot, can be set multiple times-->
-	<Screenshot Value="" />
+	<Screenshot Value="Properties/settings.png" />
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="0.3.0" />
+	<ModVersion Value="0.3.1" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.1.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Added support for playsets (require **two restarts**)
-- Added support for deleting unused assets
-- Added ingame notifications
-- Added more options
-- Improved code structure
+- Update Settings Section to Asset Pack Manager
+- Update namespaces
+- Fix Notification localization display
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />
