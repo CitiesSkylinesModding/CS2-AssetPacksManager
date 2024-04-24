@@ -1,7 +1,7 @@
 
 ## DISCLAIMER
 
-Unofficial Custom Assets are highly experimental. They WILL crash your game at some point or throw errors. Create redundand copies of your savefiles and use at your own risk. There has not been a lot of testing done on custom assets, and I'm publishing this project to get feedback from the community.
+Unofficial Custom Assets are highly experimental. They WILL crash your game at some point or throw errors. Create redundant copies of your save files and use at your own risk. There has not been a lot of testing done on custom assets, and I'm publishing this project to get feedback from the community.
 
 
 ## Asset Packs Manager (Formerly Asset Importer)
@@ -14,6 +14,7 @@ There is also a notification in the main menu to restart the game if needed.
 
 
 ## Features
+- Support for Playsets
 - Support for Thumbnails
 - Support for Localization (Using L18N Everywhere)
 

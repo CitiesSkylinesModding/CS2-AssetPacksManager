@@ -21,6 +21,7 @@ Subscribe -> Start Game -> Close Game -> Start Game
 There is also a notification in the main menu to restart the game if needed.
 
 ## Features
+- Support for Playsets
 - Support for Thumbnails
 - Support for Localization (Using L18N Everywhere)
 
