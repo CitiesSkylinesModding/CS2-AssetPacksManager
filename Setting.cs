@@ -10,8 +10,8 @@ using System.Collections.Generic;
 namespace AssetPacksManager
 {
     [FileLocation(nameof(AssetPacksManager))]
-    [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup)]
-    [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup)]
+    [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup, kMiscGroup)]
+    [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup, kMiscGroup)]
     public class Setting : ModSetting
     {
 
@@ -38,11 +38,6 @@ namespace AssetPacksManager
         [SettingsUISection(kSection, kSettingsGroup)]
         public bool DeleteUnusedFiles { get; set; }
 
-        [SettingsUISection(kSection, kMiscGroup)]
-        public bool EnableVerboseLogging { get; set; }
-
-        [SettingsUISection(kSection, kMiscGroup)]
-        public bool AutoHideNotifications { get; set; }
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
@@ -59,6 +54,20 @@ namespace AssetPacksManager
         {
             set { Mod.SyncAssets(); }
         }
+
+        [SettingsUIButton]
+        [SettingsUIConfirmation]
+        [SettingsUISection(kSection, kActionsGroup)]
+        public bool DeleteModsCache
+        {
+            set { Mod.DeleteModsCache(); }
+        }
+
+        [SettingsUISection(kSection, kMiscGroup)]
+        public bool EnableVerboseLogging { get; set; }
+
+        [SettingsUISection(kSection, kMiscGroup)]
+        public bool AutoHideNotifications { get; set; }
 
         public override void SetDefaults()
         {
@@ -85,11 +94,12 @@ namespace AssetPacksManager
         {
             return new Dictionary<string, string>
             {
-                {m_Setting.GetSettingsLocaleID(), nameof(AssetPacksManager)},
+                {m_Setting.GetSettingsLocaleID(), "Asset Packs Manager"},
                 { m_Setting.GetOptionTabLocaleID(Setting.kSection), "Main" },
 
                 { m_Setting.GetOptionGroupLocaleID(Setting.kSettingsGroup), "Synchronization" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kActionsGroup), "Actions" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kMiscGroup), "Miscellaneous" },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableLocalAssetPacks)), "Enable Local Asset Packs"},
                 {
@@ -139,6 +149,16 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.SyncAssets)),
                     $"Are you sure you want to re-import all asset packs?"
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsCache)), "Delete Mods Cache"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsCache)),
+                    $"Sometimes helps the issue of missing CID-Files. Deletes the cache of downloaded PDX Mods. This will close the game immediately. It will not change your playset, but will require to re-download all mods on the next startup. This might take a few minutes depending on the amount of subscribed mods."
+                },
+                {
+                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteModsCache)),
+                    $"**WARNING. This will close your game!** Are you sure you want to delete the mods cache? This cannot be undone."
                 },
             };
         }

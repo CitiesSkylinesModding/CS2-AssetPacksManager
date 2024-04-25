@@ -8,6 +8,7 @@ using Game;
 using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
+using Colossal.Json;
 using Colossal.PSI.Environment;
 using Colossal.UI;
 using Game.Debug;
@@ -16,6 +17,7 @@ using Game.PSI;
 using Game.Simulation;
 using JetBrains.Annotations;
 using Unity.Entities;
+using UnityEngine;
 using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
 
@@ -28,9 +30,12 @@ namespace AssetPacksManager
 
         [CanBeNull] public string ModPath { get; set; }
 
-        private PrefabSystem prefabSystem;
+        private static PrefabSystem prefabSystem;
 
         private static string assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+
+        // Each mod has a dict entry that contains the missing cid prefabs
+        private static Dictionary<string, List<string>> missingCids = new();
         
         public void OnLoad(UpdateSystem updateSystem)
         {
@@ -48,6 +53,8 @@ namespace AssetPacksManager
             setting.HiddenSetting = false;
             Setting.instance = setting;
 
+            prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
+
             if (!Directory.Exists(assetPath))
             {
                 Directory.CreateDirectory(assetPath);
@@ -62,13 +69,77 @@ namespace AssetPacksManager
 
             //AssetDatabase.user.AddAsset(path);
 
+            DatabaseExperiment();
+            return;
             SyncAssets();
+
+            foreach(string key in missingCids.Keys)
+            {
+                NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"The mod {key.Split(',')[0]} is missing CID for {missingCids[key].Count} prefabs.");
+            }
         }
 
         private static void Log(string message, bool alwaysLog = false)
         {
             if (Setting.instance.EnableVerboseLogging || alwaysLog)
                 Logger.Info(message);
+        }
+
+        private static void DatabaseExperiment()
+        {
+            /*var name = AssetDataPath.Create("Mods/SmallFireHouse01", "SmallFireHouse01");
+            new PrefabAsset();
+            var prefab = new GameObject("SmallFireHouse01");
+            PrefabAssetExtensions.AddAsset(AssetDatabase.game, name, prefab);*/
+
+            foreach (PrefabAsset p in AssetDatabase.global.GetAssets<PrefabAsset>())
+            {
+                Logger.Info("I Name: " + p.name);
+                Logger.Info("I Path: " + p.path);
+                Logger.Info("I SubPath: " + p.subPath);
+            }
+
+            var relativePath = "Mods/CustomAssets/SmallFireHouse01";
+            var fileName = "SmallFireHouse01";
+
+            var path = AssetDataPath.Create(relativePath, fileName);
+            Logger.Info("Subpath: " + path.subPath);
+            Logger.Info("Ext: " + path.extension);
+            Logger.Info("AssetName: " + path.assetName);
+            Logger.Info("ToPath: " + path.ToPath(new FileSystemDataSource.PathEscapePolicy()));
+            Logger.Info("ToFileName: " + path.ToFilename(new FileSystemDataSource.PathEscapePolicy()));
+            var cidFilename = Path.Combine(EnvPath.kGameDataPath, "StreamingAssets", relativePath, (fileName + ".Prefab.cid"));
+            using StreamReader sr = new StreamReader(cidFilename);
+            var guid = new Guid(sr.ReadToEnd());
+            sr.Close();
+            AssetDatabase.game.AddAsset<PrefabAsset>(path, guid);
+            Logger.Info("Prefab added successfully");
+
+            foreach (PrefabAsset prefabAsset in AssetDatabase.game.GetAssets<PrefabAsset>())
+            {
+                try
+                {
+                    Logger.Info("I Name: " + prefabAsset.name);
+                    Logger.Info("I Path: " + prefabAsset.path);
+                    Logger.Info("I SubPath: " + prefabAsset.subPath);
+                    Logger.Info("AssetName: " + path.assetName);
+                    PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
+                    Logger.Info("Loaded Prefab");
+                    prefabSystem.AddPrefab(prefabBase, null, null, null);
+                    Logger.Info("Added to Prefab System");
+                }
+                catch (DirectoryNotFoundException e)
+                {
+                    Logger.Error("Message: " + e.Message);
+                    Logger.Error("Stack: " + e.StackTrace);
+                    if (e.InnerException != null)
+                    {
+                        Logger.Error("Inner: " + e.InnerException.Message);
+                        Logger.Error("InnerStack: " + e.InnerException.StackTrace);
+                        Logger.Error(e.ToJSONString());
+                    }
+                }
+            }
         }
 
 
@@ -97,7 +168,7 @@ namespace AssetPacksManager
         }
 
 
-        private static void DumpAssets(string name)
+        private static void DumpAssets(string name, string path)
         {
             var x = AssetDatabase.game.AllAssets().GetEnumerator();
             string s = "";
@@ -105,8 +176,6 @@ namespace AssetPacksManager
             {
                 s += x.Current?.name + " " + x.Current?.database.name + "\n";
             }
-
-            var path = "C:/Users/Konsi/Documents/CS2-Modding/CS2-AssetImporter/AssetsDump" + name + ".txt";
 
             // Create file
             using (StreamWriter sw = File.CreateText(path))
@@ -117,6 +186,7 @@ namespace AssetPacksManager
 
         public static void SyncAssets()
         {
+            missingCids.Clear();
             Log("Starting Asset Sync", true);
             Log("Asset Path: " + assetPath);
             if (!Directory.Exists(assetPath))
@@ -142,25 +212,32 @@ namespace AssetPacksManager
             foreach (var modInfo in GameManager.instance.modManager)
             {
                 Log("Checking mod: " + modInfo.name);
+                var assemblyName = modInfo.name.Split(',')[0];
+                var modDir = Path.GetDirectoryName(modInfo.asset.path);
+                var mod = new DirectoryInfo(modDir);
+                if (modDir == null)
+                    continue;
+                if (assemblyName == "CustomAssetPack")
+                {
+                    Logger.Warn($"Mod {modInfo.asset.name} is using default name");
+
+                    NotificationSystem.Push(Guid.NewGuid().ToString(), title:$"Mod {mod.Name} is using default name", text:$"Please contact the developer of this mod to change the assembly name to something unique");
+                }
                 if (modInfo.asset.isEnabled)
                 {
-                    var modDir = Path.GetDirectoryName(modInfo.asset.path);
-                    if (modDir == null)
-                        continue;
                     if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods") && !Setting.instance.EnableLocalAssetPacks)
                     {
-                        Log($"Skipping local mod {modInfo.name} (" + modInfo.assemblyFullName + ")");
+                        Log($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
                         continue;
                     }
                     if (!Setting.instance.EnableSubscribedAssetPacks)
                         continue;
-
-                    var mod = new DirectoryInfo(modDir);
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
                         Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
-                        expectedAssets.AddRange(CollectAssetsRecursively(assetDir.FullName));
+
+                        expectedAssets.AddRange(CollectAssetsRecursively(assetDir.FullName, modInfo.name));
                     }
                 }
                 else
@@ -172,7 +249,7 @@ namespace AssetPacksManager
             return expectedAssets;
         }
 
-        private static List<FileInfo> CollectAssetsRecursively(string directory)
+        private static List<FileInfo> CollectAssetsRecursively(string directory, string modName)
         {
             List<FileInfo> files = new();
             var dir = new DirectoryInfo(directory);
@@ -182,11 +259,27 @@ namespace AssetPacksManager
             DirectoryInfo[] dirs = dir.GetDirectories();
             foreach (FileInfo file in dir.GetFiles())
             {
+                if (file.Extension == ".Prefab")
+                {
+                    if (!File.Exists(file.FullName + ".cid"))
+                    {
+                        Logger.Warn("Prefab has no CID: " + file.FullName);
+                        if (missingCids.ContainsKey(modName))
+                        {
+                            missingCids[modName].Add(file.Name);
+                        }
+                        else
+                        {
+                            missingCids.Add(modName, new List<string> {file.Name});
+                        }
+                        continue;
+                    }
+                }
                 files.Add(file);
             }
             foreach (DirectoryInfo subDir in dirs)
             {
-                files.AddRange(CollectAssetsRecursively(subDir.FullName));
+                files.AddRange(CollectAssetsRecursively(subDir.FullName, modName));
             }
             return files;
         }
@@ -310,6 +403,28 @@ namespace AssetPacksManager
                 Setting.instance.UnregisterInOptionsUI();
                 Setting.instance = null;
             }
+        }
+
+        public static void DeleteModsCache()
+        {
+            var foldersToDelete = new[] {
+                Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_subscribed"),
+                Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_unmanaged"),
+                Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_workInProgress")
+            };
+
+            Logger.Info("Deleting Mods Cache");
+            foreach (var folder in foldersToDelete)
+            {
+                if (Directory.Exists(folder))
+                {
+                    Directory.Delete(folder, true);
+                    Logger.Info($"Deleted folder: {folder}");
+                }
+            }
+
+            Logger.Info("Closing Game...");
+            Application.Quit(0);
         }
     }
 }
