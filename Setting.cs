@@ -38,23 +38,6 @@ namespace AssetPacksManager
         [SettingsUISection(kSection, kSettingsGroup)]
         public bool DeleteUnusedFiles { get; set; }
 
-
-        [SettingsUIButton]
-        [SettingsUIConfirmation]
-        [SettingsUISection(kSection, kActionsGroup)]
-        public bool DeleteImportedAssets
-        {
-            set { Mod.DeleteImportedAssets(); }
-        }
-
-        [SettingsUIButton]
-        [SettingsUIConfirmation]
-        [SettingsUISection(kSection, kActionsGroup)]
-        public bool SyncAssets
-        {
-            set { Mod.SyncAssets(); }
-        }
-
         [SettingsUIButton]
         [SettingsUIConfirmation]
         [SettingsUISection(kSection, kActionsGroup)]
@@ -129,26 +112,6 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.AutoHideNotifications)),
                     $"Automatically hides Asset Importer Notifications after 30 seconds."
-                },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteImportedAssets)), "Delete imported assets"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteImportedAssets)),
-                    $"Deletes all imported asset packs from your game directory. Please manually sync assets to re-import them. You will need to restart the game after syncing assets. If you don't choose to sync manually, you will have to restart the game TWICE."
-                },
-                {
-                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteImportedAssets)),
-                    $"Are you sure you want to delete all imported asset packs? \nPlease manually sync assets to re-import them. You will need to restart the game after syncing assets. If you don't choose to sync manually, you will have to restart the game **TWICE**."
-                },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.SyncAssets)), "Re-Import subscribed assets"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.SyncAssets)),
-                    $"Copies all the downloaded asset packs to your game directory again. This will overwrite any existing assets"
-                },
-                {
-                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.SyncAssets)),
-                    $"Are you sure you want to re-import all asset packs?"
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsCache)), "Delete Mods Cache"},
