@@ -69,7 +69,9 @@ namespace AssetPacksManager
 
             //AssetDatabase.user.AddAsset(path);
 
-            DatabaseExperiment();
+            LoadModAssets();
+
+            //DatabaseExperiment();
             return;
             SyncAssets();
 
@@ -77,6 +79,157 @@ namespace AssetPacksManager
             {
                 NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"The mod {key.Split(',')[0]} is missing CID for {missingCids[key].Count} prefabs.");
             }
+        }
+
+        private static void LoadAssets(Dictionary<string, List<FileInfo>> modAssets)
+        {
+            foreach(var mod in modAssets)
+            {
+                foreach (var file in mod.Value)
+                {
+                    Logger.Info("Loading File: " + file.FullName);
+
+                    var absolutePath = file.FullName;
+                    //var absolutePath = "C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/Rural Welfare Office.Prefab";
+                    //var relativePath = ".cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/";
+
+                    // Replace backslashes with forward slashes
+                    absolutePath = absolutePath.Replace('\\', '/');
+                    // get relative path from absolute path
+                    var relativePath = absolutePath.Replace(EnvPath.kUserDataPath + "/", "");
+                    // Remove content after last / from relative path
+                    relativePath = relativePath.Substring(0, relativePath.LastIndexOf('/'));
+
+                    //var fileName = "SmallFireHouse01";
+                    var fileName = Path.GetFileNameWithoutExtension(file.FullName);
+
+                    var path = AssetDataPath.Create(relativePath, fileName);
+
+                    var cidFilename = EnvPath.kUserDataPath + "\\" + relativePath + "\\" + fileName + ".Prefab.cid";
+                    Logger.Info("Rel Path: " + relativePath);
+                    Logger.Info("CID Path: " + cidFilename);
+                    using StreamReader sr = new StreamReader(cidFilename);
+                    var guid = new Guid(sr.ReadToEnd());
+                    sr.Close();
+                    AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
+                    Logger.Info("Prefab added to database successfully");
+                }
+            }
+
+            foreach (PrefabAsset prefabAsset in AssetDatabase.user.GetAssets<PrefabAsset>())
+            {
+                try
+                {
+                    Logger.Info("I Name: " + prefabAsset.name);
+                    Logger.Info("I Path: " + prefabAsset.path);
+                    Logger.Info("I SubPath: " + prefabAsset.subPath);
+                    PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
+                    Logger.Info("Loaded Prefab");
+                    prefabSystem.AddPrefab(prefabBase, null, null, null);
+                    Logger.Info("Added to Prefab System");
+                }
+                catch (DirectoryNotFoundException e)
+                {
+                    Logger.Error("Message: " + e.Message);
+                    Logger.Error("Stack: " + e.StackTrace);
+                    if (e.InnerException != null)
+                    {
+                        Logger.Error("Inner: " + e.InnerException.Message);
+                        Logger.Error("InnerStack: " + e.InnerException.StackTrace);
+                        Logger.Error(e.ToJSONString());
+                    }
+                }
+            }
+        }
+
+        private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, string modName)
+        {
+            List<FileInfo> files = new();
+            var dir = new DirectoryInfo(directory);
+            if (!dir.Exists)
+                Logger.Error($"Source directory not found: {dir.FullName}");
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                if (file.Extension == ".Prefab")
+                {
+                    if (!File.Exists(file.FullName + ".cid"))
+                    {
+                        Logger.Warn("Prefab has no CID: " + file.FullName);
+                        if (missingCids.ContainsKey(modName))
+                        {
+                            missingCids[modName].Add(file.Name);
+                        }
+                        else
+                        {
+                            missingCids.Add(modName, new List<string> {file.Name});
+                        }
+                        continue;
+                    }
+                    files.Add(file);
+                }
+            }
+            foreach (DirectoryInfo subDir in dirs)
+            {
+                files.AddRange(GetPrefabsFromDirectoryRecursively(subDir.FullName, modName));
+            }
+            return files;
+        }
+
+        private static void LoadModAssets()
+        {
+            foreach (PrefabAsset p in AssetDatabase.global.GetAssets<PrefabAsset>())
+            {
+                Logger.Info("I Name: " + p.name);
+                Logger.Info("I Path: " + p.path);
+                Logger.Info("I SubPath: " + p.subPath);
+            }
+
+
+            Dictionary<string, List<FileInfo>> modAssets = new();
+            foreach (var modInfo in GameManager.instance.modManager)
+            {
+                Log($"Checking mod {modInfo.name}");
+                var assemblyName = modInfo.name.Split(',')[0];
+                var modDir = Path.GetDirectoryName(modInfo.asset.path);
+                var mod = new DirectoryInfo(modDir);
+                if (modDir == null)
+                    continue;
+                if (assemblyName == "CustomAssetPack")
+                {
+                    Logger.Warn($"Mod {modInfo.asset.name} is using default name");
+
+                    NotificationSystem.Push(Guid.NewGuid().ToString(), title:$"Mod {mod.Name} is using default name", text:$"Please contact the developer of this mod to change the assembly name to something unique");
+                }
+                if (modInfo.asset.isEnabled)
+                {
+                    if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods") && !Setting.instance.EnableLocalAssetPacks)
+                    {
+                        Log($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
+                        continue;
+                    }
+                    if (!Setting.instance.EnableSubscribedAssetPacks)
+                        continue;
+                    var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
+                    if (assetDir.Exists)
+                    {
+                        if (!modAssets.ContainsKey(mod.Name))
+                            modAssets.Add(mod.Name, new List<FileInfo>());
+                        Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
+                        var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
+                        Logger.Info("Found " + assetsFromMod.Count + " assets from mod");
+                        modAssets[mod.Name].AddRange(assetsFromMod);
+                    }
+                }
+                else
+                {
+                    Log($"Skipping disabled mod {modInfo.name} (" + modInfo.name + ")");
+                }
+            }
+
+            Log("All mod prefabs have been collected. Adding to database now.");
+            LoadAssets(modAssets);
         }
 
         private static void Log(string message, bool alwaysLog = false)
