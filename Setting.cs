@@ -35,9 +35,6 @@ namespace AssetPacksManager
         [SettingsUISection(kSection, kSettingsGroup)]
         public bool EnableSubscribedAssetPacks { get; set; }
 
-        [SettingsUISection(kSection, kSettingsGroup)]
-        public bool DeleteUnusedFiles { get; set; }
-
         [SettingsUIButton]
         [SettingsUIConfirmation]
         [SettingsUISection(kSection, kActionsGroup)]
@@ -57,7 +54,6 @@ namespace AssetPacksManager
             HiddenSetting = true;
             EnableLocalAssetPacks = false;
             EnableSubscribedAssetPacks = true;
-            DeleteUnusedFiles = true;
             EnableVerboseLogging = false;
             AutoHideNotifications = true;
         }
@@ -94,12 +90,6 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableSubscribedAssetPacks)),
                     $"Enables the import of subscribed asset packs."
-                },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteUnusedFiles)), "Delete unused files"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteUnusedFiles)),
-                    $"Deletes all unused files in the CustomAssets folder."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableVerboseLogging)), "Enable Verbose Logging"},

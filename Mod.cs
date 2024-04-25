@@ -32,7 +32,7 @@ namespace AssetPacksManager
 
         private static PrefabSystem prefabSystem;
 
-        private static string assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
+        //private static string assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
 
         // Each mod has a dict entry that contains the missing cid prefabs
         private static Dictionary<string, List<string>> missingCids = new();
@@ -55,13 +55,12 @@ namespace AssetPacksManager
 
             prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
 
-            if (!Directory.Exists(assetPath))
+            /*if (!Directory.Exists(assetPath))
             {
                 Directory.CreateDirectory(assetPath);
             }
-            UIManager.defaultUISystem.AddHostLocation("customassets", assetPath);
-            UIManager.defaultUISystem.AddHostLocation("customassets", "C:/Users/Konsi/Desktop");
             Log("Added custom assets COUI location");
+            */
 
             LoadModAssets();
             foreach(string key in missingCids.Keys)
@@ -195,6 +194,7 @@ namespace AssetPacksManager
                     {
                         if (!modAssets.ContainsKey(mod.Name))
                             modAssets.Add(mod.Name, new List<FileInfo>());
+                        UIManager.defaultUISystem.AddHostLocation("customassets", assetDir.FullName);
                         Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
                         var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
                         Logger.Info("Found " + assetsFromMod.Count + " assets from mod");
