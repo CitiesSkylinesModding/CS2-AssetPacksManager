@@ -16,14 +16,14 @@ Unofficial Custom Assets are highly experimental. They WILL crash your game at s
 This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the GitHub Page to find a list of currently available Asset Packs.
 Be careful using Custom Assets and this mod. It is a very early stage
 
-### Please note you have to restart the game after subscribing to an Asset Pack
-Subscribe -> Start Game -> Close Game -> Start Game
-There is also a notification in the main menu to restart the game if needed.
-
 ## Features
 - Support for Playsets
 - Support for Thumbnails
 - Support for Localization (Using L18N Everywhere)
+
+## Planned Features
+- Create reports with broken/missing assets
+- Enable/Disable Asset Packs ingame
 
 ## Resources for Asset Creation
 This section will include videos, knowledge bases and other resources to help you create your own assets.
@@ -34,22 +34,24 @@ The code of this mod was created by Konsi and Nullpinter
 	<!--Thumbnail-->
 	<Thumbnail Value="Properties/Thumbnail.png" />
 	<!--Screenshot, can be set multiple times-->
-	<Screenshot Value="Properties/settings.png" />
+	<Screenshot Value="Properties/Thumbnail.png" />
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="0.3.1" />
+	<ModVersion Value="1.0.0" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.1.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Update Settings Section to Asset Pack Manager
-- Update namespaces
-- Fix Notification localization display
+** All existing Asset Packs are still compatible with this version **
+- Assets are now being loaded into the database instead of being copied!
+- Removed Syncing Options (no longer needed)
+- Removed having to restart the game multiple times
+- Add information about assets that were unable to be loaded
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />

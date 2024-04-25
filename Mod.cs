@@ -62,43 +62,71 @@ namespace AssetPacksManager
             Log("Added custom assets COUI location");
             */
 
+            // TODO: Legacy deletion of custom assets
+            try
+            {
+                string customAssetsDir = $"{EnvPath.kUserDataPath}/CustomAssets";
+                if (Directory.Exists(customAssetsDir))
+                {
+                    Directory.Move(customAssetsDir,  "C:/Users/" + Environment.UserName + "/Desktop/CustomAssets_backup");
+                    NotificationSystem.Push("APM-legacy", "Custom Assets folder moved, restart game", "The Custom Assets is no longer being used and has been moved to Desktop. You may need to restart the game");
+                }
+            }
+            catch (Exception x)
+            {
+
+            }
+
+
             LoadModAssets();
+            SendAssetNotification();
             foreach(string key in missingCids.Keys)
             {
-                NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"The mod {key.Split(',')[0]} is missing CID for {missingCids[key].Count} prefabs.");
+                NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"{key.Split(',')[0]} is missing CID for {missingCids[key].Count} prefabs. Delete mods cache or contact Asset Creator");
             }
         }
 
+        private static int loaded;
+        private static int notLoaded;
         private static void LoadAssets(Dictionary<string, List<FileInfo>> modAssets)
         {
+            loaded = 0;
+            notLoaded = 0;
             foreach(var mod in modAssets)
             {
                 foreach (var file in mod.Value)
                 {
-                    Logger.Info("Loading File: " + file.FullName);
+                    try
+                    {
+                        Logger.Info("Loading File: " + file.FullName);
 
-                    var absolutePath = file.FullName;
-                    //var absolutePath = "C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/Rural Welfare Office.Prefab";
-                    //var relativePath = ".cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/";
+                        var absolutePath = file.FullName;
+                        //var absolutePath = "C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/Rural Welfare Office.Prefab";
+                        //var relativePath = ".cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/";
 
-                    // Replace backslashes with forward slashes
-                    absolutePath = absolutePath.Replace('\\', '/');
-                    // get relative path from absolute path
-                    var relativePath = absolutePath.Replace(EnvPath.kUserDataPath + "/", "");
-                    // Remove content after last / from relative path
-                    relativePath = relativePath.Substring(0, relativePath.LastIndexOf('/'));
+                        // Replace backslashes with forward slashes
+                        absolutePath = absolutePath.Replace('\\', '/');
+                        // get relative path from absolute path
+                        var relativePath = absolutePath.Replace(EnvPath.kUserDataPath + "/", "");
+                        // Remove content after last / from relative path
+                        relativePath = relativePath.Substring(0, relativePath.LastIndexOf('/'));
 
-                    //var fileName = "SmallFireHouse01";
-                    var fileName = Path.GetFileNameWithoutExtension(file.FullName);
+                        //var fileName = "SmallFireHouse01";
+                        var fileName = Path.GetFileNameWithoutExtension(file.FullName);
 
-                    var path = AssetDataPath.Create(relativePath, fileName);
+                        var path = AssetDataPath.Create(relativePath, fileName);
 
-                    var cidFilename = EnvPath.kUserDataPath + "\\" + relativePath + "\\" + fileName + ".Prefab.cid";
-                    using StreamReader sr = new StreamReader(cidFilename);
-                    var guid = new Guid(sr.ReadToEnd());
-                    sr.Close();
-                    AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
-                    Logger.Info("Prefab added to database successfully");
+                        var cidFilename = EnvPath.kUserDataPath + "\\" + relativePath + "\\" + fileName + ".Prefab.cid";
+                        using StreamReader sr = new StreamReader(cidFilename);
+                        var guid = new Guid(sr.ReadToEnd());
+                        sr.Close();
+                        AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
+                        Log("Prefab added to database successfully");
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Warn($"Asset {file} could not be loaded: {e.Message}");
+                    }
                 }
             }
 
@@ -106,24 +134,25 @@ namespace AssetPacksManager
             {
                 try
                 {
-                    // Logger.Info("I Name: " + prefabAsset.name);
-                    // Logger.Info("I Path: " + prefabAsset.path);
+                    Log("Asset Name: " + prefabAsset.name);
+                    Log("Asset Path: " + prefabAsset.path);
                     // Logger.Info("I SubPath: " + prefabAsset.subPath);
                     PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
                     Log("Loaded Prefab");
                     prefabSystem.AddPrefab(prefabBase, null, null, null);
                     Log("Added to Prefab System");
+                    loaded++;
                 }
                 catch (Exception e)
                 {
-                    Logger.Error("Message: " + e.Message);
-                    Logger.Error("Stack: " + e.StackTrace);
-                    if (e.InnerException != null)
+                    notLoaded++;
+                    Logger.Error("Please see AssetPacksManager Log for details. Asset " + prefabAsset.name + " could not be added to DB: " + e.Message + "\nStacktrace: " + e.StackTrace);
+                    /*if (e.InnerException != null)
                     {
                         Logger.Error("Inner: " + e.InnerException.Message);
                         Logger.Error("InnerStack: " + e.InnerException.StackTrace);
                         Logger.Error(e.ToJSONString());
-                    }
+                    }*/
                 }
             }
         }
@@ -217,11 +246,8 @@ namespace AssetPacksManager
                 Logger.Info(message);
         }
 
-        /*private static async void SendAssetChangedNotification(int assetsChanged)
+        private static async void SendAssetNotification()
         {
-            Log("Assets have been changed. Waiting for mod manager initialization to show warning", true);
-            //Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired);
-
             // Delay by 100 ms, because we have to wait for the mod manager to initialize
             while (!GameManager.instance.modManager.isInitialized)
             {
@@ -232,10 +258,13 @@ namespace AssetPacksManager
             NotificationSystem.Pop("asset-packs-manager");
             if (Setting.instance.AutoHideNotifications)
                 delay = 10000f;
-            NotificationSystem.Pop("asset-packs-manager", delay, title:$"Asset Importer ({createdFiles} created, {updatedFiles} updated, {deletedFiles} deleted)", text: $"Custom Assets have been changed. Restart the game to apply changes");
+            var text = "All custom assets have been loaded successfully. Loaded: " + loaded;
+            if (notLoaded > 0)
+                text = "Some assets could not be loaded. Loaded: " + loaded + " Not Loaded: " + notLoaded;
+            NotificationSystem.Pop("asset-packs-manager", delay, title:$"Asset Packs Manager", text: text);
             //GameManager.instance.modManager.RequireRestart();
             //Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired, true);
-        }*/
+        }
 
         public void OnDispose()
         {
