@@ -25,7 +25,8 @@ namespace AssetPacksManager
 {
     public class Mod : IMod
     {
-        public static readonly ILog Logger = LogManager.GetLogger($"{nameof(AssetPacksManager)}.{nameof(Mod)}")
+        private static readonly string logFileName = $"{nameof(AssetPacksManager)}.{nameof(Mod)}";
+        public static readonly ILog Logger = LogManager.GetLogger(logFileName)
             .SetShowsErrorsInUI(false);
 
         [CanBeNull] public string ModPath { get; set; }
@@ -77,13 +78,53 @@ namespace AssetPacksManager
 
             }
 
+            LoadModAssetsInForeground();
+            if (Setting.instance.ShowWarningForLocalAssets)
+            {
+                int localAssets = FindLocalAssets($"{EnvPath.kLocalModsPath}");
+                if (localAssets > 0)
+                {
+                    NotificationSystem.Pop("APM-local", 30f, "Local Assets Found", $"Found {localAssets} local assets in the user folder. These are loaded automatically.");
+                }
+            }
+        }
 
+        private static int FindLocalAssets(string currentDir)
+        {
+            int localAssets = 0;
+            foreach (var dir in Directory.GetDirectories(currentDir))
+            {
+                if (dir.Contains(".cache"))
+                    continue;
+                else
+                    localAssets += FindLocalAssets(dir);
+            }
+            foreach (var file in Directory.GetFiles(currentDir))
+            {
+                if (file.EndsWith(".Prefab"))
+                {
+                    localAssets++;
+                }
+            }
+            return localAssets;
+        }
+
+        private static void LoadModAssetsInForeground()
+        {
+            var startTime = DateTime.Now;
             LoadModAssets();
+            var assetLoadTime = DateTime.Now - startTime;
+            Logger.Info("Asset Load Time: " + assetLoadTime.TotalMilliseconds + "ms");
             SendAssetNotification();
             foreach(string key in missingCids.Keys)
             {
                 NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"{key.Split(',')[0]} is missing CID for {missingCids[key].Count} prefabs. Delete mods cache or contact Asset Creator");
             }
+        }
+
+        public static void OpenLogFile()
+        {
+            System.Diagnostics.Process.Start($"{EnvPath.kUserDataPath}/Logs/{logFileName}.log");
         }
 
         private static int loaded;
@@ -140,13 +181,13 @@ namespace AssetPacksManager
                     PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
                     Log("Loaded Prefab");
                     prefabSystem.AddPrefab(prefabBase, null, null, null);
-                    Log("Added to Prefab System");
+                    Log($"Added {prefabAsset.name} to Prefab System");
                     loaded++;
                 }
                 catch (Exception e)
                 {
                     notLoaded++;
-                    Logger.Error("Please see AssetPacksManager Log for details. Asset " + prefabAsset.name + " could not be added to DB: " + e.Message + "\nStacktrace: " + e.StackTrace);
+                    Logger.Info($"Please see AssetPacksManager Log for details. Asset {prefabAsset.name} could not be added to Database: {e.Message}Path: {prefabAsset.path}\nUnique Name: {prefabAsset.uniqueName}\nCID: {prefabAsset.guid}\nSubPath: {prefabAsset.subPath}");
                     /*if (e.InnerException != null)
                     {
                         Logger.Error("Inner: " + e.InnerException.Message);
@@ -226,7 +267,7 @@ namespace AssetPacksManager
                         UIManager.defaultUISystem.AddHostLocation("customassets", assetDir.FullName);
                         Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
                         var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
-                        Logger.Info("Found " + assetsFromMod.Count + " assets from mod");
+                        Logger.Info($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
                         modAssets[mod.Name].AddRange(assetsFromMod);
                     }
                 }
@@ -256,11 +297,11 @@ namespace AssetPacksManager
 
             float delay = 30f;
             NotificationSystem.Pop("asset-packs-manager");
-            if (Setting.instance.AutoHideNotifications)
+            if (!Setting.instance.AutoHideNotifications)
                 delay = 10000f;
             var text = "All custom assets have been loaded successfully. Loaded: " + loaded;
             if (notLoaded > 0)
-                text = "Some assets could not be loaded. Loaded: " + loaded + " Not Loaded: " + notLoaded;
+                text = "Some assets could not be loaded. Loaded: " + loaded + ". Not Loaded: " + notLoaded;
             NotificationSystem.Pop("asset-packs-manager", delay, title:$"Asset Packs Manager", text: text);
             //GameManager.instance.modManager.RequireRestart();
             //Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired, true);

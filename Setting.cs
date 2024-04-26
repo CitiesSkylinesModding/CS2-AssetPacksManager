@@ -43,11 +43,21 @@ namespace AssetPacksManager
             set { Mod.DeleteModsCache(); }
         }
 
+        [SettingsUIButton]
+        [SettingsUISection(kSection, kActionsGroup)]
+        public bool OpenLogFIle
+        {
+            set { Mod.OpenLogFile(); }
+        }
+
         [SettingsUISection(kSection, kMiscGroup)]
         public bool EnableVerboseLogging { get; set; }
 
         [SettingsUISection(kSection, kMiscGroup)]
         public bool AutoHideNotifications { get; set; }
+
+        [SettingsUISection(kSection, kMiscGroup)]
+        public bool ShowWarningForLocalAssets { get; set; }
 
         public override void SetDefaults()
         {
@@ -56,6 +66,7 @@ namespace AssetPacksManager
             EnableSubscribedAssetPacks = true;
             EnableVerboseLogging = false;
             AutoHideNotifications = true;
+            ShowWarningForLocalAssets = true;
         }
     }
 
@@ -104,6 +115,12 @@ namespace AssetPacksManager
                     $"Automatically hides Asset Importer Notifications after 30 seconds."
                 },
 
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.ShowWarningForLocalAssets)), "Show Warning for Local Assets"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.ShowWarningForLocalAssets)),
+                    $"Displays a warning when APM detects local assets in the user/Mods folder. This is to prevent accidental loading of local assets."
+                },
+
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsCache)), "Delete Mods Cache"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsCache)),
@@ -112,6 +129,12 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteModsCache)),
                     $"**WARNING. This will close your game!** Are you sure you want to delete the mods cache? This cannot be undone."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.OpenLogFIle)), "Open Log File"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.OpenLogFIle)),
+                    $"Opens the log file of the mod in the default text editor. Log contains details about assets that failed to load."
                 },
             };
         }

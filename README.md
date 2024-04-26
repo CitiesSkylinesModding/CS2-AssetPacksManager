@@ -14,7 +14,8 @@ Be careful using Custom Assets and this mod. It is a very early stage
 
 ## Planned Features
 - Create reports with broken/missing assets
-- Enable/Disable Asset Packs ingame
+- Asynchronous Asset Loading
+- Enable/Disable Asset Packs ingame~~~~
 
 ## Resources for Asset Creation
 This section will include videos, knowledge bases and other resources to help you create your own assets.
