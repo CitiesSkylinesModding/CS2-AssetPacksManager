@@ -15,14 +15,10 @@ Be careful using Custom Assets and this mod. It is a very early stage
 ## Planned Features
 - Create reports with broken/missing assets
 - Asynchronous Asset Loading
-- Enable/Disable Asset Packs ingame~~~~
+- Enable/Disable Asset Packs ingame
 
 ## Resources for Asset Creation
 This section will include videos, knowledge bases and other resources to help you create your own assets.
-
-## Resources for Asset Creation
-This section will include videos, knowledge bases and other resources to help you create your own assets.
-
 
 ## Available Asset Packs
 - [Template to make your own Asset Packs](https://github.com/kosch104/CS2-CustomAssetPack)
@@ -32,7 +28,7 @@ This section will include videos, knowledge bases and other resources to help yo
 - [Drive-In Cinema Asset](https://mods.paradoxplaza.com/mods/78969/Windows)
 - [Modular Subway Station Assets Pack](https://mods.paradoxplaza.com/mods/78967/Windows)
 - [Super Elementary School Upgrade Asset](https://mods.paradoxplaza.com/mods/78974/Windows)
-- [StarQ VP EU Gas Station](https://mods.paradoxplaza.com/mods/79021/Windows)
+- [Vanilla Ploppable Buildings](https://mods.paradoxplaza.com/mods/79020/Windows)
 - [Mini Elementary School](https://mods.paradoxplaza.com/mods/79313/Windows)
 - [Parking Pack](https://mods.paradoxplaza.com/mods/79326/Windows)
 - [Beach Pack](https://mods.paradoxplaza.com/mods/79222/Windows)
