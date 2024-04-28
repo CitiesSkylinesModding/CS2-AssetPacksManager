@@ -36,6 +36,7 @@ The code of this mod was created by Konsi and Nullpinter
 	<Thumbnail Value="Properties/Thumbnail.png" />
 	<!--Screenshot, can be set multiple times-->
 	<Screenshot Value="Properties/Thumbnail.png" />
+	<Screenshot Value="Properties/settings.png" />
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->

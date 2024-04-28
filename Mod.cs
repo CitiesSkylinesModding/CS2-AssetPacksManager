@@ -139,6 +139,10 @@ namespace AssetPacksManager
                 {
                     try
                     {
+                        if (file == null)
+                        {
+                            Logger.Error($"File is null for mod {mod.Key}. This should never happen.");
+                        }
                         Logger.Info("Loading File: " + file.FullName);
 
                         var absolutePath = file.FullName;
