@@ -163,7 +163,7 @@ namespace AssetPacksManager
 
                         var cidFilename = EnvPath.kUserDataPath + "\\" + relativePath + "\\" + fileName + ".Prefab.cid";
                         using StreamReader sr = new StreamReader(cidFilename);
-                        var guid = new Guid(sr.ReadToEnd());
+                        var guid = sr.ReadToEnd();
                         sr.Close();
                         AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
                         Log("Prefab added to database successfully");
