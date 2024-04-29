@@ -37,7 +37,7 @@ This section will include videos, knowledge bases and other resources to help yo
 
 
 ## Credit
-The code of this mod was created by Konsi and Nullpinter
+The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for the Thumbnail.~~~~
 
 ## Support and Contact
 Check out the [Custom Asset Pack](https://github.com/kosch104/CS2-CustomAssetPack) Repository to start publishing your own assets.
