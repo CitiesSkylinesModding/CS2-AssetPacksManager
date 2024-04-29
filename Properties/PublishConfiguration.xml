@@ -30,30 +30,26 @@ Be careful using Custom Assets and this mod. It is a very early stage
 This section will include videos, knowledge bases and other resources to help you create your own assets.
 
 ## Credit
-The code of this mod was created by Konsi and Nullpinter
+The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for the Thumbnail
 	</LongDescription>
 	<!--Thumbnail-->
-	<Thumbnail Value="Properties/Thumbnail.png" />
+	<Thumbnail Value="Properties/APM_Thumbnail_500x500.png" />
 	<!--Screenshot, can be set multiple times-->
-	<Screenshot Value="Properties/Thumbnail.png" />
+	<Screenshot Value="Properties/APM_Thumbnail_1920x1080.png" />
 	<Screenshot Value="Properties/settings.png" />
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.0.1" />
+	<ModVersion Value="1.0.2" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.1.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Update error handling
-- Added option to open log file
-- Added time counter for asset loading
-- Added optional warning if local asset files are found (loaded by game automatically)
-- Fixed incorrect value of AutoHideNotifications
+- Add Experimental Fix to duplicate prefab registration (Thanks to StarQ)
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />
