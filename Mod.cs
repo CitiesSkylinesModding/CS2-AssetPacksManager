@@ -256,19 +256,22 @@ namespace AssetPacksManager
                 }
                 if (modInfo.asset.isEnabled)
                 {
-                    if (modDir.Contains($"{EnvPath.kLocalModsPath}/Mods") && !Setting.instance.EnableLocalAssetPacks)
-                    {
-                        Log($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
-                        continue;
-                    }
-                    if (!Setting.instance.EnableSubscribedAssetPacks)
-                        continue;
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
+                        UIManager.defaultUISystem.AddHostLocation("customassets", assetDir.FullName);
+                        var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
+                        if (modDir.Contains(localModsPath) && !Setting.instance.EnableLocalAssetPacks)
+                        {
+                            Log($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
+                            continue;
+                        }
+                        if (!Setting.instance.EnableSubscribedAssetPacks)
+                            continue;
+
                         if (!modAssets.ContainsKey(mod.Name))
                             modAssets.Add(mod.Name, new List<FileInfo>());
-                        UIManager.defaultUISystem.AddHostLocation("customassets", assetDir.FullName);
+
                         Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
                         var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
                         Logger.Info($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
