@@ -82,6 +82,7 @@ namespace AssetPacksManager
 
             LoadModAssetsInForeground();
             AddHostLocations();
+            //AddHostLocationsMultithreaded();
 
             if (Setting.instance.ShowWarningForLocalAssets)
             {
@@ -95,6 +96,17 @@ namespace AssetPacksManager
 
         private static HashSet<TimeSpan> hostLocationTimes = new();
         private static void AddHostLocations()
+        {
+            var hostLocationBefore = DateTime.Now;
+            foreach (var dir in hostLocationDirs)
+            {
+                DoAddHostLocation(string.Copy(dir));
+            }
+            var hostLocationAfter = DateTime.Now - hostLocationBefore;
+            Logger.Info("Total Host Location Time: " + hostLocationAfter.TotalMilliseconds + "ms.");
+        }
+
+        private static void AddHostLocationsMultithreaded()
         {
             var hostLocationBefore = DateTime.Now;
             List<Task> tasks = new();
@@ -179,13 +191,24 @@ namespace AssetPacksManager
                 {
                     try
                     {
+                        if (Logger == null)
+                        {
+                            Debug.LogError("Logger is null in beginning of LoadAssets");
+                            continue;
+                        }
+
+                        Logger.Info("Test 1");
                         if (file == null)
                         {
+                            Logger.Info("ERROR: FILE NULL:");
+                            Logger.Info("MOD: " + mod);
                             Logger.Error($"File is null for mod {mod.Key}. This should never happen.");
                         }
                         if (!DisableLogging)
                             Logger.Info("Loading File: " + file.FullName);
 
+                        Logger.Info("Test 2");
+                        Logger.Info("Is file null? " + (file == null));
                         var absolutePath = file.FullName;
                         //var absolutePath = "C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/Rural Welfare Office.Prefab";
                         //var relativePath = ".cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/";
