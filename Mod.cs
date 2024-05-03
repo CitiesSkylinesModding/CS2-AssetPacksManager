@@ -32,6 +32,7 @@ namespace AssetPacksManager
         [CanBeNull] public string ModPath { get; set; }
 
         private static PrefabSystem prefabSystem;
+        public static bool DisableLogging = false;
 
         //private static string assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
 
@@ -43,7 +44,8 @@ namespace AssetPacksManager
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
             {
-                Logger.Info($"Current mod asset at {asset.path}");
+                if (!DisableLogging)
+                    Logger.Info($"Current mod asset at {asset.path}");
                 ModPath = Path.GetDirectoryName(asset.path);
             }
 
@@ -79,6 +81,7 @@ namespace AssetPacksManager
             }
 
             LoadModAssetsInForeground();
+            AddHostLocations();
             if (Setting.instance.ShowWarningForLocalAssets)
             {
                 int localAssets = FindLocalAssets($"{EnvPath.kLocalModsPath}");
@@ -87,6 +90,17 @@ namespace AssetPacksManager
                     NotificationSystem.Pop("APM-local", 30f, "Local Assets Found", $"Found {localAssets} local assets in the user folder. These are loaded automatically.");
                 }
             }
+        }
+
+        private static void AddHostLocations()
+        {
+            var hostLocationBefore = DateTime.Now;
+            foreach (var dir in hostLocationDirs)
+            {
+                UIManager.defaultUISystem.AddHostLocation("customassets", dir);
+            }
+            var hostLocationAfter = DateTime.Now - hostLocationBefore;
+            Logger.Info("Host Location Time: " + hostLocationAfter.TotalMilliseconds + "ms");
         }
 
         private static int FindLocalAssets(string currentDir)
@@ -109,12 +123,14 @@ namespace AssetPacksManager
             return localAssets;
         }
 
+        private static DateTime assetStartTime;
+
         private static void LoadModAssetsInForeground()
         {
-            var startTime = DateTime.Now;
+            assetStartTime = DateTime.Now;
             LoadModAssets();
-            var assetLoadTime = DateTime.Now - startTime;
-            Logger.Info("Asset Load Time: " + assetLoadTime.TotalMilliseconds + "ms");
+            var totalAssetLoadTime = DateTime.Now - assetStartTime;
+            Logger.Info("Total Asset Load Time: " + totalAssetLoadTime.TotalMilliseconds + "ms");
             SendAssetNotification();
             foreach(string key in missingCids.Keys)
             {
@@ -133,6 +149,7 @@ namespace AssetPacksManager
         {
             loaded = 0;
             notLoaded = 0;
+            var assetDatabaseStartTime = DateTime.Now;
             foreach(var mod in modAssets)
             {
                 foreach (var file in mod.Value)
@@ -143,7 +160,8 @@ namespace AssetPacksManager
                         {
                             Logger.Error($"File is null for mod {mod.Key}. This should never happen.");
                         }
-                        Logger.Info("Loading File: " + file.FullName);
+                        if (!DisableLogging)
+                            Logger.Info("Loading File: " + file.FullName);
 
                         var absolutePath = file.FullName;
                         //var absolutePath = "C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/Rural Welfare Office.Prefab";
@@ -174,7 +192,10 @@ namespace AssetPacksManager
                     }
                 }
             }
+            var assetDatabaseEndTime = DateTime.Now - assetDatabaseStartTime;
+            Logger.Info("Asset Database Time: " + assetDatabaseEndTime.TotalMilliseconds + "ms");
 
+            var prefabSystemStartTime = DateTime.Now;
             foreach (PrefabAsset prefabAsset in AssetDatabase.user.GetAssets<PrefabAsset>())
             {
                 try
@@ -200,6 +221,8 @@ namespace AssetPacksManager
                     }*/
                 }
             }
+            var prefabSystemEndTime = DateTime.Now - prefabSystemStartTime;
+            Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
         }
 
         private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, string modName)
@@ -236,10 +259,11 @@ namespace AssetPacksManager
             }
             return files;
         }
-
+        private static List<string> hostLocationDirs = new();
         private static void LoadModAssets()
         {
             Dictionary<string, List<FileInfo>> modAssets = new();
+            var assetFinderStartTime = DateTime.Now;
             foreach (var modInfo in GameManager.instance.modManager)
             {
                 var assemblyName = modInfo.name.Split(',')[0];
@@ -256,10 +280,11 @@ namespace AssetPacksManager
                 }
                 if (modInfo.asset.isEnabled)
                 {
+                    var modTime = DateTime.Now;
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
-                        UIManager.defaultUISystem.AddHostLocation("customassets", assetDir.FullName);
+                        hostLocationDirs.Add(assetDir.FullName);
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
                         if (modDir.Contains(localModsPath) && !Setting.instance.EnableLocalAssetPacks)
                         {
@@ -274,9 +299,12 @@ namespace AssetPacksManager
 
                         Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
                         var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
-                        Logger.Info($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
+                        if (!DisableLogging)
+                            Logger.Info($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
                         modAssets[mod.Name].AddRange(assetsFromMod);
                     }
+                    var modTimeEnd = DateTime.Now - modTime;
+                    Logger.Info("Mod Time: " + modTimeEnd.TotalMilliseconds + "ms");
                 }
                 else
                 {
@@ -284,6 +312,8 @@ namespace AssetPacksManager
                 }
             }
 
+            var assetFinderEndTime = DateTime.Now - assetFinderStartTime;
+            Logger.Info("Asset Finder Time: " + assetFinderEndTime.TotalMilliseconds + "ms");
             Log("All mod prefabs have been collected. Adding to database now.");
             LoadAssets(modAssets);
         }
