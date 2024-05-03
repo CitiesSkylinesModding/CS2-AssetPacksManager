@@ -6,6 +6,7 @@ using Game.Settings;
 using Game.UI;
 using Game.UI.Widgets;
 using System.Collections.Generic;
+using Colossal.Logging;
 
 namespace AssetPacksManager
 {
@@ -51,7 +52,8 @@ namespace AssetPacksManager
         }
 
         [SettingsUISection(kSection, kMiscGroup)]
-        public bool EnableVerboseLogging { get; set; }
+        public LogLevel LoggingLevel { get; set; } = LogLevel.Info;
+
 
         [SettingsUISection(kSection, kMiscGroup)]
         public bool AutoHideNotifications { get; set; }
@@ -64,9 +66,18 @@ namespace AssetPacksManager
             HiddenSetting = true;
             EnableLocalAssetPacks = false;
             EnableSubscribedAssetPacks = true;
-            EnableVerboseLogging = false;
+            LoggingLevel = LogLevel.Info;
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
+        }
+
+        public enum LogLevel
+        {
+            Debug,
+            Info,
+            Warning,
+            Error,
+            Critical
         }
     }
 
@@ -103,11 +114,11 @@ namespace AssetPacksManager
                     $"Enables the import of subscribed asset packs."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableVerboseLogging)), "Enable Verbose Logging"},
+                /*{m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableVerboseLogging)), "Enable Verbose Logging"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableVerboseLogging)),
                     $"Enables additional log messages for debugging purposes."
-                },
+                },*/
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AutoHideNotifications)), "Auto Hide Notifications"},
                 {

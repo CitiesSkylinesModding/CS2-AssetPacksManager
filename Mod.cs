@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Colossal.Logging;
 using Game;
@@ -25,9 +26,7 @@ namespace AssetPacksManager
 {
     public class Mod : IMod
     {
-        private static readonly string logFileName = $"{nameof(AssetPacksManager)}.{nameof(Mod)}";
-        public static readonly ILog Logger = LogManager.GetLogger(logFileName)
-            .SetShowsErrorsInUI(false);
+        public static KLogger Logger = new KLogger();
 
         [CanBeNull] public string ModPath { get; set; }
 
@@ -175,7 +174,7 @@ namespace AssetPacksManager
 
         public static void OpenLogFile()
         {
-            System.Diagnostics.Process.Start($"{EnvPath.kUserDataPath}/Logs/{logFileName}.log");
+            Logger.OpenLogFile();
         }
 
         private static int loaded;
@@ -230,7 +229,7 @@ namespace AssetPacksManager
                         var guid = sr.ReadToEnd();
                         sr.Close();
                         AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
-                        Log("Prefab added to database successfully");
+                        Logger.Debug("Prefab added to database successfully");
                     }
                     catch (Exception e)
                     {
@@ -246,13 +245,13 @@ namespace AssetPacksManager
             {
                 try
                 {
-                    Log("Asset Name: " + prefabAsset.name);
-                    Log("Asset Path: " + prefabAsset.path);
+                    Logger.Debug("Asset Name: " + prefabAsset.name);
+                    Logger.Debug("Asset Path: " + prefabAsset.path);
                     // Logger.Info("I SubPath: " + prefabAsset.subPath);
                     PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
-                    Log("Loaded Prefab");
+                    Logger.Debug("Loaded Prefab");
                     prefabSystem.AddPrefab(prefabBase, null, null, null);
-                    Log($"Added {prefabAsset.name} to Prefab System");
+                    Logger.Debug($"Added {prefabAsset.name} to Prefab System");
                     loaded++;
                 }
                 catch (Exception e)
@@ -313,7 +312,7 @@ namespace AssetPacksManager
             foreach (var modInfo in GameManager.instance.modManager)
             {
                 var assemblyName = modInfo.name.Split(',')[0];
-                Log($"Checking mod {assemblyName}");
+                Logger.Debug($"Checking mod {assemblyName}");
                 var modDir = Path.GetDirectoryName(modInfo.asset.path);
                 var mod = new DirectoryInfo(modDir);
                 if (modDir == null)
@@ -334,7 +333,7 @@ namespace AssetPacksManager
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
                         if (modDir.Contains(localModsPath) && !Setting.instance.EnableLocalAssetPacks)
                         {
-                            Log($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
+                            Logger.Debug($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
                             continue;
                         }
                         if (!Setting.instance.EnableSubscribedAssetPacks)
@@ -343,7 +342,7 @@ namespace AssetPacksManager
                         if (!modAssets.ContainsKey(mod.Name))
                             modAssets.Add(mod.Name, new List<FileInfo>());
 
-                        Log($"Copying assets from {mod.Name} (" + modInfo.name + ")");
+                        Logger.Debug($"Copying assets from {mod.Name} (" + modInfo.name + ")");
                         var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
                         if (!DisableLogging)
                             Logger.Info($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
@@ -354,20 +353,14 @@ namespace AssetPacksManager
                 }
                 else
                 {
-                    Log($"Skipping disabled mod {modInfo.name} (" + modInfo.name + ")");
+                    Logger.Debug($"Skipping disabled mod {modInfo.name} (" + modInfo.name + ")");
                 }
             }
 
             var assetFinderEndTime = DateTime.Now - assetFinderStartTime;
             Logger.Info("Asset Finder Time: " + assetFinderEndTime.TotalMilliseconds + "ms");
-            Log("All mod prefabs have been collected. Adding to database now.");
+            Logger.Debug("All mod prefabs have been collected. Adding to database now.");
             LoadAssets(modAssets);
-        }
-
-        private static void Log(string message, bool alwaysLog = false)
-        {
-            if (Setting.instance.EnableVerboseLogging || alwaysLog)
-                Logger.Info(message);
         }
 
         private static async void SendAssetNotification()
@@ -392,7 +385,7 @@ namespace AssetPacksManager
 
         public void OnDispose()
         {
-            Log(nameof(OnDispose));
+            Logger.Debug(nameof(OnDispose));
             if (Setting.instance != null)
             {
                 Setting.instance.UnregisterInOptionsUI();
