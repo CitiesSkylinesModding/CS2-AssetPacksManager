@@ -43,4 +43,4 @@ This section will include videos, knowledge bases and other resources to help yo
 The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for the Thumbnail.
 
 ## Support and Contact
-Check out the [Custom Asset Pack](https://github.com/kosch104/CS2-CustomAssetPack) Repository to start publishing your own assets. Feel free to ask for help in the [Cities Skylines Modding Discord](https://discord.gg/UkKAfRqfCn) or create an issue on this repository for help. 
+Check out the [Custom Asset Pack](https://github.com/kosch104/CS2-CustomAssetPack) Repository to start publishing your own assets. Feel free to ask for help in the [Cities Skylines Modding Discord](https://discord.gg/UkKAfRqfCn) or [create an issue](https://github.com/kosch104/CS2-AssetPacksManager/issues/new?assignees=kosch104&labels=assistance+needed&projects=&template=help-needed.md&title=) on this repository for help. 
