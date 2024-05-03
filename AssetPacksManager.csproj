@@ -19,8 +19,8 @@
 
         <!--The file where mod information which is required for publishing mod on PDX mods are stored-->
         <PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
-        <AssemblyVersion>1.0.3</AssemblyVersion>
-        <FileVersion>1.0.3</FileVersion>
+        <AssemblyVersion>1.0.4</AssemblyVersion>
+        <FileVersion>1.0.4</FileVersion>
         <LangVersion>default</LangVersion>
         <Version>1.0.0</Version>
         <Authors>Konsi</Authors>
@@ -32,7 +32,7 @@
 
     <ItemGroup>
         <Reference Include="Colossal.AssetPipeline">
-          <HintPath>D:\Games\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.AssetPipeline.dll</HintPath>
+            <Private>false</Private>
         </Reference>
         <Reference Include="Game">
             <Private>false</Private>

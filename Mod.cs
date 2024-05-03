@@ -82,6 +82,7 @@ namespace AssetPacksManager
 
             LoadModAssetsInForeground();
             AddHostLocations();
+
             if (Setting.instance.ShowWarningForLocalAssets)
             {
                 int localAssets = FindLocalAssets($"{EnvPath.kLocalModsPath}");
@@ -92,15 +93,30 @@ namespace AssetPacksManager
             }
         }
 
+        private static List<TimeSpan> hostLocationTimes = new();
         private static void AddHostLocations()
         {
             var hostLocationBefore = DateTime.Now;
+            List<Task> tasks = new();
             foreach (var dir in hostLocationDirs)
             {
-                UIManager.defaultUISystem.AddHostLocation("customassets", dir);
+                tasks.Add(Task.Run(() => DoAddHostLocation(dir)));
             }
+            Task.WaitAll(tasks.ToArray());
             var hostLocationAfter = DateTime.Now - hostLocationBefore;
-            Logger.Info("Host Location Time: " + hostLocationAfter.TotalMilliseconds + "ms");
+            float timeSavedByParallel = hostLocationTimes.Sum(x => (float)x.TotalMilliseconds) - (float)hostLocationAfter.TotalMilliseconds;
+            float percentageSaved = timeSavedByParallel / hostLocationTimes.Sum(x => (float)x.TotalMilliseconds) * 100;
+            Logger.Info("Total Host Location Time: " + hostLocationAfter.TotalMilliseconds + "ms. Time saved by parallel: " + timeSavedByParallel + "ms (" + percentageSaved + "%)");
+        }
+
+
+        private static void DoAddHostLocation(string dir)
+        {
+            var hostLocationBefore = DateTime.Now;
+            UIManager.defaultUISystem.AddHostLocation("customassets", dir);
+            var hostLocationAfter = DateTime.Now - hostLocationBefore;
+            hostLocationTimes.Add(hostLocationAfter);
+            Logger.Info("Single Host Location Time: " + hostLocationAfter.TotalMilliseconds + "ms");
         }
 
         private static int FindLocalAssets(string currentDir)
@@ -123,11 +139,11 @@ namespace AssetPacksManager
             return localAssets;
         }
 
-        private static DateTime assetStartTime;
+
 
         private static void LoadModAssetsInForeground()
         {
-            assetStartTime = DateTime.Now;
+            var assetStartTime = DateTime.Now;
             LoadModAssets();
             var totalAssetLoadTime = DateTime.Now - assetStartTime;
             Logger.Info("Total Asset Load Time: " + totalAssetLoadTime.TotalMilliseconds + "ms");
