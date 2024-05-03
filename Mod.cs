@@ -81,8 +81,8 @@ namespace AssetPacksManager
             }
 
             LoadModAssetsInForeground();
-            AddHostLocations();
-            //AddHostLocationsMultithreaded();
+            //AddHostLocations();
+            AddHostLocationsMultithreaded();
 
             if (Setting.instance.ShowWarningForLocalAssets)
             {
