@@ -20,6 +20,9 @@ Be careful using Custom Assets and this mod. It is a very early stage
 ## Resources for Asset Creation
 This section will include videos, knowledge bases and other resources to help you create your own assets.
 
+- Share your created assets by using the [Custom Asset Pack Repository](https://github.com/kosch104/CS2-CustomAssetPack). It includes a windows tool that lets you create and publish asset packs with ease.
+
+
 ## Available Asset Packs
 - [Template to make your own Asset Packs](https://github.com/kosch104/CS2-CustomAssetPack)
 - [Car Props Asset Pack](https://github.com/kosch104/CS2AP-CarProps)
@@ -37,8 +40,7 @@ This section will include videos, knowledge bases and other resources to help yo
 
 
 ## Credit
-The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for the Thumbnail.~~~~
+The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for the Thumbnail.
 
 ## Support and Contact
-Check out the [Custom Asset Pack](https://github.com/kosch104/CS2-CustomAssetPack) Repository to start publishing your own assets.
-Contact me on Discord Konsi#1337 or create an issue on this repository for help. There will also be a support discord environment.
+Check out the [Custom Asset Pack](https://github.com/kosch104/CS2-CustomAssetPack) Repository to start publishing your own assets. Feel free to ask for help in the [Cities Skylines Modding Discord](https://discord.gg/UkKAfRqfCn) or create an issue on this repository for help. 
