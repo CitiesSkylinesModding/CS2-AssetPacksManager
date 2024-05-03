@@ -93,14 +93,14 @@ namespace AssetPacksManager
             }
         }
 
-        private static List<TimeSpan> hostLocationTimes = new();
+        private static HashSet<TimeSpan> hostLocationTimes = new();
         private static void AddHostLocations()
         {
             var hostLocationBefore = DateTime.Now;
             List<Task> tasks = new();
             foreach (var dir in hostLocationDirs)
             {
-                tasks.Add(Task.Run(() => DoAddHostLocation(dir)));
+                tasks.Add(Task.Run(() => DoAddHostLocation(string.Copy(dir))));
             }
             Task.WaitAll(tasks.ToArray());
             var hostLocationAfter = DateTime.Now - hostLocationBefore;
@@ -113,7 +113,14 @@ namespace AssetPacksManager
         private static void DoAddHostLocation(string dir)
         {
             var hostLocationBefore = DateTime.Now;
-            UIManager.defaultUISystem.AddHostLocation("customassets", dir);
+            try
+            {
+                UIManager.defaultUISystem.AddHostLocation("customassets", dir);
+            }
+            catch (Exception e)
+            {
+                Logger.Warn($"Host location {dir} not added, due to an exception");
+            }
             var hostLocationAfter = DateTime.Now - hostLocationBefore;
             hostLocationTimes.Add(hostLocationAfter);
             Logger.Info("Single Host Location Time: " + hostLocationAfter.TotalMilliseconds + "ms");
@@ -255,7 +262,7 @@ namespace AssetPacksManager
                 {
                     if (!File.Exists(file.FullName + ".cid"))
                     {
-                        Logger.Warn("Prefab has no CID: " + file.FullName);
+                        Logger.Warn($"Prefab has no CID: {file.FullName}");
                         if (missingCids.ContainsKey(modName))
                         {
                             missingCids[modName].Add(file.Name);

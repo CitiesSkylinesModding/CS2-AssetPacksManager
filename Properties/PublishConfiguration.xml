@@ -51,6 +51,7 @@ The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for 
 	<ChangeLog>
 - Improved Asset Pack Loading Times by ~80% due to Multithreading and various performance improvements
 - Removed unneeded included assemblies
+- Fix Custom Asset Migration
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />
