@@ -44,3 +44,5 @@ The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for 
 
 ## Support and Contact
 Check out the [Custom Asset Pack](https://github.com/kosch104/CS2-CustomAssetPack) Repository to start publishing your own assets. Feel free to ask for help in the [Cities Skylines Modding Discord](https://discord.gg/UkKAfRqfCn) or [create an issue](https://github.com/kosch104/CS2-AssetPacksManager/issues/new?assignees=kosch104&labels=assistance+needed&projects=&template=help-needed.md&title=) on this repository for help. 
+
+![Alt](https://repobeats.axiom.co/api/embed/68dbd36e423710c4a3072907b68daf8f0fc80539.svg "Repobeats analytics image")
