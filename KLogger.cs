@@ -11,6 +11,13 @@ public class KLogger
     public static readonly ILog Logger = LogManager.GetLogger(logFileName)
         .SetShowsErrorsInUI(false);
 
+    public static KLogger Instance;
+
+    public static void Init()
+    {
+        Instance = new KLogger();
+    }
+
     public void OpenLogFile()
     {
         System.Diagnostics.Process.Start($"{EnvPath.kUserDataPath}/Logs/{logFileName}.log");
@@ -20,46 +27,51 @@ public class KLogger
 
     public void Debug(string message)
     {
-        if (DateTime.Now >= nextLogTime)
+        int cooldown = Setting.instance.LogCooldownTicks;
+        while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
-            Logger.Debug(message);
-            nextLogTime = DateTime.Now.AddMilliseconds(1);
         }
+        Logger.Debug(message);
+        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Info(string message)
     {
-        if (DateTime.Now >= nextLogTime)
+        int cooldown = Setting.instance.LogCooldownTicks;
+        while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
-            Logger.Info(message);
-            nextLogTime = DateTime.Now.AddMilliseconds(1);
         }
+        Logger.Info(message);
+        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Warn(string message)
     {
-        if (DateTime.Now >= nextLogTime)
+        int cooldown = Setting.instance.LogCooldownTicks;
+        while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
-            Logger.Warn(message);
-            nextLogTime = DateTime.Now.AddMilliseconds(1);
         }
+        Logger.Warn(message);
+        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Error(string message)
     {
-        if (DateTime.Now >= nextLogTime)
+        int cooldown = Setting.instance.LogCooldownTicks;
+        while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
-            Logger.Error(message);
-            nextLogTime = DateTime.Now.AddMilliseconds(1);
         }
+        Logger.Error(message);
+        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Critical(string message)
     {
-        if (DateTime.Now >= nextLogTime)
+        int cooldown = Setting.instance.LogCooldownTicks;
+        while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
-            Logger.Critical(message);
-            nextLogTime = DateTime.Now.AddMilliseconds(1);
         }
+        Logger.Critical(message);
+        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 }

@@ -31,20 +31,18 @@ namespace AssetPacksManager
         [CanBeNull] public string ModPath { get; set; }
 
         private static PrefabSystem prefabSystem;
-        public static bool DisableLogging = false;
-
-        //private static string assetPath = $"{EnvPath.kUserDataPath}/CustomAssets";
 
         // Each mod has a dict entry that contains the missing cid prefabs
         private static Dictionary<string, List<string>> missingCids = new();
         
         public void OnLoad(UpdateSystem updateSystem)
         {
+            KLogger.Init();
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
             {
-                if (!DisableLogging)
-                    Logger.Info($"Current mod asset at {asset.path}");
+                //if (!DisableLogging)
+                //    Logger.Info($"Current mod asset at {asset.path}");
                 ModPath = Path.GetDirectoryName(asset.path);
             }
 
@@ -76,7 +74,7 @@ namespace AssetPacksManager
             }
             catch (Exception x)
             {
-
+                Logger.Error("Error moving Custom Assets folder: " + x.Message);
             }
 
             LoadModAssetsInForeground();
@@ -91,6 +89,29 @@ namespace AssetPacksManager
                     NotificationSystem.Pop("APM-local", 30f, "Local Assets Found", $"Found {localAssets} local assets in the user folder. These are loaded automatically.");
                 }
             }
+        }
+
+        public static void DeleteModsWithMissingCid()
+        {
+            int successfulDeletions = 0;
+            foreach(string key in missingCids.Keys)
+            {
+                try
+                {
+                    string path = $"{EnvPath.kUserDataPath}/.cache/Mods/mods_subscribed/{key}";
+                    if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, true);
+                        Logger.Info($"Deleted mod cache for {key}");
+                        successfulDeletions++;
+                    }
+                }
+                catch (Exception x)
+                {
+                    Logger.Error($"Error deleting mod cache for mod {{key}}: {x.Message}");
+                }
+            }
+            NotificationSystem.Push("APM-delete", "Deleted Mods", $"Deleted {successfulDeletions}/{missingCids.Count} mods with missing CID. Click to close game.", onClicked: CloseGame);
         }
 
         private static HashSet<TimeSpan> hostLocationTimes = new();
@@ -168,7 +189,7 @@ namespace AssetPacksManager
             SendAssetNotification();
             foreach(string key in missingCids.Keys)
             {
-                NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"{key.Split(',')[0]} is missing CID for {missingCids[key].Count} prefabs. Delete mods cache or contact Asset Creator");
+                NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"{key.Split(',')[0]} has {missingCids[key].Count} missing CIDs. Click to delete cache", onClicked: DeleteModsWithMissingCid);
             }
         }
 
@@ -190,24 +211,8 @@ namespace AssetPacksManager
                 {
                     try
                     {
-                        if (Logger == null)
-                        {
-                            Debug.LogError("Logger is null in beginning of LoadAssets");
-                            continue;
-                        }
+                        Logger.Debug("Loading File: " + file.FullName);
 
-                        Logger.Info("Test 1");
-                        if (file == null)
-                        {
-                            Logger.Info("ERROR: FILE NULL:");
-                            Logger.Info("MOD: " + mod);
-                            Logger.Error($"File is null for mod {mod.Key}. This should never happen.");
-                        }
-                        if (!DisableLogging)
-                            Logger.Info("Loading File: " + file.FullName);
-
-                        Logger.Info("Test 2");
-                        Logger.Info("Is file null? " + (file == null));
                         var absolutePath = file.FullName;
                         //var absolutePath = "C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/Rural Welfare Office.Prefab";
                         //var relativePath = ".cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/";
@@ -325,7 +330,7 @@ namespace AssetPacksManager
                 }
                 if (modInfo.asset.isEnabled)
                 {
-                    var modTime = DateTime.Now;
+                    //var modTime = DateTime.Now;
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
@@ -344,12 +349,11 @@ namespace AssetPacksManager
 
                         Logger.Debug($"Copying assets from {mod.Name} (" + modInfo.name + ")");
                         var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
-                        if (!DisableLogging)
-                            Logger.Info($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
+                        Logger.Debug($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
                         modAssets[mod.Name].AddRange(assetsFromMod);
                     }
-                    var modTimeEnd = DateTime.Now - modTime;
-                    Logger.Info("Mod Time: " + modTimeEnd.TotalMilliseconds + "ms");
+                    //var modTimeEnd = DateTime.Now - modTime;
+                    //Logger.Info("Mod Time: " + modTimeEnd.TotalMilliseconds + "ms");
                 }
                 else
                 {
@@ -372,13 +376,15 @@ namespace AssetPacksManager
             }
 
             float delay = 30f;
-            NotificationSystem.Pop("asset-packs-manager");
+            NotificationSystem.Pop("APM-result");
             if (!Setting.instance.AutoHideNotifications)
                 delay = 10000f;
             var text = "All custom assets have been loaded successfully. Loaded: " + loaded;
             if (notLoaded > 0)
                 text = "Some assets could not be loaded. Loaded: " + loaded + ". Not Loaded: " + notLoaded;
-            NotificationSystem.Pop("asset-packs-manager", delay, title:$"Asset Packs Manager", text: text);
+            else if (loaded == 0)
+                text = "No custom assets found. Please subscribe to an Asset Pack to use custom Asset Packs";
+            NotificationSystem.Pop("APM-result", delay, title:$"Asset Packs Manager", text: text);
             //GameManager.instance.modManager.RequireRestart();
             //Log("Mod Manager init: " + GameManager.instance.modManager.isInitialized + " Restart: " + GameManager.instance.modManager.restartRequired, true);
         }
@@ -391,6 +397,12 @@ namespace AssetPacksManager
                 Setting.instance.UnregisterInOptionsUI();
                 Setting.instance = null;
             }
+        }
+
+        public static void CloseGame()
+        {
+            Logger.Info("Closing Game...");
+            Application.Quit(0);
         }
 
         public static void DeleteModsCache()
@@ -410,9 +422,6 @@ namespace AssetPacksManager
                     Logger.Info($"Deleted folder: {folder}");
                 }
             }
-
-            Logger.Info("Closing Game...");
-            Application.Quit(0);
         }
     }
 }

@@ -45,14 +45,62 @@ namespace AssetPacksManager
         }
 
         [SettingsUIButton]
+        [SettingsUIConfirmation]
+        [SettingsUISection(kSection, kActionsGroup)]
+        public bool DeleteModsWithMissingCid
+        {
+            set
+            {
+                Mod.DeleteModsWithMissingCid();
+                Mod.CloseGame();
+            }
+        }
+
+        [SettingsUIButton]
         [SettingsUISection(kSection, kActionsGroup)]
         public bool OpenLogFIle
         {
             set { Mod.OpenLogFile(); }
         }
 
+        [SettingsUISlider(min=0, max=100000, step=1000, unit = "ms")]
         [SettingsUISection(kSection, kMiscGroup)]
-        public LogLevel LoggingLevel { get; set; } = LogLevel.Info;
+        public int LogCooldownTicks { get; set; }
+
+        private LogLevel _loggingLevel;
+
+        [SettingsUISection(kSection, kMiscGroup)]
+        public LogLevel LoggingLevel
+        {
+            get { return _loggingLevel; }
+            set
+            {
+                _loggingLevel = value;
+                switch (value)
+                {
+                    case LogLevel.Debug:
+                        KLogger.Logger.effectivenessLevel = Level.Debug;
+                        break;
+                    case LogLevel.Info:
+                        KLogger.Logger.effectivenessLevel = Level.Info;
+                        break;
+                    case LogLevel.Warning:
+                        KLogger.Logger.effectivenessLevel = Level.Warn;
+                        break;
+                    case LogLevel.Error:
+                        KLogger.Logger.effectivenessLevel = Level.Error;
+                        break;
+                    case LogLevel.Critical:
+                        KLogger.Logger.effectivenessLevel = Level.Critical;
+                        break;
+                }
+                /*KLogger.Instance.Debug("Debug");
+                KLogger.Instance.Info("Info");
+                KLogger.Instance.Warn("Warning");
+                KLogger.Instance.Error("Error");
+                KLogger.Instance.Critical("Critical");*/
+            }
+        }
 
 
         [SettingsUISection(kSection, kMiscGroup)]
@@ -69,6 +117,7 @@ namespace AssetPacksManager
             LoggingLevel = LogLevel.Info;
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
+            LogCooldownTicks = 0;
         }
 
         public enum LogLevel
@@ -114,11 +163,17 @@ namespace AssetPacksManager
                     $"Enables the import of subscribed asset packs."
                 },
 
-                /*{m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableVerboseLogging)), "Enable Verbose Logging"},
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoggingLevel)), "Logging Level" },
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableVerboseLogging)),
-                    $"Enables additional log messages for debugging purposes."
-                },*/
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LoggingLevel)),
+                    $"Choose the amount of information that is logged. Cascading, Level Warning includes Error and Critical, for example."
+                },
+
+                { m_Setting.GetEnumValueLocaleID(Setting.LogLevel.Debug), "Debug" },
+                { m_Setting.GetEnumValueLocaleID(Setting.LogLevel.Info), "Info" },
+                { m_Setting.GetEnumValueLocaleID(Setting.LogLevel.Warning), "Warning" },
+                { m_Setting.GetEnumValueLocaleID(Setting.LogLevel.Error), "Error" },
+                { m_Setting.GetEnumValueLocaleID(Setting.LogLevel.Critical), "Critical" },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AutoHideNotifications)), "Auto Hide Notifications"},
                 {
@@ -132,6 +187,12 @@ namespace AssetPacksManager
                     $"Displays a warning when APM detects local assets in the user/Mods folder. This is to prevent accidental loading of local assets."
                 },
 
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LogCooldownTicks)), "Log Cooldown (10000 = 1ms)"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LogCooldownTicks)),
+                    $"Sets the minimum time between log entries. This is to prevent the NullReferenceExceptions caused by the logger."
+                },
+
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsCache)), "Delete Mods Cache"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsCache)),
@@ -140,6 +201,16 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteModsCache)),
                     $"**WARNING. This will close your game!** Are you sure you want to delete the mods cache? This cannot be undone."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsWithMissingCid)), "Delete Mods with missing CID-Files"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsWithMissingCid)),
+                    $"A less agressive version of the Delete Mods Cache option. This will only delete mods that are missing the CID-File. This will close the game immediately. It will not change your playset, but will require to re-download all affected mods on the next startup."
+                },
+                {
+                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteModsWithMissingCid)),
+                    $"**WARNING. This will close your game!** Are you sure you want to delete the affected mods cache? This cannot be undone."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.OpenLogFIle)), "Open Log File"},
