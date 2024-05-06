@@ -275,6 +275,42 @@ namespace AssetPacksManager
             Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
         }
 
+        /// <summary>
+        /// Checks if the prefab has a CID file. If not, it will try to restore it from the backup
+        /// Creates a backup file if it doesn't exist.
+        ///
+        /// This is only needed because PDX Mods deleted CID files when disabling a mod while ingame.
+        /// </summary>
+        /// <param name="file">Prefab file to be checked</param>
+        /// <param name="modName">Current mod directory</param>
+        /// <returns></returns>
+        private static bool CheckPrefab(FileInfo file, string modName)
+        {
+            if (!File.Exists(file.FullName + ".cid"))
+            {
+                if (File.Exists(file.FullName + ".cid.backup"))
+                {
+                    File.Copy(file.FullName + ".cid.backup", file.FullName + ".cid");
+                    Logger.Info($"Restored CID for {file.FullName}");
+                    return true;
+                }
+                Logger.Warn($"Prefab has no CID: {file.FullName}. No CID Backup was found");
+                if (missingCids.ContainsKey(modName))
+                {
+                    missingCids[modName].Add(file.Name);
+                }
+                else
+                {
+                    missingCids.Add(modName, new List<string> {file.Name});
+                }
+                return false;
+            }
+            // Back up CID
+            if (!File.Exists(file.FullName + ".cid.backup"))
+                File.Copy(file.FullName + ".cid", file.FullName + ".cid.backup", true);
+            return true;
+        }
+
         private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, string modName)
         {
             List<FileInfo> files = new();
@@ -287,23 +323,8 @@ namespace AssetPacksManager
             {
                 if (file.Extension == ".Prefab")
                 {
-                    if (!File.Exists(file.FullName + ".cid"))
-                    {
-                        Logger.Warn($"Prefab has no CID: {file.FullName}");
-                        if (missingCids.ContainsKey(modName))
-                        {
-                            missingCids[modName].Add(file.Name);
-                        }
-                        else
-                        {
-                            missingCids.Add(modName, new List<string> {file.Name});
-                        }
-                        continue;
-                    }
-                    // Back up CID
-                    if (!File.Exists(file.FullName + ".cid.backup"))
-                        File.Copy(file.FullName + ".cid", file.FullName + ".cid.backup", true);
-                    files.Add(file);
+                    if (CheckPrefab(file, modName))
+                        files.Add(file);
                 }
             }
             foreach (DirectoryInfo subDir in dirs)
