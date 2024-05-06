@@ -178,7 +178,7 @@ namespace AssetPacksManager
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AutoHideNotifications)), "Auto Hide Notifications"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.AutoHideNotifications)),
-                    $"Automatically hides Asset Importer Notifications after 30 seconds."
+                    $"Automatically hides APM Notifications after 30 seconds."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.ShowWarningForLocalAssets)), "Show Warning for Local Assets"},

@@ -300,6 +300,9 @@ namespace AssetPacksManager
                         }
                         continue;
                     }
+                    // Back up CID
+                    if (!File.Exists(file.FullName + ".cid.backup"))
+                        File.Copy(file.FullName + ".cid", file.FullName + ".cid.backup", true);
                     files.Add(file);
                 }
             }
