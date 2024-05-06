@@ -46,6 +46,7 @@ namespace AssetPacksManager
             AssetDatabase.global.LoadSettings(nameof(AssetPacksManager), setting, new Setting(this));
             setting.HiddenSetting = false;
             Setting.instance = setting;
+            Logger.Info(Setting.instance.ToString());
 
             prefabSystem = updateSystem.World.GetOrCreateSystemManaged<PrefabSystem>();
 

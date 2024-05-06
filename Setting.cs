@@ -36,6 +36,9 @@ namespace AssetPacksManager
         [SettingsUISection(kSection, kSettingsGroup)]
         public bool EnableSubscribedAssetPacks { get; set; }
 
+        [SettingsUISection(kSection, kSettingsGroup)]
+        public bool LoadIconLocationInBackground { get; set; }
+
         [SettingsUIButton]
         [SettingsUIConfirmation]
         [SettingsUISection(kSection, kActionsGroup)]
@@ -114,6 +117,7 @@ namespace AssetPacksManager
             HiddenSetting = true;
             EnableLocalAssetPacks = false;
             EnableSubscribedAssetPacks = true;
+            LoadIconLocationInBackground = true;
             LoggingLevel = LogLevel.Info;
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
@@ -127,6 +131,20 @@ namespace AssetPacksManager
             Warning,
             Error,
             Critical
+        }
+
+        public override string ToString()
+        {
+            string text = "=====APM Settings=====";
+            text += $"\nEnableLocalAssetPacks: {EnableLocalAssetPacks}";
+            text += $"\nEnableSubscribedAssetPacks: {EnableSubscribedAssetPacks}";
+            text += $"\nLoadIconLocationInBackground: {LoadIconLocationInBackground}";
+            text += $"\nLoggingLevel: {LoggingLevel}";
+            text += $"\nAutoHideNotifications: {AutoHideNotifications}";
+            text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
+            text += $"\nLogCooldownTicks: {LogCooldownTicks}";
+            text += "======================";
+            return text;
         }
     }
 
@@ -154,13 +172,19 @@ namespace AssetPacksManager
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableLocalAssetPacks)), "Enable Local Asset Packs"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableLocalAssetPacks)),
-                    $"Enables the import of locally installed mods (Mods in the user/Mods folder)."
+                    $"Enables the import of locally installed mods (Mods in the user/Mods folder). These will already be loaded by the game (without icons). Activating this option may cause duplicate assets"
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableSubscribedAssetPacks)), "Enable Subscribed Asset Packs"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableSubscribedAssetPacks)),
                     $"Enables the import of subscribed asset packs."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadIconLocationInBackground)), "Load Icon Location in Background"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadIconLocationInBackground)),
+                    $"Improves asset pack loading times drastically, but sometimes causes missing icons ingame. Turn off if you have issues with missing asset icons."
                 },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoggingLevel)), "Logging Level" },
