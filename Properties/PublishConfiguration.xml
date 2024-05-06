@@ -50,6 +50,7 @@ The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for 
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
 - Improved Asset Pack Loading Times by ~80% due to Multithreading and various performance improvements
+- Added CID Backup mechanism to prevent missing CID errors
 - Removed unneeded included assemblies
 - Fix Custom Asset Migration
 	</ChangeLog>

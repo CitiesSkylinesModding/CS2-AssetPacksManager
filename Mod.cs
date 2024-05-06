@@ -2,22 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Colossal.Logging;
 using Game;
 using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
-using Colossal.Json;
 using Colossal.PSI.Environment;
 using Colossal.UI;
-using Game.Debug;
 using Game.Prefabs;
 using Game.PSI;
-using Game.Simulation;
 using JetBrains.Annotations;
-using Unity.Entities;
 using UnityEngine;
 using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
@@ -148,10 +142,11 @@ namespace AssetPacksManager
             try
             {
                 UIManager.defaultUISystem.AddHostLocation("customassets", dir);
+                Logger.Info($"Host location {dir} added");
             }
             catch (Exception e)
             {
-                Logger.Warn($"Host location {dir} not added, due to an exception");
+                Logger.Warn($"Host location {dir} not added, due to an exception: {e.Message}");
             }
             var hostLocationAfter = DateTime.Now - hostLocationBefore;
             hostLocationTimes.Add(hostLocationAfter);
