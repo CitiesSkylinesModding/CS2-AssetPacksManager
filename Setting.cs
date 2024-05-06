@@ -135,7 +135,7 @@ namespace AssetPacksManager
 
         public override string ToString()
         {
-            string text = "=====APM Settings=====";
+            string text = "\n=====APM Settings=====";
             text += $"\nEnableLocalAssetPacks: {EnableLocalAssetPacks}";
             text += $"\nEnableSubscribedAssetPacks: {EnableSubscribedAssetPacks}";
             text += $"\nLoadIconLocationInBackground: {LoadIconLocationInBackground}";
