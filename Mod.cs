@@ -22,12 +22,14 @@ namespace AssetPacksManager
     {
         public static KLogger Logger = new KLogger();
 
-        [CanBeNull] public string ModPath { get; set; }
+        public string ModPath { get; set; }
 
         private static PrefabSystem prefabSystem;
 
         // Each mod has a dict entry that contains the missing cid prefabs
         private static Dictionary<string, List<string>> missingCids = new();
+        private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
+        private static readonly string thumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
         
         public void OnLoad(UpdateSystem updateSystem)
         {
@@ -74,7 +76,8 @@ namespace AssetPacksManager
 
             LoadModAssetsInForeground();
             //AddHostLocations();
-            AddHostLocationsMultithreaded();
+            //AddHostLocationsMultithreaded();
+            UIManager.defaultUISystem.AddHostLocation("customassets", thumbnailDir);
 
             if (Setting.instance.ShowWarningForLocalAssets)
             {
@@ -322,6 +325,11 @@ namespace AssetPacksManager
                     if (CheckPrefab(file, modName))
                         files.Add(file);
                 }
+
+                if (SupportedThumbnailExtensions.Contains(file.Extension))
+                {
+                    CopyThumbnail(file, modName);
+                }
             }
             foreach (DirectoryInfo subDir in dirs)
             {
@@ -329,6 +337,28 @@ namespace AssetPacksManager
             }
             return files;
         }
+
+        private static void CopyThumbnail(FileInfo file, string modName)
+        {
+            try
+            {
+                var fullPath = file.FullName.Replace('\\', '/');
+                // get everything of the path after modName
+                var relativePath =
+                    fullPath.Substring(fullPath.IndexOf(modName, StringComparison.Ordinal) + modName.Length + 1);
+                // Remove "assets"
+                relativePath = relativePath.Substring(relativePath.IndexOf("/", StringComparison.Ordinal) + 1);
+                FileInfo target = new FileInfo(Path.Combine(thumbnailDir, relativePath));
+                if (!target.Directory.Exists)
+                    target.Directory.Create();
+                File.Copy(file.FullName, target.FullName, true);
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Error copying thumbnail for {file.Name}: " + e.Message);
+            }
+        }
+
         private static List<string> hostLocationDirs = new();
         private static void LoadModAssets()
         {
