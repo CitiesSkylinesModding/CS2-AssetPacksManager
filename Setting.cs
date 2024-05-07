@@ -138,7 +138,7 @@ namespace AssetPacksManager
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
             text += $"\nLogCooldownTicks: {LogCooldownTicks}";
-            text += "======================";
+            text += "\n======================";
             return text;
         }
     }
