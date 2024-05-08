@@ -30,7 +30,6 @@ namespace AssetPacksManager
         private static Dictionary<string, List<string>> missingCids = new();
         private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
         private static readonly string thumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
-        
         public void OnLoad(UpdateSystem updateSystem)
         {
             KLogger.Init();
@@ -58,22 +57,26 @@ namespace AssetPacksManager
             }
             Log("Added custom assets COUI location");
             */
-
+            var migrationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                "CustomAssets_backup");
             // TODO: Legacy deletion of custom assets
             try
             {
                 string customAssetsDir = $"{EnvPath.kUserDataPath}/CustomAssets";
                 if (Directory.Exists(customAssetsDir))
                 {
-                    Directory.Move(customAssetsDir,  "C:/Users/" + Environment.UserName + "/Desktop/CustomAssets_backup");
-                    NotificationSystem.Push("APM-legacy", "Custom Assets folder moved, restart game", "The Custom Assets is no longer being used and has been moved to Desktop. You may need to restart the game");
+                    Directory.Move(customAssetsDir, migrationPath);
+                    NotificationSystem.Push("APM-legacy", "Custom Assets folder migrated, restart game", "The Custom Assets is no longer being used and has been moved to Desktop. Please restart the game");
                 }
             }
             catch (Exception x)
             {
+                NotificationSystem.Push("APM-legacy", "Error migrating Custom Assets folder", $"Please delete {migrationPath} manually.");
                 Logger.Error("Error moving Custom Assets folder: " + x.Message);
             }
 
+            if (!Directory.Exists(thumbnailDir))
+                Directory.CreateDirectory(thumbnailDir);
             LoadModAssetsInForeground();
             //AddHostLocations();
             //AddHostLocationsMultithreaded();
