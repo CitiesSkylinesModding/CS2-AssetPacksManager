@@ -176,7 +176,6 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                 notificationInfo.progressState = ProgressState.Progressing;
                 notificationInfo.progress = (int)(currentIndex / (float)modAssets.Count() * 100);
                 notificationInfo.text = $"Step 2/3: Preparing Packs: {currentIndex}/{modAssets.Count()}";
-                yield return new WaitForSeconds(1);
                 foreach (var file in mod.Value)
                 {
                     try
@@ -374,10 +373,6 @@ public partial class AssetPackLoaderSystem : GameSystemBase
 
             foreach (var modInfo in GameManager.instance.modManager)
             {
-                notificationInfo.progressState = ProgressState.Progressing;
-                notificationInfo.progress = (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100);
-                notificationInfo.text = $"Step 1/3: Collecting: {modInfo.asset.name}";
-
                 var assemblyName = modInfo.name.Split(',')[0];
                 Logger.Debug($"Checking mod {assemblyName}");
                 var modDir = Path.GetDirectoryName(modInfo.asset.path);
@@ -396,6 +391,9 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
+                        notificationInfo.progressState = ProgressState.Progressing;
+                        notificationInfo.progress = (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100);
+                        notificationInfo.text = $"Step 1/3: Collecting: {modInfo.asset.name}";
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
                         if (modDir.Contains(localModsPath) && !Setting.instance.EnableLocalAssetPacks)
                         {
