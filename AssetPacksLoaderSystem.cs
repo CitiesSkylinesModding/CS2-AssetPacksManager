@@ -19,7 +19,7 @@ using StreamReader = System.IO.StreamReader;
 
 namespace AssetPacksManager;
 
-public partial class AssetPackLoaderSystem : GameSystemBase
+public partial class AssetPacksLoaderSystem : GameSystemBase
 {
     private static PrefabSystem _prefabSystem;
     private static NotificationUISystem _notificationUISystem;
@@ -29,7 +29,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
     private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
     private static readonly string thumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
     private static KLogger Logger;
-    public static AssetPackLoaderSystem Instance;
+    public static AssetPacksLoaderSystem Instance;
     private static MonoComponent _monoComponent;
     private GameObject _monoObject = new();
 
@@ -87,7 +87,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
     {
         if (mode == GameMode.MainMenu)
         {
-            LoadAssetPacks();
+            CollectAssetPacks();
         }
     }
 
@@ -135,7 +135,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
         }
 
 
-        private static void LoadAssetPacks()
+        private static void CollectAssetPacks()
         {
 
             var assetStartTime = DateTime.Now;
@@ -161,7 +161,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
         private static IEnumerator LoadAssets(Dictionary<string, List<FileInfo>> modAssets)
         {
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadAssets)}",
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPacksLoaderSystem)}.{nameof(LoadAssets)}",
                 title: "Preparing Assets",
                 progressState: ProgressState.Indeterminate,
                 thumbnail: "Resources/notify_icon.png",
@@ -225,7 +225,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             );
 
             var notification2Info = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.LoadAssets2",
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPacksLoaderSystem)}.LoadAssets2",
                 title: "Loadings Assets",
                 progressState: ProgressState.Indeterminate,
                 progress: 0);
@@ -362,7 +362,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
         private static IEnumerator LoadModAssets()
         {
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadModAssets)}",
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPacksLoaderSystem)}.{nameof(LoadModAssets)}",
                 title: "Loading Asset Packs",
                 progressState: ProgressState.Indeterminate,
                 thumbnail: "Resources/notify_icon.png",
