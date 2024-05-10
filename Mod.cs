@@ -43,7 +43,7 @@ namespace AssetPacksManager
             Setting.instance = setting;
             Logger.Info(Setting.instance.ToString());
 
-            updateSystem.UpdateAt<AssetPacksLoaderSystem>(SystemUpdatePhase.MainLoop);
+            updateSystem.UpdateAt<AssetPackLoaderSystem>(SystemUpdatePhase.MainLoop);
         }
 
         public void OnDispose()

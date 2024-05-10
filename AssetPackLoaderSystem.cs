@@ -19,7 +19,7 @@ using StreamReader = System.IO.StreamReader;
 
 namespace AssetPacksManager;
 
-public partial class AssetPacksLoaderSystem : GameSystemBase
+public partial class AssetPackLoaderSystem : GameSystemBase
 {
     private static PrefabSystem _prefabSystem;
     private static NotificationUISystem _notificationUISystem;
@@ -29,7 +29,7 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
     private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
     private static readonly string thumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
     private static KLogger Logger;
-    public static AssetPacksLoaderSystem Instance;
+    public static AssetPackLoaderSystem Instance;
     private static MonoComponent _monoComponent;
     private GameObject _monoObject = new();
 
@@ -61,8 +61,8 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
             Logger.Error("Error moving Custom Assets folder: " + x.Message);
         }
 
-        if (!Directory.Exists(Path.Combine(thumbnailDir, "apm")))
-            Directory.CreateDirectory(Path.Combine(thumbnailDir, "apm"));
+        if (!Directory.Exists(thumbnailDir))
+            Directory.CreateDirectory(thumbnailDir);
         //AddHostLocations();
         //AddHostLocationsMultithreaded();
         UIManager.defaultUISystem.AddHostLocation("customassets", thumbnailDir);
@@ -87,7 +87,7 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
     {
         if (mode == GameMode.MainMenu)
         {
-            CollectAssetPacks();
+            LoadAssetPacks();
         }
     }
 
@@ -135,7 +135,7 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
         }
 
 
-        private static void CollectAssetPacks()
+        private static void LoadAssetPacks()
         {
 
             var assetStartTime = DateTime.Now;
@@ -161,10 +161,9 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
         private static IEnumerator LoadAssets(Dictionary<string, List<FileInfo>> modAssets)
         {
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPacksLoaderSystem)}.{nameof(LoadAssets)}",
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadAssets)}",
                 title: "Preparing Assets",
                 progressState: ProgressState.Indeterminate,
-                thumbnail: "Resources/notify_icon.png",
                 progress: 0);
             int currentIndex = 0;
 
@@ -220,25 +219,23 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
                 delay: 3f,
                 text: $"Asset Preparing complete.",
                 progressState: ProgressState.Complete,
-                thumbnail: "coui:///apm/notification.png",
                 progress: 100
             );
 
             var notification2Info = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPacksLoaderSystem)}.LoadAssets2",
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.Load2",
                 title: "Loadings Assets",
                 progressState: ProgressState.Indeterminate,
                 progress: 0);
             currentIndex = 0;
 
             var prefabSystemStartTime = DateTime.Now;
-            var prefabAssets = AssetDatabase.user.GetAssets<PrefabAsset>().ToList();
-            foreach (PrefabAsset prefabAsset in prefabAssets)
+            foreach (PrefabAsset prefabAsset in AssetDatabase.user.GetAssets<PrefabAsset>())
             {
                 try
                 {
                     notification2Info.progressState = ProgressState.Progressing;
-                    notification2Info.progress = (int)(currentIndex / (float)prefabAssets.Count() * 100);
+                    notification2Info.progress = (int)(currentIndex / (float)modAssets.Count() * 100);
                     notification2Info.text = $"Loading: {prefabAsset.name}";
                     Logger.Debug("Asset Name: " + prefabAsset.name);
                     Logger.Debug("Asset Path: " + prefabAsset.path);
@@ -267,7 +264,7 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
             Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
             _notificationUISystem.RemoveNotification(
                 identifier: notification2Info.id,
-                delay: 30f,
+                delay: 3f,
                 text: $"Asset Loading complete. {loaded} assets loaded, {notLoaded} failed to load.",
                 progressState: ProgressState.Complete,
                 progress: 100
@@ -359,13 +356,13 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
             }
         }
 
+        private static List<string> hostLocationDirs = new();
         private static IEnumerator LoadModAssets()
         {
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPacksLoaderSystem)}.{nameof(LoadModAssets)}",
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadModAssets)}",
                 title: "Loading Asset Packs",
                 progressState: ProgressState.Indeterminate,
-                thumbnail: "Resources/notify_icon.png",
                 progress: 0);
             int currentIndex = 0;
             int packsFound = 0;
@@ -397,6 +394,7 @@ public partial class AssetPacksLoaderSystem : GameSystemBase
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
+                        hostLocationDirs.Add(assetDir.FullName);
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
                         if (modDir.Contains(localModsPath) && !Setting.instance.EnableLocalAssetPacks)
                         {
