@@ -230,12 +230,13 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             currentIndex = 0;
 
             var prefabSystemStartTime = DateTime.Now;
-            foreach (PrefabAsset prefabAsset in AssetDatabase.user.GetAssets<PrefabAsset>())
+            var allPrefabs = AssetDatabase.user.GetAssets<PrefabAsset>();
+            foreach (PrefabAsset prefabAsset in allPrefabs)
             {
                 try
                 {
                     notification2Info.progressState = ProgressState.Progressing;
-                    notification2Info.progress = (int)(currentIndex / (float)modAssets.Count() * 100);
+                    notification2Info.progress = (int)(currentIndex / (float)allPrefabs.Count() * 100);
                     notification2Info.text = $"Step 3/3: Loading: {prefabAsset.name}";
                     Logger.Debug("Asset Name: " + prefabAsset.name);
                     Logger.Debug("Asset Path: " + prefabAsset.path);
