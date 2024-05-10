@@ -174,7 +174,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             {
                 notificationInfo.progressState = ProgressState.Progressing;
                 notificationInfo.progress = (int)(currentIndex / (float)modAssets.Count() * 100);
-                notificationInfo.text = $"Preparing: {mod.Value}";
+                notificationInfo.text = $"Step 2/3: Preparing: {mod.Value}";
                 foreach (var file in mod.Value)
                 {
                     try
@@ -223,7 +223,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             );
 
             var notification2Info = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.Load2",
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadAssets)}2",
                 title: "Loadings Assets",
                 progressState: ProgressState.Indeterminate,
                 progress: 0);
@@ -236,7 +236,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                 {
                     notification2Info.progressState = ProgressState.Progressing;
                     notification2Info.progress = (int)(currentIndex / (float)modAssets.Count() * 100);
-                    notification2Info.text = $"Loading: {prefabAsset.name}";
+                    notification2Info.text = $"Step 3/3: Loading: {prefabAsset.name}";
                     Logger.Debug("Asset Name: " + prefabAsset.name);
                     Logger.Debug("Asset Path: " + prefabAsset.path);
                     // Logger.Info("I SubPath: " + prefabAsset.subPath);
@@ -355,8 +355,6 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                 Logger.Error($"Error copying thumbnail for {file.Name}: " + e.Message);
             }
         }
-
-        private static List<string> hostLocationDirs = new();
         private static IEnumerator LoadModAssets()
         {
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
@@ -374,7 +372,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             {
                 notificationInfo.progressState = ProgressState.Progressing;
                 notificationInfo.progress = (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100);
-                notificationInfo.text = $"Collecting: {modInfo.asset.name}";
+                notificationInfo.text = $"Step 1/3: Collecting: {modInfo.asset.name}";
 
                 var assemblyName = modInfo.name.Split(',')[0];
                 Logger.Debug($"Checking mod {assemblyName}");
@@ -394,7 +392,6 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
-                        hostLocationDirs.Add(assetDir.FullName);
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
                         if (modDir.Contains(localModsPath) && !Setting.instance.EnableLocalAssetPacks)
                         {
