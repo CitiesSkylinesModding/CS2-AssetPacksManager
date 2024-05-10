@@ -41,7 +41,7 @@ namespace AssetPacksManager
         [SettingsUISection(kSection, kActionsGroup)]
         public bool DeleteModsCache
         {
-            set { Mod.DeleteModsCache(); }
+            set { AssetPackLoaderSystem.DeleteModsCache(); }
         }
 
         [SettingsUIButton]
@@ -51,8 +51,8 @@ namespace AssetPacksManager
         {
             set
             {
-                Mod.DeleteModsWithMissingCid();
-                Mod.CloseGame();
+                AssetPackLoaderSystem.DeleteModsWithMissingCid();
+                AssetPackLoaderSystem.CloseGame();
             }
         }
 
@@ -60,7 +60,7 @@ namespace AssetPacksManager
         [SettingsUISection(kSection, kActionsGroup)]
         public bool OpenLogFIle
         {
-            set { Mod.OpenLogFile(); }
+            set { AssetPackLoaderSystem.OpenLogFile(); }
         }
 
         [SettingsUISlider(min=0, max=100000, step=1000, unit = "ms")]
@@ -233,6 +233,7 @@ namespace AssetPacksManager
                 },
             };
         }
+
 
         public void Unload()
         {

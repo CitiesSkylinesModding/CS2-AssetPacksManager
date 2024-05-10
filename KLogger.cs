@@ -12,6 +12,7 @@ public class KLogger
         .SetShowsErrorsInUI(false);
 
     public static KLogger Instance;
+    private static bool DisableLogging = false;
 
     public static void Init()
     {
@@ -27,6 +28,8 @@ public class KLogger
 
     public void Debug(string message)
     {
+        if(DisableLogging)
+            return;
         int cooldown = Setting.instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
@@ -37,6 +40,8 @@ public class KLogger
 
     public void Info(string message)
     {
+        if(DisableLogging)
+            return;
         int cooldown = Setting.instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
@@ -47,6 +52,8 @@ public class KLogger
 
     public void Warn(string message)
     {
+        if(DisableLogging)
+            return;
         int cooldown = Setting.instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
@@ -57,6 +64,8 @@ public class KLogger
 
     public void Error(string message)
     {
+        if(DisableLogging)
+            return;
         int cooldown = Setting.instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
@@ -67,6 +76,8 @@ public class KLogger
 
     public void Critical(string message)
     {
+        if(DisableLogging)
+            return;
         int cooldown = Setting.instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
