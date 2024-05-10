@@ -14,6 +14,7 @@ using Game.Prefabs;
 using Game.PSI;
 using Game.SceneFlow;
 using Game.UI.Menu;
+using Unity.Entities;
 using UnityEngine;
 using StreamReader = System.IO.StreamReader;
 
@@ -174,7 +175,8 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             {
                 notificationInfo.progressState = ProgressState.Progressing;
                 notificationInfo.progress = (int)(currentIndex / (float)modAssets.Count() * 100);
-                notificationInfo.text = $"Step 2/3: Preparing: {mod.Value}";
+                notificationInfo.text = $"Step 2/3: Preparing Packs: {currentIndex}/{modAssets.Count()}";
+                yield return new WaitForSeconds(1);
                 foreach (var file in mod.Value)
                 {
                     try
@@ -216,7 +218,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             Logger.Info("Asset Database Time: " + assetDatabaseEndTime.TotalMilliseconds + "ms");
             _notificationUISystem.RemoveNotification(
                 identifier: notificationInfo.id,
-                delay: 3f,
+                delay: 1f,
                 text: $"Asset Preparing complete.",
                 progressState: ProgressState.Complete,
                 progress: 100
@@ -231,12 +233,13 @@ public partial class AssetPackLoaderSystem : GameSystemBase
 
             var prefabSystemStartTime = DateTime.Now;
             var allPrefabs = AssetDatabase.user.GetAssets<PrefabAsset>();
-            foreach (PrefabAsset prefabAsset in allPrefabs)
+            var prefabAssets = allPrefabs as PrefabAsset[] ?? allPrefabs.ToArray();
+            foreach (PrefabAsset prefabAsset in prefabAssets)
             {
                 try
                 {
                     notification2Info.progressState = ProgressState.Progressing;
-                    notification2Info.progress = (int)(currentIndex / (float)allPrefabs.Count() * 100);
+                    notification2Info.progress = (int)(currentIndex / (float)prefabAssets.Count() * 100);
                     notification2Info.text = $"Step 3/3: Loading: {prefabAsset.name}";
                     Logger.Debug("Asset Name: " + prefabAsset.name);
                     Logger.Debug("Asset Path: " + prefabAsset.path);
@@ -265,7 +268,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
             _notificationUISystem.RemoveNotification(
                 identifier: notification2Info.id,
-                delay: 3f,
+                delay: 30f,
                 text: $"Asset Loading complete. {loaded} assets loaded, {notLoaded} failed to load.",
                 progressState: ProgressState.Complete,
                 progress: 100
