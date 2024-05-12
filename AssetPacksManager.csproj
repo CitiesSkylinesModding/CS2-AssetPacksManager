@@ -15,7 +15,7 @@
         <!--Your-PDX-Account-Pa$$word-->
         <PDXAccountDataPath>$(USERPROFILE)\Desktop\pdx_account.txt</PDXAccountDataPath>
 
-        <!--<AdditionalFilesDirectory>Resources</AdditionalFilesDirectory>-->
+        <AdditionalFilesDirectory>Resources</AdditionalFilesDirectory>
 
         <!--The file where mod information which is required for publishing mod on PDX mods are stored-->
         <PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
@@ -90,6 +90,9 @@
     <ItemGroup>
         <None Include="$(ModPropsFile)" Link="Properties\Mod.props"/>
         <None Include="$(ModTargetsFile)" Link="Properties\Mod.targets"/>
+        <None Update="Resources\notify_icon.png">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

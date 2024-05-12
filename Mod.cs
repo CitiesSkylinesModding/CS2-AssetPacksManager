@@ -33,6 +33,7 @@ namespace AssetPacksManager
                 //if (!DisableLogging)
                 //    Logger.Info($"Current mod asset at {asset.path}");
                 ModPath = Path.GetDirectoryName(asset.path);
+                UIManager.defaultUISystem.AddHostLocation("apm", Path.Combine(Path.GetDirectoryName(asset.path), "Resources"), false);
             }
 
             Setting setting = new (this);
