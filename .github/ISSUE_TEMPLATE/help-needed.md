@@ -17,8 +17,10 @@ Enter text here
 ## Have you used the `Delete Mods Cache`-Option in Asset Packs Manager? If not, why not?
 No
 
-## Have you deleted the `C:/Users/USERNAME/AppData/LocalLow/Colossal Order/Cities Skylines II/Mods` folder?
+## Have you deleted the `C:/Users/%username%/AppData/LocalLow/Colossal Order/Cities Skylines II/Mods` folder? If not, why not?
 No
 
-## Have you deleted the `C:/Users/USERNAME/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets` folder?
+## Have you deleted the `C:/Users/%username%/AppData/LocalLow/Colossal Order/Cities Skylines II/CustomAssets` folder? If not, why not?
 No
+
+## Attached Logs from `C:/Users/%username%/AppData/LocalLow/Colossal Order/Cities Skylines II/Logs`
