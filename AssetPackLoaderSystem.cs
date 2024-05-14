@@ -26,15 +26,15 @@ public partial class AssetPackLoaderSystem : GameSystemBase
     private static NotificationUISystem _notificationUISystem;
 
     // Each mod has a dict entry that contains the missing cid prefabs
-    private static Dictionary<string, List<string>> missingCids = new();
+    private static readonly Dictionary<string, List<string>> MissingCids = new();
     private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
-    private static readonly string thumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
+    private static readonly string ThumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
     private static KLogger Logger;
     public static AssetPackLoaderSystem Instance;
     private static MonoComponent _monoComponent;
-    private GameObject _monoObject = new();
-    private static bool AssetsLoaded = false;
-
+    private readonly GameObject _monoObject = new();
+    private static bool _assetsLoaded = false;
+    private static DateTime _assetLoadStartTime;
     protected override void OnCreate()
     {
         base.OnCreate();
@@ -63,11 +63,9 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             Logger.Error("Error moving Custom Assets folder: " + x.Message);
         }
 
-        if (!Directory.Exists(thumbnailDir))
-            Directory.CreateDirectory(thumbnailDir);
-        //AddHostLocations();
-        //AddHostLocationsMultithreaded();
-        UIManager.defaultUISystem.AddHostLocation("customassets", thumbnailDir, false);
+        if (!Directory.Exists(ThumbnailDir))
+            Directory.CreateDirectory(ThumbnailDir);
+        UIManager.defaultUISystem.AddHostLocation("customassets", ThumbnailDir, false);
 
         if (Setting.instance.ShowWarningForLocalAssets)
         {
@@ -90,10 +88,10 @@ public partial class AssetPackLoaderSystem : GameSystemBase
         base.OnGameLoadingComplete(purpose, mode);
         if (mode == GameMode.MainMenu)
         {
-            if (!AssetsLoaded)
+            if (!_assetsLoaded)
             {
                 _monoComponent.StartCoroutine(CollectAssets());
-                AssetsLoaded = true;
+                _assetsLoaded = true;
             }
         }
     }
@@ -101,7 +99,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
     public static void DeleteModsWithMissingCid()
     {
         int successfulDeletions = 0;
-        foreach(string key in missingCids.Keys)
+        foreach(string key in MissingCids.Keys)
         {
             try
             {
@@ -118,7 +116,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                 Logger.Error($"Error deleting mod cache for mod {{key}}: {x.Message}");
             }
         }
-        NotificationSystem.Push("APM-delete", "Deleted Mods", $"Deleted {successfulDeletions}/{missingCids.Count} mods with missing CID. Click to close game.", onClicked: CloseGame);
+        NotificationSystem.Push("APM-delete", "Deleted Mods", $"Deleted {successfulDeletions}/{MissingCids.Count} mods with missing CID. Click to close game.", onClicked: CloseGame);
     }
 
     private static int FindLocalAssets(string currentDir)
@@ -145,9 +143,15 @@ public partial class AssetPackLoaderSystem : GameSystemBase
     {
         Logger.OpenLogFile();
     }
-
     private static IEnumerator CollectAssets()
     {
+        if (!Setting.instance.EnableLocalAssetPacks && !Setting.instance.EnableSubscribedAssetPacks)
+        {
+            NotificationSystem.Pop("APM-status", 30f, "Asset Packs Disabled",
+                "Both local and subscribed asset packs are disabled. No assets will be loaded.");
+            yield break;
+        }
+        _assetLoadStartTime = DateTime.Now;
         var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
             $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(CollectAssets)}",
             title: "Step 1/3: Collecting Asset Packs",
@@ -227,9 +231,9 @@ public partial class AssetPackLoaderSystem : GameSystemBase
         _monoComponent.StartCoroutine(PrepareAssets(modAssets));
 
         //SendAssetNotification();
-        foreach(string key in missingCids.Keys)
+        foreach(string key in MissingCids.Keys)
         {
-            NotificationSystem.Pop(key, 300f, title:$"Missing CID for {missingCids[key].Count} prefabs", text: $"{key.Split(',')[0]} has {missingCids[key].Count} missing CIDs. Click to delete cache", onClicked: DeleteModsWithMissingCid);
+            NotificationSystem.Pop(key, 300f, title:$"Missing CID for {MissingCids[key].Count} prefabs", text: $"{key.Split(',')[0]} has {MissingCids[key].Count} missing CIDs. Click to delete cache", onClicked: DeleteModsWithMissingCid);
         }
     }
 
@@ -357,6 +361,8 @@ public partial class AssetPackLoaderSystem : GameSystemBase
             progressState: ProgressState.Complete,
             progress: 100
         );
+        var totalAssetTime = DateTime.Now - _assetLoadStartTime;
+        KLogger.Logger.Critical("Asset Time: " + totalAssetTime);
     }
 
     /// <summary>
@@ -379,13 +385,13 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                 return true;
             }
             Logger.Warn($"Prefab has no CID: {file.FullName}. No CID Backup was found");
-            if (missingCids.ContainsKey(modName))
+            if (MissingCids.ContainsKey(modName))
             {
-                missingCids[modName].Add(file.Name);
+                MissingCids[modName].Add(file.Name);
             }
             else
             {
-                missingCids.Add(modName, new List<string> {file.Name});
+                MissingCids.Add(modName, new List<string> {file.Name});
             }
             return false;
         }
@@ -433,7 +439,7 @@ public partial class AssetPackLoaderSystem : GameSystemBase
                 fullPath.Substring(fullPath.IndexOf(modName, StringComparison.Ordinal) + modName.Length + 1);
             // Remove "assets"
             relativePath = relativePath.Substring(relativePath.IndexOf("/", StringComparison.Ordinal) + 1);
-            FileInfo target = new FileInfo(Path.Combine(thumbnailDir, relativePath));
+            FileInfo target = new FileInfo(Path.Combine(ThumbnailDir, relativePath));
             if (!target.Directory.Exists)
                 target.Directory.Create();
             File.Copy(file.FullName, target.FullName, true);
