@@ -20,10 +20,11 @@ Be careful using Custom Assets and this mod. It is a very early stage
 - Support for Playsets
 - Support for Thumbnails
 - Support for Localization (Using L18N Everywhere)
+- Asynchronous Asset Loading
 
 ## Planned Features
-- Create reports with broken/missing assets
-- Asynchronous Asset Loading
+- ~~Create reports with broken/missing assets~~
+- ~~Asynchronous Asset Loading~~
 - Enable/Disable Asset Packs ingame
 
 ## Resources for Asset Creation
@@ -41,19 +42,15 @@ The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for 
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.1.1" />
+	<ModVersion Value="1.2.0" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.1.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Improved Stability and fixed multiple error causes
-- Improved Asset Pack Loading Times by ~90% due to thumbnail caching
-- Added CID Backup mechanism to prevent missing CID errors
-- Removed unneeded included assemblies
-- Fix Custom Asset Migration
-- Hotfix: Fix error with missing thumbnail directory
+- Add Loading in Main Menu
+- Add code improvements
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />
