@@ -50,7 +50,6 @@ namespace AssetPacksManager
 
             var migrationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                 "CustomAssets_backup");
-            // TODO: Legacy deletion of custom assets
             try
             {
                 string customAssetsDir = $"{EnvPath.kUserDataPath}/CustomAssets";
