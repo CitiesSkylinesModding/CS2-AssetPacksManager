@@ -21,14 +21,13 @@ Be careful using Custom Assets and this mod. It is a very early stage
 - Support for Thumbnails
 - Support for Localization (Using L18N Everywhere)
 - Asynchronous Asset Loading
+- Create reports with broken/missing assets
 
 ## Planned Features
-- ~~Create reports with broken/missing assets~~
-- ~~Asynchronous Asset Loading~~
 - Enable/Disable Asset Packs ingame
 
 ## Resources for Asset Creation
-This section will include videos, knowledge bases and other resources to help you create your own assets.
+For Resources on Asset Creation, visit the "CustomAssetPack" repository on my GitHub.
 
 ## Credit
 The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for the Thumbnail.

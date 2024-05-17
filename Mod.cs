@@ -41,8 +41,8 @@ namespace AssetPacksManager
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
             AssetDatabase.global.LoadSettings(nameof(AssetPacksManager), setting, new Setting(this));
             setting.HiddenSetting = false;
-            Setting.instance = setting;
-            Logger.Info(Setting.instance.ToString());
+            Setting.Instance = setting;
+            Logger.Info(Setting.Instance.ToString());
 
             updateSystem.UpdateAt<AssetPackLoaderSystem>(SystemUpdatePhase.MainLoop);
         }
@@ -50,10 +50,10 @@ namespace AssetPacksManager
         public void OnDispose()
         {
             Logger.Debug(nameof(OnDispose));
-            if (Setting.instance != null)
+            if (Setting.Instance != null)
             {
-                Setting.instance.UnregisterInOptionsUI();
-                Setting.instance = null;
+                Setting.Instance.UnregisterInOptionsUI();
+                Setting.Instance = null;
             }
         }
 

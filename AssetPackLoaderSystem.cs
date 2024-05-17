@@ -35,7 +35,7 @@ namespace AssetPacksManager
         public static AssetPackLoaderSystem Instance;
         private static MonoComponent _monoComponent;
         private readonly GameObject _monoObject = new();
-        private static bool _assetsLoaded = false;
+        public static bool AssetsLoaded = false;
         private static DateTime _assetLoadStartTime;
 
         protected override void OnCreate()
@@ -71,7 +71,7 @@ namespace AssetPacksManager
                 Directory.CreateDirectory(ThumbnailDir);
             UIManager.defaultUISystem.AddHostLocation("customassets", ThumbnailDir, false);
 
-            if (Setting.instance.ShowWarningForLocalAssets)
+            if (Setting.Instance.ShowWarningForLocalAssets)
             {
                 int localAssets = FindLocalAssets($"{EnvPath.kLocalModsPath}");
                 if (localAssets > 0)
@@ -87,12 +87,19 @@ namespace AssetPacksManager
             base.OnGameLoadingComplete(purpose, mode);
             if (mode == GameMode.MainMenu)
             {
-                if (!_assetsLoaded)
+                if (Setting.Instance.EnableAssetPackLoadingOnStartup)
                 {
-                    _monoComponent.StartCoroutine(CollectAssets());
-                    _assetsLoaded = true;
+                    LoadAssetPacks();
                 }
             }
+        }
+
+        public void LoadAssetPacks()
+        {
+            if (AssetsLoaded)
+                return;
+            _monoComponent.StartCoroutine(CollectAssets());
+            AssetsLoaded = true;
         }
 
         public static void DeleteModsWithMissingCid()
@@ -150,7 +157,7 @@ namespace AssetPacksManager
 
         private static IEnumerator CollectAssets()
         {
-            if (!Setting.instance.EnableLocalAssetPacks && !Setting.instance.EnableSubscribedAssetPacks)
+            if (!Setting.Instance.EnableLocalAssetPacks && !Setting.Instance.EnableSubscribedAssetPacks)
             {
                 NotificationSystem.Pop("APM-status", 30f, "Asset Packs Disabled",
                     "Both local and subscribed asset packs are disabled. No assets will be loaded.");
@@ -198,13 +205,13 @@ namespace AssetPacksManager
                             (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100);
                         notificationInfo.text = $"Collecting: {modInfo.asset.name}";
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
-                        if (modDir.Contains(localModsPath) && !Setting.instance.EnableLocalAssetPacks)
+                        if (modDir.Contains(localModsPath) && !Setting.Instance.EnableLocalAssetPacks)
                         {
                             Logger.Debug($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
                             continue;
                         }
 
-                        if (!Setting.instance.EnableSubscribedAssetPacks)
+                        if (!Setting.Instance.EnableSubscribedAssetPacks)
                             continue;
 
                         if (!modAssets.ContainsKey(mod.Name))

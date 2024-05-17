@@ -30,7 +30,7 @@ public class KLogger
     {
         if(DisableLogging)
             return;
-        int cooldown = Setting.instance.LogCooldownTicks;
+        int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
@@ -42,7 +42,7 @@ public class KLogger
     {
         if(DisableLogging)
             return;
-        int cooldown = Setting.instance.LogCooldownTicks;
+        int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
@@ -54,7 +54,7 @@ public class KLogger
     {
         if(DisableLogging)
             return;
-        int cooldown = Setting.instance.LogCooldownTicks;
+        int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
@@ -66,7 +66,7 @@ public class KLogger
     {
         if(DisableLogging)
             return;
-        int cooldown = Setting.instance.LogCooldownTicks;
+        int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
@@ -78,7 +78,7 @@ public class KLogger
     {
         if(DisableLogging)
             return;
-        int cooldown = Setting.instance.LogCooldownTicks;
+        int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }

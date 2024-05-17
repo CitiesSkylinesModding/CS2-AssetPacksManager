@@ -20,7 +20,7 @@ namespace AssetPacksManager
         public const string kSettingsGroup = "Synchronization";
         public const string kActionsGroup = "Actions";
         public const string kMiscGroup = "Misc";
-        public static Setting instance;
+        public static Setting Instance;
         public Setting(IMod mod) : base(mod)
         {
             SetDefaults();
@@ -35,6 +35,27 @@ namespace AssetPacksManager
 
         [SettingsUISection(kSection, kSettingsGroup)]
         public bool EnableSubscribedAssetPacks { get; set; }
+
+        [SettingsUISection(kSection, kSettingsGroup)]
+        public bool EnableAssetPackLoadingOnStartup { get; set; } = true;
+
+        private bool AssetsLoadable()
+        {
+            return AssetPackLoaderSystem.AssetsLoaded;
+        }
+
+        [SettingsUISection(kSection, kSettingsGroup)]
+        [SettingsUIDisableByCondition(typeof(Setting), nameof(AssetsLoadable))]
+        public bool LoadAssetPacks
+        {
+            set
+            {
+                if (value)
+                {
+                    AssetPackLoaderSystem.Instance.LoadAssetPacks();
+                }
+            }
+        }
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
@@ -102,7 +123,6 @@ namespace AssetPacksManager
             }
         }
 
-
         [SettingsUISection(kSection, kMiscGroup)]
         public bool AutoHideNotifications { get; set; }
 
@@ -117,6 +137,7 @@ namespace AssetPacksManager
             LoggingLevel = LogLevel.Info;
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
+            EnableAssetPackLoadingOnStartup = false;
             LogCooldownTicks = 0;
         }
 
@@ -134,6 +155,7 @@ namespace AssetPacksManager
             string text = "\n=====APM Settings=====";
             text += $"\nEnableLocalAssetPacks: {EnableLocalAssetPacks}";
             text += $"\nEnableSubscribedAssetPacks: {EnableSubscribedAssetPacks}";
+            text += $"\nEnableAssetPackLoadingOnStartup: {EnableAssetPackLoadingOnStartup}";
             text += $"\nLoggingLevel: {LoggingLevel}";
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
@@ -174,6 +196,18 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableSubscribedAssetPacks)),
                     $"Enables the import of subscribed asset packs."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableAssetPackLoadingOnStartup)), "Enable Asset Pack Loading on Startup"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableAssetPackLoadingOnStartup)),
+                    $"Enables the loading of asset packs on startup. Turning this setting off will prevent the loading of asset packs on startup. You will have to load them manually."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadAssetPacks)), "Load Asset Packs"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadAssetPacks)),
+                    $"Loads the asset packs. This will load the asset packs that are enabled in the settings."
                 },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoggingLevel)), "Logging Level" },
