@@ -10,7 +10,7 @@ using Colossal.Logging;
 
 namespace AssetPacksManager
 {
-    [FileLocation(nameof(AssetPacksManager))]
+    [FileLocation($"ModsSettings/{nameof(AssetPacksManager)}/{nameof(AssetPacksManager)}")]
     [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup, kMiscGroup)]
     [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup, kMiscGroup)]
     public class Setting : ModSetting
@@ -137,7 +137,7 @@ namespace AssetPacksManager
             LoggingLevel = LogLevel.Info;
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
-            EnableAssetPackLoadingOnStartup = false;
+            EnableAssetPackLoadingOnStartup = true;
             LogCooldownTicks = 0;
         }
 
