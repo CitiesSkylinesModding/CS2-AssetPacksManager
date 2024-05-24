@@ -1,9 +1,9 @@
 
 ## DISCLAIMER
 
-Unofficial Custom Assets are highly experimental. They WILL crash your game at some point or throw errors. Create redundant copies of your save files and use at your own risk. There has not been a lot of testing done on custom assets, and I'm publishing this project to get feedback from the community.
+Unofficial Custom Assets are experimental. They might crash your game or throw errors. Create redundant copies of your save files and use at your own risk. Custom assets have been tested extensively and don't cause issues if used correctly and with care.
 
-## Asset Packs Manager (Formerly Asset Importer)
+## Asset Packs Manager
 This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the GitHub Page to find a list of currently available Asset Packs.
 Be careful using Custom Assets and this mod. It is a very early stage
 
