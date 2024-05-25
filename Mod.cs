@@ -51,20 +51,28 @@ namespace AssetPacksManager
 
         private void MigrateSettings()
         {
-            var oldLocation = Path.Combine(EnvPath.kUserDataPath, nameof(AssetPacksManager) + ".coc");
-            if (File.Exists(oldLocation))
+            try
             {
-                var newLocation = Path.Combine(EnvPath.kUserDataPath, "ModsSettings", nameof(AssetPacksManager), nameof(AssetPacksManager) + ".coc");
-                if (!File.Exists(newLocation))
+                var oldLocation = Path.Combine(EnvPath.kUserDataPath, nameof(AssetPacksManager) + ".coc");
+                if (File.Exists(oldLocation))
                 {
-                    if (!Directory.Exists(Path.GetDirectoryName(newLocation)))
-                        Directory.CreateDirectory(Path.GetDirectoryName(newLocation));
-                    File.Move(oldLocation, newLocation);
+                    var newLocation = Path.Combine(EnvPath.kUserDataPath, "ModsSettings", nameof(AssetPacksManager),
+                        nameof(AssetPacksManager) + ".coc");
+                    if (!File.Exists(newLocation))
+                    {
+                        if (!Directory.Exists(Path.GetDirectoryName(newLocation)))
+                            Directory.CreateDirectory(Path.GetDirectoryName(newLocation));
+                        File.Move(oldLocation, newLocation);
+                    }
+                    else
+                    {
+                        File.Delete(oldLocation);
+                    }
                 }
-                else
-                {
-                    File.Delete(oldLocation);
-                }
+            }
+            catch (Exception x)
+            {
+                Logger.Warn("Settings could not be migrated: " + x.Message);
             }
         }
 

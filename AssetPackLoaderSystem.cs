@@ -196,14 +196,17 @@ namespace AssetPacksManager
 
                 if (modInfo.asset.isEnabled)
                 {
-                    //var modTime = DateTime.Now;
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
-                        notificationInfo.progressState = ProgressState.Progressing;
-                        notificationInfo.progress =
-                            (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100);
-                        notificationInfo.text = $"Collecting: {modInfo.asset.name}";
+                        notificationInfo = _notificationUISystem.AddOrUpdateNotification(
+                            $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(CollectAssets)}",
+                            title: "Step 1/3: Collecting Asset Packs",
+                            text: $"Collecting: {modInfo.asset.name}",
+                            progressState: ProgressState.Progressing,
+                            thumbnail: "coui://apm/notify_icon.png",
+                            progress: (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100));
+
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
                         if (modDir.Contains(localModsPath) && !Setting.Instance.EnableLocalAssetPacks)
                         {
@@ -248,7 +251,6 @@ namespace AssetPacksManager
             Logger.Debug("All mod prefabs have been collected. Adding to database now.");
             _monoComponent.StartCoroutine(PrepareAssets(modAssets));
 
-            //SendAssetNotification();
             foreach (string key in MissingCids.Keys)
             {
                 NotificationSystem.Pop(key, 300f, title: $"Missing CID for {MissingCids[key].Count} prefabs",
@@ -276,9 +278,16 @@ namespace AssetPacksManager
             var assetDatabaseStartTime = DateTime.Now;
             foreach (var mod in modAssets)
             {
-                notificationInfo.progressState = ProgressState.Progressing;
-                notificationInfo.progress = (int)(currentIndex / (float)modAssets.Count() * 100);
-                notificationInfo.text = $"Preparing Pack: {currentIndex}/{modAssets.Count()}";
+                notificationInfo = _notificationUISystem.AddOrUpdateNotification(
+                    $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(PrepareAssets)}",
+                    title: "Step 2/3: Preparing Assets",
+                    text: $"Preparing Pack: {mod.Key}",
+                    progressState: ProgressState.Progressing,
+                    thumbnail: "coui://apm/notify_icon.png",
+                    progress: (int)(currentIndex / (float)modAssets.Count() * 100));
+
+                var modStartTime = DateTime.Now;
+
                 foreach (var file in mod.Value)
                 {
                     try
@@ -286,8 +295,6 @@ namespace AssetPacksManager
                         Logger.Debug("Loading File: " + file.FullName);
 
                         var absolutePath = file.FullName;
-                        //var absolutePath = "C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/Rural Welfare Office.Prefab";
-                        //var relativePath = ".cache/Mods/mods_subscribed/79063_6/assets/DansPack/Rural Welfare Office/";
 
                         // Replace backslashes with forward slashes
                         absolutePath = absolutePath.Replace('\\', '/');
@@ -296,7 +303,6 @@ namespace AssetPacksManager
                         // Remove content after last / from relative path
                         relativePath = relativePath.Substring(0, relativePath.LastIndexOf('/'));
 
-                        //var fileName = "SmallFireHouse01";
                         var fileName = Path.GetFileNameWithoutExtension(file.FullName);
 
                         var path = AssetDataPath.Create(relativePath, fileName);
@@ -313,6 +319,9 @@ namespace AssetPacksManager
                         Logger.Warn($"Asset {file} could not be loaded: {e.Message}");
                     }
                 }
+
+                var modEndTime = DateTime.Now - modStartTime;
+                Logger.Debug($"Mod Time for {mod.Key}: {modEndTime.TotalMilliseconds} ms (average {modAssets.Count() / modEndTime.TotalMilliseconds} ms per asset)");
 
                 currentIndex++;
                 yield return null;
@@ -345,33 +354,43 @@ namespace AssetPacksManager
             var prefabSystemStartTime = DateTime.Now;
             var allPrefabs = AssetDatabase.user.GetAssets<PrefabAsset>();
             var prefabAssets = allPrefabs as PrefabAsset[] ?? allPrefabs.ToArray();
+            Dictionary<string, int> times = new();
             foreach (PrefabAsset prefabAsset in prefabAssets)
             {
                 try
                 {
-                    notificationInfo.progressState = ProgressState.Progressing;
-                    notificationInfo.progress = (int)(currentIndex / (float)prefabAssets.Count() * 100);
-                    notificationInfo.text = $"Loading: {prefabAsset.name}";
+                    var prefabStartTime = DateTime.Now;
+                    notificationInfo = _notificationUISystem.AddOrUpdateNotification(
+                        $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadAssets)}",
+                        title: "Step 3/3: Loading Assets",
+                        text: $"Loading: {prefabAsset.name}",
+                        progressState: ProgressState.Progressing,
+                        thumbnail: "coui://apm/notify_icon.png",
+                        progress: (int)(currentIndex / (float)prefabAssets.Count() * 100));
+
                     Logger.Debug("Asset Name: " + prefabAsset.name);
                     Logger.Debug("Asset Path: " + prefabAsset.path);
-                    // Logger.Info("I SubPath: " + prefabAsset.subPath);
                     PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
                     Logger.Debug("Loaded Prefab");
                     _prefabSystem.AddPrefab(prefabBase, null, null, null);
                     Logger.Debug($"Added {prefabAsset.name} to Prefab System");
                     loaded++;
+                    var prefabEndTime = DateTime.Now - prefabStartTime;
+                    Logger.Debug("Prefab Time: " + prefabEndTime.TotalMilliseconds + "ms");
+                    if (times.ContainsKey(prefabAsset.name))
+                    {
+                        times[prefabAsset.name] += (int)prefabEndTime.TotalMilliseconds;
+                    }
+                    else
+                    {
+                        times.Add(prefabAsset.name, (int)prefabEndTime.TotalMilliseconds);
+                    }
                 }
                 catch (Exception e)
                 {
                     notLoaded++;
                     Logger.Info(
                         $"Please see AssetPacksManager Log for details. Asset {prefabAsset.name} could not be added to Database: {e.Message}Path: {prefabAsset.path}\nUnique Name: {prefabAsset.uniqueName}\nCID: {prefabAsset.guid}\nSubPath: {prefabAsset.subPath}");
-                    /*if (e.InnerException != null)
-                    {
-                        Logger.Error("Inner: " + e.InnerException.Message);
-                        Logger.Error("InnerStack: " + e.InnerException.StackTrace);
-                        Logger.Error(e.ToJSONString());
-                    }*/
                 }
 
                 currentIndex++;
@@ -380,6 +399,31 @@ namespace AssetPacksManager
 
             var prefabSystemEndTime = DateTime.Now - prefabSystemStartTime;
             Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
+            Logger.Info($"Average: {prefabSystemEndTime.TotalMilliseconds / prefabAssets.Length}ms per asset");
+            string minAsset = "", maxAsset = "";
+            int min = Int32.MaxValue, max = -1;
+            foreach(var time in times)
+            {
+                if (time.Value < min)
+                {
+                    min = time.Value;
+                    minAsset = time.Key;
+                }
+                if (time.Value > max)
+                {
+                    max = time.Value;
+                    maxAsset = time.Key;
+                }
+            }
+            Logger.Info($"Min: {minAsset} - {min}ms");
+            Logger.Info($"Max: {maxAsset} - {max}ms");
+            using(StreamWriter sw = new StreamWriter(Path.Combine(EnvPath.kUserDataPath, "ModsData", nameof(AssetPacksManager), "AssetLoadTimes.txt")))
+            {
+                foreach (var time in times)
+                {
+                    sw.WriteLine($"{time.Key}: {time.Value}ms");
+                }
+            }
             _notificationUISystem.RemoveNotification(
                 identifier: notificationInfo.id,
                 delay: 30f,
