@@ -36,8 +36,6 @@ namespace AssetPacksManager
                 UIManager.defaultUISystem.AddHostLocation("apm", Path.Combine(Path.GetDirectoryName(asset.path), "Resources"), false);
             }
 
-            MigrateSettings();
-
             Setting setting = new (this);
             setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
@@ -47,33 +45,6 @@ namespace AssetPacksManager
             Logger.Info(Setting.Instance.ToString());
 
             updateSystem.UpdateAt<AssetPackLoaderSystem>(SystemUpdatePhase.MainLoop);
-        }
-
-        private void MigrateSettings()
-        {
-            try
-            {
-                var oldLocation = Path.Combine(EnvPath.kUserDataPath, nameof(AssetPacksManager) + ".coc");
-                if (File.Exists(oldLocation))
-                {
-                    var newLocation = Path.Combine(EnvPath.kUserDataPath, "ModsSettings", nameof(AssetPacksManager),
-                        nameof(AssetPacksManager) + ".coc");
-                    if (!File.Exists(newLocation))
-                    {
-                        if (!Directory.Exists(Path.GetDirectoryName(newLocation)))
-                            Directory.CreateDirectory(Path.GetDirectoryName(newLocation));
-                        File.Move(oldLocation, newLocation);
-                    }
-                    else
-                    {
-                        File.Delete(oldLocation);
-                    }
-                }
-            }
-            catch (Exception x)
-            {
-                Logger.Warn("Settings could not be migrated: " + x.Message);
-            }
         }
 
         public void OnDispose()
