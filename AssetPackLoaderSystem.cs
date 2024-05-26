@@ -131,6 +131,11 @@ namespace AssetPacksManager
         private static int FindLocalAssets(string currentDir)
         {
             int localAssets = 0;
+            if (!Directory.Exists(currentDir))
+            {
+                return 0;
+            }
+
             foreach (var dir in Directory.GetDirectories(currentDir))
             {
                 if (dir.Contains(".cache"))
@@ -436,15 +441,15 @@ namespace AssetPacksManager
         }
 
         /// <summary>
-        /// Checks if the prefab has a CID file. If not, it will try to restore it from the backup
+        /// Checks if the asset has a CID file. If not, it will try to restore it from the backup
         /// Creates a backup file if it doesn't exist.
         ///
         /// This is only needed because PDX Mods deleted CID files when disabling a mod while ingame.
         /// </summary>
-        /// <param name="file">Prefab file to be checked</param>
+        /// <param name="file">Asset file to be checked</param>
         /// <param name="modName">Current mod directory</param>
         /// <returns></returns>
-        private static bool CheckPrefab(FileInfo file, string modName)
+        private static bool CheckAsset(FileInfo file, string modName)
         {
             if (!File.Exists(file.FullName + ".cid"))
             {
@@ -455,14 +460,14 @@ namespace AssetPacksManager
                     return true;
                 }
 
-                Logger.Warn($"Prefab has no CID: {file.FullName}. No CID Backup was found");
+                Logger.Warn($"Asset has no CID: {file.FullName}. No CID Backup was found");
                 if (MissingCids.ContainsKey(modName))
                 {
                     MissingCids[modName].Add(file.Name);
                 }
                 else
                 {
-                    MissingCids.Add(modName, new List<string> { file.Name });
+                    MissingCids.Add(modName, [file.Name]);
                 }
 
                 return false;
@@ -473,7 +478,7 @@ namespace AssetPacksManager
                 File.Copy(file.FullName + ".cid", file.FullName + ".cid.backup", true);
             return true;
         }
-
+        private static readonly List<string> AdditionalCidChecks = [".Geometry", ".Surface", ".Texture"];
         private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, string modName)
         {
             List<FileInfo> files = new();
@@ -486,8 +491,12 @@ namespace AssetPacksManager
             {
                 if (file.Extension == ".Prefab")
                 {
-                    if (CheckPrefab(file, modName))
+                    if (CheckAsset(file, modName))
                         files.Add(file);
+                }
+                else if (AdditionalCidChecks.Contains(file.Extension))
+                {
+                    CheckAsset(file, modName);
                 }
 
                 if (SupportedThumbnailExtensions.Contains(file.Extension))
