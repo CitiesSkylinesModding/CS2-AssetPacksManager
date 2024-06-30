@@ -7,36 +7,36 @@ using Game.UI;
 using Game.UI.Widgets;
 using System.Collections.Generic;
 using Colossal.Logging;
+using Game.UI.Menu;
 
 namespace AssetPacksManager
 {
     [FileLocation($"ModsSettings/{nameof(AssetPacksManager)}/{nameof(AssetPacksManager)}")]
-    [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup, kMiscGroup)]
-    [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup, kMiscGroup)]
+    [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup, kMiscGroup, kLoadedPacks)]
+    [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup, kMiscGroup, kLoadedPacks)]
     public class Setting : ModSetting
     {
 
-        public const string kSection = "Main";
+        public const string kMainSection = "Settings";
+        public const string kPacksSection = "Packs";
         public const string kSettingsGroup = "Synchronization";
         public const string kActionsGroup = "Actions";
         public const string kMiscGroup = "Misc";
+        public const string kLoadedPacks = "Loaded Asset Packs";
         public static Setting Instance;
         public Setting(IMod mod) : base(mod)
         {
-            SetDefaults();
+
         }
 
-        [SettingsUIHidden]
-        public bool HiddenSetting { get; set; }
 
+        [SettingsUISection(kMainSection, kSettingsGroup)]
+        public bool EnableLocalAssetPacks { get; set; } = false;
 
-        [SettingsUISection(kSection, kSettingsGroup)]
-        public bool EnableLocalAssetPacks { get; set; }
+        [SettingsUISection(kMainSection, kSettingsGroup)]
+        public bool EnableSubscribedAssetPacks { get; set; } = true;
 
-        [SettingsUISection(kSection, kSettingsGroup)]
-        public bool EnableSubscribedAssetPacks { get; set; }
-
-        [SettingsUISection(kSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kSettingsGroup)]
         public bool EnableAssetPackLoadingOnStartup { get; set; } = true;
 
         private bool AssetsLoadable()
@@ -44,7 +44,7 @@ namespace AssetPacksManager
             return AssetPackLoaderSystem.AssetsLoaded;
         }
 
-        [SettingsUISection(kSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kSettingsGroup)]
         [SettingsUIDisableByCondition(typeof(Setting), nameof(AssetsLoadable))]
         public bool LoadAssetPacks
         {
@@ -59,7 +59,7 @@ namespace AssetPacksManager
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
-        [SettingsUISection(kSection, kActionsGroup)]
+        [SettingsUISection(kMainSection, kActionsGroup)]
         public bool DeleteModsCache
         {
             set { AssetPackLoaderSystem.DeleteModsCache(); }
@@ -67,7 +67,7 @@ namespace AssetPacksManager
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
-        [SettingsUISection(kSection, kActionsGroup)]
+        [SettingsUISection(kMainSection, kActionsGroup)]
         public bool DeleteModsWithMissingCid
         {
             set
@@ -78,19 +78,19 @@ namespace AssetPacksManager
         }
 
         [SettingsUIButton]
-        [SettingsUISection(kSection, kActionsGroup)]
-        public bool OpenLogFIle
+        [SettingsUISection(kMainSection, kActionsGroup)]
+        public bool OpenLogFile
         {
             set { AssetPackLoaderSystem.OpenLogFile(); }
         }
 
         [SettingsUISlider(min=0, max=100000, step=1000, unit = "ms")]
-        [SettingsUISection(kSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kMiscGroup)]
         public int LogCooldownTicks { get; set; }
 
         private LogLevel _loggingLevel;
 
-        [SettingsUISection(kSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kMiscGroup)]
         public LogLevel LoggingLevel
         {
             get { return _loggingLevel; }
@@ -123,15 +123,21 @@ namespace AssetPacksManager
             }
         }
 
-        [SettingsUISection(kSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kMiscGroup)]
         public bool AutoHideNotifications { get; set; }
 
-        [SettingsUISection(kSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kMiscGroup)]
         public bool ShowWarningForLocalAssets { get; set; }
+
+        public static int LoadedAssetPacksTextVersion { get; set; }
+
+        //[SettingsUIValueVersion(typeof(Setting), nameof(LoadedAssetPacksTextVersion))]
+        [SettingsUIDisplayName(typeof(AssetPackLoaderSystem), nameof(AssetPackLoaderSystem.GetLoadedAssetPacksText))]
+        [SettingsUISection(kPacksSection, kLoadedPacks)]
+        public string LoadedAssetPacksText => "";
 
         public override void SetDefaults()
         {
-            HiddenSetting = true;
             EnableLocalAssetPacks = false;
             EnableSubscribedAssetPacks = true;
             LoggingLevel = LogLevel.Info;
@@ -180,11 +186,13 @@ namespace AssetPacksManager
             return new Dictionary<string, string>
             {
                 {m_Setting.GetSettingsLocaleID(), "Asset Packs Manager"},
-                { m_Setting.GetOptionTabLocaleID(Setting.kSection), "Main" },
+                { m_Setting.GetOptionTabLocaleID(Setting.kMainSection), "Settings" },
+                { m_Setting.GetOptionTabLocaleID(Setting.kPacksSection), "Asset Packs" },
 
                 { m_Setting.GetOptionGroupLocaleID(Setting.kSettingsGroup), "Synchronization" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kActionsGroup), "Actions" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kMiscGroup), "Miscellaneous" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kLoadedPacks), "Loaded Asset Packs" },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableLocalAssetPacks)), "Enable Local Asset Packs"},
                 {
@@ -231,7 +239,7 @@ namespace AssetPacksManager
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.ShowWarningForLocalAssets)), "Show Warning for Local Assets"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.ShowWarningForLocalAssets)),
-                    $"Displays a warning when APM detects local assets in the user/Mods folder. This is to prevent accidental loading of local assets."
+                    $"Displays a warning when APM detects local assets in the user folder. This is to prevent accidental loading of local assets."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LogCooldownTicks)), "Log Cooldown (10000 = 1ms)"},
@@ -253,18 +261,24 @@ namespace AssetPacksManager
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsWithMissingCid)), "Delete Mods with missing CID-Files"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsWithMissingCid)),
-                    $"A less agressive version of the Delete Mods Cache option. This will only delete mods that are missing the CID-File. This will close the game immediately. It will not change your playset, but will require to re-download all affected mods on the next startup."
+                    $"A less aggressive version of the Delete Mods Cache option. This will only delete mods that are missing the CID-File. This will close the game immediately. It will not change your playset, but will require to re-download all affected mods on the next startup."
                 },
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteModsWithMissingCid)),
                     $"**WARNING. This will close your game!** Are you sure you want to delete the affected mods cache? This cannot be undone."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.OpenLogFIle)), "Open Log File"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.OpenLogFile)), "Open Log File"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.OpenLogFIle)),
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.OpenLogFile)),
                     $"Opens the log file of the mod in the default text editor. Log contains details about assets that failed to load."
                 },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadedAssetPacksText)), "Loaded Asset Packs"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadedAssetPacksText)),
+                    $"Displays the loaded asset packs. This is a read-only field."
+                }
             };
         }
 

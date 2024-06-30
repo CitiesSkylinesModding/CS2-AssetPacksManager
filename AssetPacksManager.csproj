@@ -8,19 +8,12 @@
         <!--The folder where Game.dll is located. Set it only if the game is not installed in the default location, otherwise keep it empty-->
         <CustomManagedPath>D:\Games\steamapps\common\Cities Skylines II\Cities2_Data\Managed</CustomManagedPath>
 
-        <!--Path to the text file where PDX account data is stored which is required to publish the mod-->
-        <!--Keep it outside of project in order to not commit it or share accidentally-->
-        <!--The file should contain 2 lines:-->
-        <!--Your.PDX@Account.login-->
-        <!--Your-PDX-Account-Pa$$word-->
-        <PDXAccountDataPath>$(USERPROFILE)\Desktop\pdx_account.txt</PDXAccountDataPath>
-
         <AdditionalFilesDirectory>Resources</AdditionalFilesDirectory>
 
         <!--The file where mod information which is required for publishing mod on PDX mods are stored-->
         <PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
-        <AssemblyVersion>1.2.5</AssemblyVersion>
-        <FileVersion>1.2.5</FileVersion>
+        <AssemblyVersion>1.3.0</AssemblyVersion>
+        <FileVersion>1.3.0</FileVersion>
         <LangVersion>default</LangVersion>
         <Version>1.0.0</Version>
         <Authors>Konsi</Authors>
@@ -91,6 +84,9 @@
         <None Include="$(ModPropsFile)" Link="Properties\Mod.props"/>
         <None Include="$(ModTargetsFile)" Link="Properties\Mod.targets"/>
         <None Update="Resources\notify_icon.png">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\game_crash_warning.svg">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

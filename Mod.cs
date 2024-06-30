@@ -40,7 +40,6 @@ namespace AssetPacksManager
             setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
             AssetDatabase.global.LoadSettings(nameof(AssetPacksManager), setting, new Setting(this));
-            setting.HiddenSetting = false;
             Setting.Instance = setting;
             Logger.Info(Setting.Instance.ToString());
 

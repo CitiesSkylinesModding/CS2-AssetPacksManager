@@ -13,6 +13,7 @@ using Colossal.UI;
 using Game.Prefabs;
 using Game.PSI;
 using Game.SceneFlow;
+using Game.UI.Localization;
 using Game.UI.Menu;
 using Unity.Collections;
 using Unity.Entities;
@@ -37,7 +38,7 @@ namespace AssetPacksManager
         private readonly GameObject _monoObject = new();
         public static bool AssetsLoaded = false;
         private static DateTime _assetLoadStartTime;
-
+        public static string LoadedAssetPacksText { get; set; } = "";
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -50,6 +51,17 @@ namespace AssetPacksManager
 
             var migrationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                 "CustomAssets_backup");
+
+            var apmNotLoadedNotification = _notificationUISystem.AddOrUpdateNotification(
+                $"APM-NoLoad",
+                title: "Asset Packs Manager not loaded",
+                text: "Click here to load Asset Packs Manager.",
+                progressState: ProgressState.Indeterminate,
+                progress: 0,
+                thumbnail: "coui://apm/game_crash_warning.svg",
+                onClicked: OnMainMenu
+            );
+
             try
             {
                 string customAssetsDir = $"{EnvPath.kUserDataPath}/CustomAssets";
@@ -73,7 +85,7 @@ namespace AssetPacksManager
 
             if (Setting.Instance.ShowWarningForLocalAssets)
             {
-                int localAssets = FindLocalAssets($"{EnvPath.kLocalModsPath}");
+                int localAssets = FindLocalAssets($"{EnvPath.kUserDataPath}");
                 if (localAssets > 0)
                 {
                     NotificationSystem.Pop("APM-local", 30f, "Local Assets Found",
@@ -82,22 +94,43 @@ namespace AssetPacksManager
             }
         }
 
+        public static LocalizedString GetLoadedAssetPacksText()
+        {
+            return LocalizedString.IdWithFallback("APM-LoadedAssetPacks", LoadedAssetPacksText);
+        }
+
         protected override void OnGameLoadingComplete(Purpose purpose, GameMode mode)
         {
             base.OnGameLoadingComplete(purpose, mode);
             if (mode == GameMode.MainMenu)
             {
-                if (Setting.Instance.EnableAssetPackLoadingOnStartup)
-                {
-                    LoadAssetPacks();
-                }
+                OnMainMenu();
+            }
+        }
+
+        private void OnMainMenu()
+        {
+            _notificationUISystem.RemoveNotification("APM-NoLoad");
+            Logger.Info("Main Menu entered");
+            if (Setting.Instance.EnableAssetPackLoadingOnStartup)
+            {
+                Logger.Info("Loading Asset Packs on Startup");
+                LoadAssetPacks();
+            }
+            else
+            {
+                Logger.Info("Asset Pack Loading on Startup is disabled");
+
             }
         }
 
         public void LoadAssetPacks()
         {
             if (AssetsLoaded)
+            {
+                Logger.Info("Assets are already loaded, skipping...");
                 return;
+            }
             _monoComponent.StartCoroutine(CollectAssets());
             AssetsLoaded = true;
         }
@@ -230,6 +263,9 @@ namespace AssetPacksManager
                         Logger.Debug($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
                         modAssets[mod.Name].AddRange(assetsFromMod);
                         packsFound++;
+
+                        AddToLoadedPacks(modInfo.name);
+                        Setting.LoadedAssetPacksTextVersion++;
                     }
                     //var modTimeEnd = DateTime.Now - modTime;
                     //Logger.Info("Mod Time: " + modTimeEnd.TotalMilliseconds + "ms");
@@ -262,6 +298,12 @@ namespace AssetPacksManager
                     text: $"{key.Split(',')[0]} has {MissingCids[key].Count} missing CIDs. Click to delete cache",
                     onClicked: DeleteModsWithMissingCid);
             }
+        }
+
+        private static void AddToLoadedPacks(string modInfoName)
+        {
+            string text = modInfoName.Split(',')[0];
+            LoadedAssetPacksText += text + "\n";
         }
 
 
@@ -331,6 +373,8 @@ namespace AssetPacksManager
                 currentIndex++;
                 yield return null;
             }
+
+            WriteAnalysisInfo();
 
             var assetDatabaseEndTime = DateTime.Now - assetDatabaseStartTime;
             Logger.Info("Asset Database Time: " + assetDatabaseEndTime.TotalMilliseconds + "ms");
@@ -429,9 +473,14 @@ namespace AssetPacksManager
                     sw.WriteLine($"{time.Key}: {time.Value}ms");
                 }
             }
+
+            int delay = 100000;
+            if (Setting.Instance.AutoHideNotifications)
+                delay = 30;
+
             _notificationUISystem.RemoveNotification(
                 identifier: notificationInfo.id,
-                delay: 30f,
+                delay: delay,
                 text: $"Asset Loading complete. {loaded} assets loaded, {notLoaded} failed to load.",
                 progressState: ProgressState.Complete,
                 progress: 100
@@ -451,6 +500,7 @@ namespace AssetPacksManager
         /// <returns></returns>
         private static bool CheckAsset(FileInfo file, string modName)
         {
+            AnalyzeAsset(file, modName);
             if (!File.Exists(file.FullName + ".cid"))
             {
                 if (File.Exists(file.FullName + ".cid.backup"))
@@ -478,6 +528,51 @@ namespace AssetPacksManager
                 File.Copy(file.FullName + ".cid", file.FullName + ".cid.backup", true);
             return true;
         }
+
+        private static readonly Dictionary<string, int> ObsoleteIdentifiers = new();
+        private static void AnalyzeAsset(FileInfo file, string modName)
+        {
+            try
+            {
+                string prefabContent = File.ReadAllText(file.FullName);
+                if (prefabContent.Contains("ObsoleteIdentifiers"))
+                {
+                    int startIndex = prefabContent.IndexOf("ObsoleteIdentifiers", StringComparison.Ordinal);
+                    string obsoleteIdentifierWrapper = prefabContent.Substring(startIndex, 2000);
+                    int nameStartIndex = obsoleteIdentifierWrapper.IndexOf("\"m_Name\": \"", StringComparison.Ordinal);
+                    string obsoleteIdentifierCloseWrapper = obsoleteIdentifierWrapper.Substring(nameStartIndex);
+                    int nameEndIndex = obsoleteIdentifierCloseWrapper.IndexOf("\",", StringComparison.Ordinal);
+                    string obsoleteIdentifier = obsoleteIdentifierCloseWrapper.Substring(0, nameEndIndex);
+                    if (obsoleteIdentifier.Contains("\"m_Name\": \""))
+                    {
+                        obsoleteIdentifier = obsoleteIdentifier.Replace("\"m_Name\": \"", "");
+                    }
+                    if (ObsoleteIdentifiers.ContainsKey(obsoleteIdentifier))
+                    {
+                        ObsoleteIdentifiers[obsoleteIdentifier]++;
+                    }
+                    else
+                    {
+                        ObsoleteIdentifiers.Add(obsoleteIdentifier, 1);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                //Logger.Warn($"Error analyzing asset {file.Name}: {e.Message}");
+            }
+        }
+
+        private static void WriteAnalysisInfo()
+        {
+            string fileName = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/ObsoleteIdentifiers.txt";
+            using StreamWriter sw = new StreamWriter(fileName);
+            foreach (var identifier in ObsoleteIdentifiers)
+            {
+                sw.WriteLine($"{identifier.Key}: {identifier.Value}");
+            }
+        }
+
         private static readonly List<string> AdditionalCidChecks = [".Geometry", ".Surface", ".Texture"];
         private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, string modName)
         {
