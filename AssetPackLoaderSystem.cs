@@ -15,8 +15,6 @@ using Game.PSI;
 using Game.SceneFlow;
 using Game.UI.Localization;
 using Game.UI.Menu;
-using Unity.Collections;
-using Unity.Entities;
 using UnityEngine;
 using StreamReader = System.IO.StreamReader;
 
@@ -279,6 +277,8 @@ namespace AssetPacksManager
                 yield return null;
             }
 
+            WriteLoadedPacks();
+
             _notificationUISystem.RemoveNotification(
                 identifier: notificationInfo.id,
                 delay: 1f,
@@ -300,10 +300,21 @@ namespace AssetPacksManager
             }
         }
 
+        private static List<string> LoadedPacks = new();
         private static void AddToLoadedPacks(string modInfoName)
         {
             string text = modInfoName.Split(',')[0];
-            LoadedAssetPacksText += text + "\n";
+            LoadedPacks.Add(text);
+        }
+
+        private static void WriteLoadedPacks()
+        {
+            LoadedPacks.Sort();
+            foreach (var text in LoadedPacks)
+            {
+                string formattedText = text.Replace(" ", "_");
+                LoadedAssetPacksText += formattedText + "------------------------------------------------------------------------ ";
+            }
         }
 
 
