@@ -124,10 +124,10 @@ namespace AssetPacksManager
         }
 
         [SettingsUISection(kMainSection, kMiscGroup)]
-        public bool AutoHideNotifications { get; set; }
+        public bool AutoHideNotifications { get; set; } = true;
 
         [SettingsUISection(kMainSection, kMiscGroup)]
-        public bool ShowWarningForLocalAssets { get; set; }
+        public bool ShowWarningForLocalAssets { get; set; } = true;
 
         public static int LoadedAssetPacksTextVersion { get; set; }
 

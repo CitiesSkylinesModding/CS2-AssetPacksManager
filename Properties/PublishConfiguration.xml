@@ -13,8 +13,8 @@
 Unofficial Custom Assets are experimental. They might crash your game or throw errors. Create redundant copies of your save files and use at your own risk. Custom assets have been tested extensively and don't cause issues if used correctly and with care.
 
 ## Asset Packs Manager
-This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the GitHub Page to find a list of currently available Asset Packs.
-Be careful using Custom Assets and this mod. It is a very early stage
+This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the [Paradox Mods Website](https://mods.paradoxplaza.com/games/cities_skylines_2)  to find a list of currently available Asset Packs.
+Be careful using Custom Assets and this mod.
 
 ## Features
 - Support for Playsets
@@ -30,7 +30,7 @@ Be careful using Custom Assets and this mod. It is a very early stage
 For Resources on Asset Creation, visit the "CustomAssetPack" repository on my GitHub.
 
 ## Credit
-The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for the Thumbnail.
+The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	</LongDescription>
 	<!--Thumbnail-->
 	<Thumbnail Value="Properties/APM_Thumbnail_500x500.png" />
@@ -41,17 +41,16 @@ The code of this mod was created by Konsi and Nullpinter. Thanks to CityRat for 
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.3.0" />
+	<ModVersion Value="1.4.0" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.1.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Add game crash warning when APM fails to load (thanks to Triton Supreme and CityRat)
-- Add list of loaded asset packs in settings
-- Fix default values for settings
-- Local Assets Warning now detects assets in whole user folder instead of Mods folder
+- Fixed asset duplication
+- Significantly increased loading times in Main Menu
+- Enabled Asset Packs are now always loaded, even with APM disabled (due to partial asset support of the game)
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />

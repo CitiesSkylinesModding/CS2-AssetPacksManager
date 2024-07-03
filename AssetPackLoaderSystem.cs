@@ -13,9 +13,11 @@ using Colossal.UI;
 using Game.Prefabs;
 using Game.PSI;
 using Game.SceneFlow;
+using Game.Simulation;
 using Game.UI.Localization;
 using Game.UI.Menu;
 using UnityEngine;
+using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
 
 namespace AssetPacksManager
@@ -369,8 +371,19 @@ namespace AssetPacksManager
                         using StreamReader sr = new StreamReader(cidFilename);
                         var guid = sr.ReadToEnd();
                         sr.Close();
-                        AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
-                        Logger.Debug("Prefab added to database successfully");
+
+                        // The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
+                        if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
+                        {
+                            loaded++;
+                            Logger.Debug("Prefab asset already in database");
+                        }
+                        else
+                        {
+                            AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
+                            Logger.Debug("Prefab added to database successfully");
+                        }
+
                     }
                     catch (Exception e)
                     {
@@ -427,16 +440,24 @@ namespace AssetPacksManager
                         progressState: ProgressState.Progressing,
                         thumbnail: "coui://apm/notify_icon.png",
                         progress: (int)(currentIndex / (float)prefabAssets.Count() * 100));
-
+                    var notificationTime = DateTime.Now - prefabStartTime;
                     Logger.Debug("Asset Name: " + prefabAsset.name);
                     Logger.Debug("Asset Path: " + prefabAsset.path);
-                    PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
+                    var prefabBaseTime = DateTime.Now;
+                    //PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
+                    var prefabBaseEndTime = DateTime.Now - prefabBaseTime;
                     Logger.Debug("Loaded Prefab");
-                    _prefabSystem.AddPrefab(prefabBase, null, null, null);
+                    var prefabAddTime = DateTime.Now;
+                    //_prefabSystem.AddPrefab(prefabBase, null, null, null);
                     Logger.Debug($"Added {prefabAsset.name} to Prefab System");
+                    var prefabAddEndTime = DateTime.Now - prefabAddTime;
+                    //Logger.Debug($"Added {prefabAsset.name} to Prefab System");
                     loaded++;
                     var prefabEndTime = DateTime.Now - prefabStartTime;
                     Logger.Debug("Prefab Time: " + prefabEndTime.TotalMilliseconds + "ms");
+                    Logger.Debug("Notification Time: " + notificationTime.TotalMilliseconds + "ms");
+                    Logger.Debug("Prefab Base Time: " + prefabBaseEndTime.TotalMilliseconds + "ms");
+                    Logger.Debug("Prefab Add Time: " + prefabAddEndTime.TotalMilliseconds + "ms");
                     if (times.ContainsKey(prefabAsset.name))
                     {
                         times[prefabAsset.name] += (int)prefabEndTime.TotalMilliseconds;
@@ -458,8 +479,8 @@ namespace AssetPacksManager
             }
 
             var prefabSystemEndTime = DateTime.Now - prefabSystemStartTime;
-            Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
-            Logger.Info($"Average: {prefabSystemEndTime.TotalMilliseconds / prefabAssets.Length}ms per asset");
+            Logger.Warn("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
+            Logger.Warn($"Average: {prefabSystemEndTime.TotalMilliseconds / prefabAssets.Length}ms per asset");
             string minAsset = "", maxAsset = "";
             int min = Int32.MaxValue, max = -1;
             foreach(var time in times)
@@ -475,8 +496,8 @@ namespace AssetPacksManager
                     maxAsset = time.Key;
                 }
             }
-            Logger.Info($"Min: {minAsset} - {min}ms");
-            Logger.Info($"Max: {maxAsset} - {max}ms");
+            Logger.Warn($"Min: {minAsset} - {min}ms");
+            Logger.Warn($"Max: {maxAsset} - {max}ms");
             using(StreamWriter sw = new StreamWriter(Path.Combine(EnvPath.kUserDataPath, "ModsData", nameof(AssetPacksManager), "AssetLoadTimes.txt")))
             {
                 foreach (var time in times)
