@@ -7,6 +7,7 @@ using Game;
 using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
+using Colossal.Logging;
 using Colossal.PSI.Environment;
 using Colossal.UI;
 using Game.Prefabs;
@@ -41,6 +42,7 @@ namespace AssetPacksManager
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
             AssetDatabase.global.LoadSettings(nameof(AssetPacksManager), setting, new Setting(this));
             Setting.Instance = setting;
+            KLogger.Logger.effectivenessLevel = Level.Debug;
             Logger.Info(Setting.Instance.ToString());
 
             updateSystem.UpdateAt<AssetPackLoaderSystem>(SystemUpdatePhase.MainLoop);

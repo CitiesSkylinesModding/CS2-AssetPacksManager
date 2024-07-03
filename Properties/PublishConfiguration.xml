@@ -41,16 +41,15 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.4.0" />
+	<ModVersion Value="1.4.1" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.1.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Fixed asset duplication
-- Significantly increased loading times in Main Menu
-- Enabled Asset Packs are now always loaded, even with APM disabled (due to partial asset support of the game)
+- Reverted last patch due to inconsistencies
+- Set Log Level to Debug
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />

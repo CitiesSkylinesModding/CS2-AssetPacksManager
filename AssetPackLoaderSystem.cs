@@ -444,11 +444,11 @@ namespace AssetPacksManager
                     Logger.Debug("Asset Name: " + prefabAsset.name);
                     Logger.Debug("Asset Path: " + prefabAsset.path);
                     var prefabBaseTime = DateTime.Now;
-                    //PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
+                    PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
                     var prefabBaseEndTime = DateTime.Now - prefabBaseTime;
                     Logger.Debug("Loaded Prefab");
                     var prefabAddTime = DateTime.Now;
-                    //_prefabSystem.AddPrefab(prefabBase, null, null, null);
+                    _prefabSystem.AddPrefab(prefabBase, null, null, null);
                     Logger.Debug($"Added {prefabAsset.name} to Prefab System");
                     var prefabAddEndTime = DateTime.Now - prefabAddTime;
                     //Logger.Debug($"Added {prefabAsset.name} to Prefab System");
