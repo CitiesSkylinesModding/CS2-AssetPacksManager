@@ -10,6 +10,7 @@ using Colossal.PSI.Environment;
 using Game;
 using Colossal.Serialization.Entities;
 using Colossal.UI;
+using Game.Modding;
 using Game.Prefabs;
 using Game.PSI;
 using Game.SceneFlow;
@@ -264,7 +265,7 @@ namespace AssetPacksManager
                         modAssets[mod.Name].AddRange(assetsFromMod);
                         packsFound++;
 
-                        AddToLoadedPacks(modInfo.name);
+                        LoadedPacks.Add(modInfo, assetsFromMod.Count);
                         Setting.LoadedAssetPacksTextVersion++;
                     }
                     //var modTimeEnd = DateTime.Now - modTime;
@@ -302,20 +303,29 @@ namespace AssetPacksManager
             }
         }
 
-        private static List<string> LoadedPacks = new();
-        private static void AddToLoadedPacks(string modInfoName)
-        {
-            string text = modInfoName.Split(',')[0];
-            LoadedPacks.Add(text);
-        }
-
+        private static Dictionary<ModManager.ModInfo, int> LoadedPacks = new();
         private static void WriteLoadedPacks()
         {
-            LoadedPacks.Sort();
-            foreach (var text in LoadedPacks)
+            List<ModManager.ModInfo> packs = new();
+            foreach(var mod in LoadedPacks)
             {
-                string formattedText = text.Replace(" ", "_");
-                LoadedAssetPacksText += formattedText + "------------------------------------------------------------------------ ";
+                packs.Add(mod.Key);
+            }
+            packs.Sort((a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
+            foreach (var modInfo in packs)
+            {
+                string modName = modInfo.name.Split(',')[0].Replace(" ", "_");
+                string modId = "";
+                string assetsByMod = "";
+
+                try
+                {
+                    modId = modInfo.asset.subPath.Split('/')[1].Split('_')[0];
+                    assetsByMod = $"({LoadedPacks[modInfo].ToString()} Assets)";
+                }
+                catch(Exception _) { }
+
+                LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
             }
         }
 
@@ -481,8 +491,8 @@ namespace AssetPacksManager
             }
 
             var prefabSystemEndTime = DateTime.Now - prefabSystemStartTime;
-            Logger.Warn("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
-            Logger.Warn($"Average: {prefabSystemEndTime.TotalMilliseconds / prefabAssets.Length}ms per asset");
+            Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
+            Logger.Info($"Average: {prefabSystemEndTime.TotalMilliseconds / prefabAssets.Length}ms per asset");
             string minAsset = "", maxAsset = "";
             int min = Int32.MaxValue, max = -1;
             foreach(var time in times)
@@ -498,8 +508,8 @@ namespace AssetPacksManager
                     maxAsset = time.Key;
                 }
             }
-            Logger.Warn($"Min: {minAsset} - {min}ms");
-            Logger.Warn($"Max: {maxAsset} - {max}ms");
+            Logger.Info($"Min: {minAsset} - {min}ms");
+            Logger.Info($"Max: {maxAsset} - {max}ms");
             using(StreamWriter sw = new StreamWriter(Path.Combine(EnvPath.kUserDataPath, "ModsData", nameof(AssetPacksManager), "AssetLoadTimes.txt")))
             {
                 foreach (var time in times)
