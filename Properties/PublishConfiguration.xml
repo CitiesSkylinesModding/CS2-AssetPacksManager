@@ -49,7 +49,8 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
 - Restored 1.3.0 functionality
-- Added setting "Adaptive Asset Loading". This is the system that was used in 1.4.X version which caused issues for some players.
+- Added experimental setting "Adaptive Asset Loading". This is the system that was used in 1.4.X version which caused issues for some players.
+- Improved List of installed Asset Packs
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />

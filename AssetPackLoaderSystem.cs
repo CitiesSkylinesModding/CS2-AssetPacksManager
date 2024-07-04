@@ -320,8 +320,11 @@ namespace AssetPacksManager
 
                 try
                 {
-                    modId = modInfo.asset.subPath.Split('/')[1].Split('_')[0];
-                    assetsByMod = $"({LoadedPacks[modInfo].ToString()} Assets)";
+                    modId = $"[{modInfo.asset.subPath.Split('/')[1].Split('_')[0]}]";
+                    assetsByMod = $"({LoadedPacks[modInfo].ToString()} Asset";
+                    if(LoadedPacks[modInfo] != 1)
+                        assetsByMod += "s";
+                    assetsByMod += ")";
                 }
                 catch(Exception _) { }
 
