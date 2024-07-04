@@ -42,7 +42,7 @@ namespace AssetPacksManager
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(setting));
             AssetDatabase.global.LoadSettings(nameof(AssetPacksManager), setting, new Setting(this));
             Setting.Instance = setting;
-            KLogger.Logger.effectivenessLevel = Level.Debug;
+            Setting.Instance.UpdateLogLevel();
             Logger.Info(Setting.Instance.ToString());
 
             updateSystem.UpdateAt<AssetPackLoaderSystem>(SystemUpdatePhase.MainLoop);

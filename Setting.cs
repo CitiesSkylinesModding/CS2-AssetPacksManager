@@ -29,7 +29,6 @@ namespace AssetPacksManager
 
         }
 
-
         [SettingsUISection(kMainSection, kSettingsGroup)]
         public bool EnableLocalAssetPacks { get; set; } = false;
 
@@ -38,6 +37,9 @@ namespace AssetPacksManager
 
         [SettingsUISection(kMainSection, kSettingsGroup)]
         public bool EnableAssetPackLoadingOnStartup { get; set; } = true;
+
+        [SettingsUISection(kMainSection, kSettingsGroup)]
+        public bool AdaptiveAssetLoading { get; set; } = false;
 
         private bool AssetsLoadable()
         {
@@ -123,6 +125,28 @@ namespace AssetPacksManager
             }
         }
 
+        public void UpdateLogLevel()
+        {
+            switch (_loggingLevel)
+            {
+                case LogLevel.Debug:
+                    KLogger.Logger.effectivenessLevel = Level.Debug;
+                    break;
+                case LogLevel.Info:
+                    KLogger.Logger.effectivenessLevel = Level.Info;
+                    break;
+                case LogLevel.Warning:
+                    KLogger.Logger.effectivenessLevel = Level.Warn;
+                    break;
+                case LogLevel.Error:
+                    KLogger.Logger.effectivenessLevel = Level.Error;
+                    break;
+                case LogLevel.Critical:
+                    KLogger.Logger.effectivenessLevel = Level.Critical;
+                    break;
+            }
+        }
+
         [SettingsUISection(kMainSection, kMiscGroup)]
         public bool AutoHideNotifications { get; set; } = true;
 
@@ -162,7 +186,9 @@ namespace AssetPacksManager
             text += $"\nEnableLocalAssetPacks: {EnableLocalAssetPacks}";
             text += $"\nEnableSubscribedAssetPacks: {EnableSubscribedAssetPacks}";
             text += $"\nEnableAssetPackLoadingOnStartup: {EnableAssetPackLoadingOnStartup}";
+            text += $"\nAdaptiveAssetLoading: {AdaptiveAssetLoading}";
             text += $"\nLoggingLevel: {LoggingLevel}";
+            text += $"\nActualLoggingLevel: {KLogger.Logger.effectivenessLevel.name}";
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
             text += $"\nLogCooldownTicks: {LogCooldownTicks}";
@@ -210,6 +236,12 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableAssetPackLoadingOnStartup)),
                     $"Enables the loading of asset packs on startup. Turning this setting off will prevent the loading of asset packs on startup. You will have to load them manually."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AdaptiveAssetLoading)), "Adaptive Asset Loading (Experimental, may cause issues)"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.AdaptiveAssetLoading)),
+                    $"Enables the loading of assets adaptively. Only assets that have not been loaded by the integrated PDX Asset Loader will be loaded, which may significantly reduce load times (up to 99%). Disable this option if you experience Black Screens, Crashes, Low FPS, missing assets or other issues."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadAssetPacks)), "Load Asset Packs"},

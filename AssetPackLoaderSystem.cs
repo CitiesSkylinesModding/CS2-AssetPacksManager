@@ -321,6 +321,7 @@ namespace AssetPacksManager
 
 
         private static int loaded;
+        private static int skipped;
         private static int notLoaded;
 
         private static IEnumerator PrepareAssets(Dictionary<string, List<FileInfo>> modAssets)
@@ -334,6 +335,7 @@ namespace AssetPacksManager
             int currentIndex = 0;
 
             loaded = 0;
+            skipped = 0;
             notLoaded = 0;
             var assetDatabaseStartTime = DateTime.Now;
             foreach (var mod in modAssets)
@@ -373,7 +375,7 @@ namespace AssetPacksManager
                         sr.Close();
 
                         // The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
-                        if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
+                        if (Setting.Instance.AdaptiveAssetLoading && AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
                         {
                             loaded++;
                             Logger.Debug("Prefab asset already in database");
@@ -510,10 +512,20 @@ namespace AssetPacksManager
             if (Setting.Instance.AutoHideNotifications)
                 delay = 30;
 
+            string text = $"Asset Loading complete. {loaded} assets loaded";
+            if (skipped > 0)
+            {
+                text += $", {skipped} skipped";
+            }
+            if (notLoaded > 0)
+            {
+                text += $", {notLoaded} failed to load";
+            }
+
             _notificationUISystem.RemoveNotification(
                 identifier: notificationInfo.id,
                 delay: delay,
-                text: $"Asset Loading complete. {loaded} assets loaded, {notLoaded} failed to load.",
+                text: text,
                 progressState: ProgressState.Complete,
                 progress: 100
             );
