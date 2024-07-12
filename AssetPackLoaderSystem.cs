@@ -336,6 +336,7 @@ namespace AssetPacksManager
         private static int loaded;
         private static int skipped;
         private static int notLoaded;
+        private static int autoLoaded = 0;
 
         private static IEnumerator PrepareAssets(Dictionary<string, List<FileInfo>> modAssets)
         {
@@ -387,17 +388,28 @@ namespace AssetPacksManager
                         var guid = sr.ReadToEnd();
                         sr.Close();
 
-                        // The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
-                        if (Setting.Instance.AdaptiveAssetLoading && AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
+                        
+
+                        if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset) && asset.state == LoadState.NotLoaded)
                         {
-                            loaded++;
-                            Logger.Debug("Prefab asset already in database");
+                            // The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
+                            if (Setting.Instance.AdaptiveAssetLoading)
+                            {
+                                loaded++;
+                                Logger.Debug("Prefab asset already in database");
+                            }
+                            else
+                            {
+                                AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
+                                Logger.Debug("Prefab added to database successfully");
+                            }
                         }
                         else
                         {
-                            AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
-                            Logger.Debug("Prefab added to database successfully");
+                            autoLoaded++;
+                            Logger.Debug("Asset added automagically");
                         }
+                        
 
                     }
                     catch (Exception e)
@@ -525,7 +537,7 @@ namespace AssetPacksManager
             if (Setting.Instance.AutoHideNotifications)
                 delay = 30;
 
-            string text = $"Asset Loading complete. {loaded} assets loaded";
+            string text = $"{loaded} assets loaded by APM.";
             if (skipped > 0)
             {
                 text += $", {skipped} skipped";
@@ -533,6 +545,10 @@ namespace AssetPacksManager
             if (notLoaded > 0)
             {
                 text += $", {notLoaded} failed to load";
+            }
+            if (autoLoaded > 0)
+            {
+                text += $", {autoLoaded} loaded automatically";
             }
 
             _notificationUISystem.RemoveNotification(
