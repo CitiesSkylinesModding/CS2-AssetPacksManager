@@ -53,7 +53,7 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 - Improved List of installed Asset Packs
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
-	<ExternalLink Type="github" Url="https://github.com/kosch104/CS2-AssetPacksManager" />
+	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />
 	<ExternalLink Type="discord" Url="https://discord.gg/UkKAfRqfCn" />
 	<ExternalLink Type="paypal" Url="https://www.paypal.com/paypalme/KonstantinSchwarze" />
 </Publish>
