@@ -91,4 +91,8 @@
         </None>
     </ItemGroup>
 
+    <Target Name="BuildUI" AfterTargets="AfterBuild">
+        <Exec Command="npm run build:csproj"/>
+    </Target>
+
 </Project>
