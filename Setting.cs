@@ -158,6 +158,7 @@ namespace AssetPacksManager
         //[SettingsUIValueVersion(typeof(Setting), nameof(LoadedAssetPacksTextVersion))]
         [SettingsUIDisplayName(typeof(AssetPackLoaderSystem), nameof(AssetPackLoaderSystem.GetLoadedAssetPacksText))]
         [SettingsUISection(kPacksSection, kLoadedPacks)]
+        [SettingsUIMultilineText]
         public string LoadedAssetPacksText => "";
 
         public override void SetDefaults()
@@ -310,7 +311,7 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadedAssetPacksText)),
                     $"Displays the loaded asset packs. This is a read-only field."
-                }
+                },
             };
         }
 

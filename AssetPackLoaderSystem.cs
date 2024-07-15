@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Colossal.IO.AssetDatabase;
+using Colossal.Localization;
 using Colossal.PSI.Common;
 using Colossal.PSI.Environment;
 using Game;
@@ -328,7 +329,8 @@ namespace AssetPacksManager
                 }
                 catch(Exception _) { }
 
-                LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
+                LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}\n";
+                //LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
             }
         }
 
