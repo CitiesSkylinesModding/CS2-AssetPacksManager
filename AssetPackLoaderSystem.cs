@@ -16,7 +16,7 @@ using Game.SceneFlow;
 using Game.UI.Localization;
 using Game.UI.Menu;
 using UnityEngine;
-using UrbanDevKit.CooperativeLoading
+using UrbanDevKit.CooperativeLoading;
 using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
 
