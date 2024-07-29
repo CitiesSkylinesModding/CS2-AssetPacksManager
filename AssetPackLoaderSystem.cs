@@ -334,6 +334,7 @@ namespace AssetPacksManager
 
         private static int loaded;
         private static int skipped;
+        private static int autoLoaded;
         private static int notLoaded;
 
         private static IEnumerator PrepareAssets(Dictionary<string, List<FileInfo>> modAssets)
@@ -348,6 +349,7 @@ namespace AssetPacksManager
 
             loaded = 0;
             skipped = 0;
+            autoLoaded = 0;
             notLoaded = 0;
             var assetDatabaseStartTime = DateTime.Now;
             foreach (var mod in modAssets)
@@ -387,10 +389,21 @@ namespace AssetPacksManager
                         sr.Close();
 
                         // The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
-                        if (Setting.Instance.AdaptiveAssetLoading && AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
+                        if (Setting.Instance.AdaptiveAssetLoading)
                         {
-                            loaded++;
-                            Logger.Debug("Prefab asset already in database");
+                            if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
+                            {
+                                if (asset.state != LoadState.NotLoaded)
+                                {
+                                    // TODO: Find out why some assets are already loaded
+                                    Logger.Warn("Asset already loaded: " + asset.name);
+                                }
+                                else
+                                {
+                                    autoLoaded++;
+                                    Logger.Debug("Prefab asset already in database");
+                                }
+                            }
                         }
                         else
                         {
@@ -439,7 +452,7 @@ namespace AssetPacksManager
 
             int currentIndex = 0;
             var prefabSystemStartTime = DateTime.Now;
-            var allPrefabs = AssetDatabase.user.GetAssets<PrefabAsset>();
+            var allPrefabs = AssetDatabase.global.GetAssets<PrefabAsset>();
             var prefabAssets = allPrefabs as PrefabAsset[] ?? allPrefabs.ToArray();
             Dictionary<string, int> times = new();
             foreach (PrefabAsset prefabAsset in prefabAssets)
@@ -524,7 +537,7 @@ namespace AssetPacksManager
             if (Setting.Instance.AutoHideNotifications)
                 delay = 30;
 
-            string text = $"Asset Loading complete. {loaded} assets loaded";
+            string text = $"{loaded} assets loaded by APM.";
             if (skipped > 0)
             {
                 text += $", {skipped} skipped";
@@ -532,6 +545,10 @@ namespace AssetPacksManager
             if (notLoaded > 0)
             {
                 text += $", {notLoaded} failed to load";
+            }
+            if (autoLoaded > 0)
+            {
+                text += $", {autoLoaded} loaded automatically";
             }
 
             _notificationUISystem.RemoveNotification(
