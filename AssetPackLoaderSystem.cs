@@ -16,6 +16,7 @@ using Game.SceneFlow;
 using Game.UI.Localization;
 using Game.UI.Menu;
 using UnityEngine;
+using UrbanDevKit.CooperativeLoading
 using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
 
@@ -93,6 +94,8 @@ namespace AssetPacksManager
             }
         }
 
+        private static readonly CollectAssetsPreloadingOperation<Task> CoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
+
         public static LocalizedString GetLoadedAssetPacksText()
         {
             return LocalizedString.IdWithFallback("APM-LoadedAssetPacks", LoadedAssetPacksText);
@@ -130,8 +133,8 @@ namespace AssetPacksManager
                 Logger.Info("Assets are already loaded, skipping...");
                 return;
             }
-            _monoComponent.StartCoroutine(CollectAssets());
-            AssetsLoaded = true;
+            //_monoComponent.StartCoroutine(CollectAssets());
+            CollectAssetsPreloadingOperation.Start();
         }
 
         public static void DeleteModsWithMissingCid()
@@ -194,6 +197,7 @@ namespace AssetPacksManager
 
         private static IEnumerator CollectAssets()
         {
+            AssetsLoaded = true;
             if (!Setting.Instance.EnableLocalAssetPacks && !Setting.Instance.EnableSubscribedAssetPacks)
             {
                 NotificationSystem.Pop("APM-status", 30f, "Asset Packs Disabled",

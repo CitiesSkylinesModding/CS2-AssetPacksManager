@@ -1,21 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Game;
 using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
-using Colossal.Logging;
-using Colossal.PSI.Environment;
 using Colossal.UI;
-using Game.Prefabs;
-using Game.PSI;
-using JetBrains.Annotations;
-using UnityEngine;
-using Hash128 = Colossal.Hash128;
-using StreamReader = System.IO.StreamReader;
 
 namespace AssetPacksManager
 {

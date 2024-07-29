@@ -91,6 +91,10 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="CitiesSkylinesModding.UrbanDevKit" Version="0.1.0" />
+    </ItemGroup>
+
     <Target Name="BuildUI" AfterTargets="AfterBuild">
         <Exec Command="npm run build:csproj"/>
     </Target>
