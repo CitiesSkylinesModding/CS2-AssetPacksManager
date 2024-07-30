@@ -97,7 +97,7 @@ namespace AssetPacksManager
 
         private static readonly PreloadingOperation<Task> CollectAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
         private static readonly PreloadingOperation<Task> PrepareAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", PrepareAssets());
-        private static readonly PreloadingOperation<Task> LoadAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
+        private static readonly PreloadingOperation<Task> LoadAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", LoadAssets());
 
         public static LocalizedString GetLoadedAssetPacksText()
         {
