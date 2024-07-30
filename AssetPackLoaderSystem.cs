@@ -95,7 +95,9 @@ namespace AssetPacksManager
             }
         }
 
-        private static readonly PreloadingOperation<Task> CoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
+        private static readonly PreloadingOperation<Task> CollectAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
+        private static readonly PreloadingOperation<Task> PrepareAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", PrepareAssets());
+        private static readonly PreloadingOperation<Task> LoadAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
 
         public static LocalizedString GetLoadedAssetPacksText()
         {
@@ -135,7 +137,7 @@ namespace AssetPacksManager
                 return;
             }
             //_monoComponent.StartCoroutine(CollectAssets());
-            CoroutinePreloader.Start();
+            CollectAssetsCoroutinePreloader.Start();
         }
 
         public static void DeleteModsWithMissingCid()
@@ -195,7 +197,7 @@ namespace AssetPacksManager
         {
             Logger.OpenLogFile();
         }
-
+        private static Dictionary<string, List<FileInfo>> modAssets = new();
         private static IEnumerator CollectAssets()
         {
             AssetsLoaded = true;
@@ -216,10 +218,10 @@ namespace AssetPacksManager
             int currentIndex = 0;
             int packsFound = 0;
 
-            Dictionary<string, List<FileInfo>> modAssets = new();
             var assetFinderStartTime = DateTime.Now;
+            var modList = GameManager.instance.modManager.ToList();
 
-            foreach (var modInfo in GameManager.instance.modManager)
+            foreach (var modInfo in modList)
             {
                 var assemblyName = modInfo.name.Split(',')[0];
                 Logger.Debug($"Checking mod {assemblyName}");
@@ -296,7 +298,8 @@ namespace AssetPacksManager
             var assetFinderEndTime = DateTime.Now - assetFinderStartTime;
             Logger.Info("Asset Collection Time: " + assetFinderEndTime.TotalMilliseconds + "ms");
             Logger.Debug("All mod prefabs have been collected. Adding to database now.");
-            //_monoComponent.StartCoroutine(PrepareAssets(modAssets));
+
+            PrepareAssetsCoroutinePreloader.Start();
 
             foreach (string key in MissingCids.Keys)
             {
@@ -341,7 +344,7 @@ namespace AssetPacksManager
         private static int skipped;
         private static int notLoaded;
 
-        private static IEnumerator PrepareAssets(Dictionary<string, List<FileInfo>> modAssets)
+        private static IEnumerator PrepareAssets()
         {
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
                 $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(PrepareAssets)}",
@@ -429,7 +432,7 @@ namespace AssetPacksManager
                 progress: 100
             );
 
-            _monoComponent.StartCoroutine(LoadAssets());
+            LoadAssetsCoroutinePreloader.Start();
         }
 
         private static IEnumerator LoadAssets()
