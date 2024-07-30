@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Colossal.IO.AssetDatabase;
 using Colossal.PSI.Common;
 using Colossal.PSI.Environment;
@@ -16,7 +17,7 @@ using Game.SceneFlow;
 using Game.UI.Localization;
 using Game.UI.Menu;
 using UnityEngine;
-using UrbanDevKit.CooperativeLoading;
+using UrbanDevKit.CooperativePreloading;
 using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
 
@@ -94,7 +95,7 @@ namespace AssetPacksManager
             }
         }
 
-        private static readonly CollectAssetsPreloadingOperation<Task> CoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
+        private static readonly PreloadingOperation<Task> CoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
 
         public static LocalizedString GetLoadedAssetPacksText()
         {
@@ -134,7 +135,7 @@ namespace AssetPacksManager
                 return;
             }
             //_monoComponent.StartCoroutine(CollectAssets());
-            CollectAssetsPreloadingOperation.Start();
+            CoroutinePreloader.Start();
         }
 
         public static void DeleteModsWithMissingCid()
@@ -295,7 +296,7 @@ namespace AssetPacksManager
             var assetFinderEndTime = DateTime.Now - assetFinderStartTime;
             Logger.Info("Asset Collection Time: " + assetFinderEndTime.TotalMilliseconds + "ms");
             Logger.Debug("All mod prefabs have been collected. Adding to database now.");
-            _monoComponent.StartCoroutine(PrepareAssets(modAssets));
+            //_monoComponent.StartCoroutine(PrepareAssets(modAssets));
 
             foreach (string key in MissingCids.Keys)
             {
