@@ -17,7 +17,6 @@ using Game.SceneFlow;
 using Game.UI.Localization;
 using Game.UI.Menu;
 using UnityEngine;
-using UrbanDevKit.CooperativePreloading;
 using Hash128 = Colossal.Hash128;
 using StreamReader = System.IO.StreamReader;
 
@@ -95,9 +94,9 @@ namespace AssetPacksManager
             }
         }
 
-        private static readonly PreloadingOperation<Task> CollectAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", CollectAssets());
-        private static readonly PreloadingOperation<Task> PrepareAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", PrepareAssets());
-        private static readonly PreloadingOperation<Task> LoadAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Preload with Coroutine", LoadAssets());
+        //private static readonly PreloadingOperation<Task> CollectAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Collect Assets Operation", CollectAssets());
+        //private static readonly PreloadingOperation<Task> PrepareAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Prepare Assets Operation", PrepareAssets());
+        //private static readonly PreloadingOperation<Task> LoadAssetsCoroutinePreloader = Preloader.RegisterPreloader(nameof(AssetPacksManager), "Load Assets Operation", LoadAssets());
 
         public static LocalizedString GetLoadedAssetPacksText()
         {
@@ -136,8 +135,7 @@ namespace AssetPacksManager
                 Logger.Info("Assets are already loaded, skipping...");
                 return;
             }
-            //_monoComponent.StartCoroutine(CollectAssets());
-            CollectAssetsCoroutinePreloader.Start();
+            //CollectAssetsCoroutinePreloader.Start();
         }
 
         public static void DeleteModsWithMissingCid()
@@ -299,7 +297,7 @@ namespace AssetPacksManager
             Logger.Info("Asset Collection Time: " + assetFinderEndTime.TotalMilliseconds + "ms");
             Logger.Debug("All mod prefabs have been collected. Adding to database now.");
 
-            PrepareAssetsCoroutinePreloader.Start();
+            //PrepareAssetsCoroutinePreloader.Start();
 
             foreach (string key in MissingCids.Keys)
             {
@@ -432,7 +430,7 @@ namespace AssetPacksManager
                 progress: 100
             );
 
-            LoadAssetsCoroutinePreloader.Start();
+            //LoadAssetsCoroutinePreloader.Start();
         }
 
         private static IEnumerator LoadAssets()
