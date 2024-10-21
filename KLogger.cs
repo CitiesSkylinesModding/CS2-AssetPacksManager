@@ -28,7 +28,7 @@ public class KLogger
 
     public void Debug(string message)
     {
-        if(DisableLogging || Setting.Instance.LoggingLevel <= Setting.LogLevel.Debug)
+        if(DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Debug)
             return;
         int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
@@ -40,7 +40,7 @@ public class KLogger
 
     public void Info(string message)
     {
-        if(DisableLogging || Setting.Instance.LoggingLevel <= Setting.LogLevel.Info)
+        if(DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Info)
             return;
         int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
@@ -52,7 +52,7 @@ public class KLogger
 
     public void Warn(string message)
     {
-        if(DisableLogging || Setting.Instance.LoggingLevel <= Setting.LogLevel.Warning)
+        if(DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Warning)
             return;
         int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
@@ -64,7 +64,7 @@ public class KLogger
 
     public void Error(string message)
     {
-        if(DisableLogging || Setting.Instance.LoggingLevel <= Setting.LogLevel.Error)
+        if(DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Error)
             return;
         int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
@@ -76,7 +76,7 @@ public class KLogger
 
     public void Critical(string message)
     {
-        if(DisableLogging || Setting.Instance.LoggingLevel <= Setting.LogLevel.Critical)
+        if(DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Critical)
             return;
         int cooldown = Setting.Instance.LogCooldownTicks;
         while(cooldown > 0 && DateTime.Now < nextLogTime)
