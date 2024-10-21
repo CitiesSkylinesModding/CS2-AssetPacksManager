@@ -170,7 +170,7 @@ namespace AssetPacksManager
 
             foreach (var dir in Directory.GetDirectories(currentDir))
             {
-                if (dir.Contains(".cache"))
+                if (dir.StartsWith("."))
                     continue;
                 else
                     localAssets += FindLocalAssets(dir);
@@ -324,7 +324,10 @@ namespace AssetPacksManager
                         assetsByMod += "s";
                     assetsByMod += ")";
                 }
-                catch(Exception _) { }
+                catch (Exception)
+                {
+                    // ignored
+                }
 
                 LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}\n";
                 //LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
