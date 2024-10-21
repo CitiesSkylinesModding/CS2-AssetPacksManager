@@ -23,8 +23,13 @@ Be careful using Custom Assets and this mod.
 - Asynchronous Asset Loading
 - Create reports with broken/missing assets
 
-## Planned Features
-- Enable/Disable Asset Packs ingame
+## Troubleshooting
+
+### Assets are gray/white boxes
+Disable Adaptive Asset Loading
+
+### Custom assets appear twice
+Enable Adaptive Asset Loading
 
 ## Resources for Asset Creation
 For Resources on Asset Creation, visit the "CustomAssetPack" repository on my GitHub.
@@ -41,16 +46,15 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.4.2" />
+	<ModVersion Value="1.4.3" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.1.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Restored 1.3.0 functionality
-- Added experimental setting "Adaptive Asset Loading". This is the system that was used in 1.4.X version which caused issues for some players.
-- Improved List of installed Asset Packs
+- Now only logs messages when logging level is set
+- Fixed local assets being counted even though they are in a folder starting with "."
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />
