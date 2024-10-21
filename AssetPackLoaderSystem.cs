@@ -428,7 +428,7 @@ namespace AssetPacksManager
                 yield return null;
             }
 
-            WriteAnalysisInfo();
+            //WriteAnalysisInfo();
 
             var assetDatabaseEndTime = DateTime.Now - assetDatabaseStartTime;
             Logger.Info("Asset Database Time: " + assetDatabaseEndTime.TotalMilliseconds + "ms");
