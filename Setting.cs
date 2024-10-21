@@ -239,7 +239,7 @@ namespace AssetPacksManager
                     $"Enables the loading of asset packs on startup. Turning this setting off will prevent the loading of asset packs on startup. You will have to load them manually."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AdaptiveAssetLoading)), "Adaptive Asset Loading (Experimental, may cause issues)"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AdaptiveAssetLoading)), "Adaptive Asset Loading (Enable when you have double custom assets, disable when you are missing assets)"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.AdaptiveAssetLoading)),
                     $"Enables the loading of assets adaptively. Only assets that have not been loaded by the integrated PDX Asset Loader will be loaded, which may significantly reduce load times (up to 99%). Disable this option if you experience Black Screens, Crashes, Low FPS, missing assets or other issues."

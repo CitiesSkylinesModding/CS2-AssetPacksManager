@@ -399,7 +399,7 @@ namespace AssetPacksManager
                                 if (asset.state != LoadState.NotLoaded)
                                 {
                                     // TODO: Find out why some assets are already loaded
-                                    Logger.Warn("Asset already loaded: " + asset.name);
+                                    Logger.Debug("Asset already loaded: " + asset.name);
                                 }
                                 else
                                 {
