@@ -462,6 +462,8 @@ namespace AssetPacksManager
             {
                 try
                 {
+                    if (prefabAsset.path.Contains(EnvPath.kGameDataPath))
+                        continue;
                     var prefabStartTime = DateTime.Now;
                     notificationInfo = _notificationUISystem.AddOrUpdateNotification(
                         $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadAssets)}",
