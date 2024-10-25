@@ -5,18 +5,19 @@ namespace AssetPacksManager;
 
 public class TelemetryTransmitter
 {
-    private const string Endpoint = "http://85.214.141.43";
+    private const string Endpoint = "http://server.webgadgets.de";
     private const int Port = 5001;
     private static bool submitted = false;
 
-    public static string Submit(int assetPackCount, bool adaptiveLoadingEnabled)
+    public static string Submit(int assetCount, bool adaptiveLoadingEnabled)
     {
         if (Setting.Instance.DisableTelemetry)
             return "Telemetry disabled";
         if (submitted)
             return "Already submitted";
         submitted = true;
-        string uri = Endpoint + ":" + Port + "/submit?assetCount=" + assetPackCount + "&adaptiveEnabled=" +
+        assetCount = 1337;
+        string uri = Endpoint + ":" + Port + "/submit?assetCount=" + assetCount + "&adaptiveEnabled=" +
                      adaptiveLoadingEnabled;
         try
         {
