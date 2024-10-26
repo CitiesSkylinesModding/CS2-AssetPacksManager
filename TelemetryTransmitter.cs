@@ -16,7 +16,6 @@ public class TelemetryTransmitter
         if (submitted)
             return "Already submitted";
         submitted = true;
-        assetCount = 1337;
         string uri = Endpoint + ":" + Port + "/submit?assetCount=" + assetCount + "&adaptiveEnabled=" +
                      adaptiveLoadingEnabled;
         try
