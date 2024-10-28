@@ -53,7 +53,10 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Fix EAI and other game assets being loaded again
+- Enable Adaptive Asset Loading by default
+- Add notification to enable/disable adaptive loading in main menu
+- Add Skyve Integration
+- Asset Packs reported as broken now show a warning
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />

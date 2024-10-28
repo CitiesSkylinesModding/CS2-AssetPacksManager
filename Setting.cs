@@ -39,7 +39,10 @@ namespace AssetPacksManager
         public bool EnableAssetPackLoadingOnStartup { get; set; } = true;
 
         [SettingsUISection(kMainSection, kSettingsGroup)]
-        public bool AdaptiveAssetLoading { get; set; } = false;
+        public bool AdaptiveAssetLoading { get; set; } = true;
+
+        [SettingsUISection(kMainSection, kSettingsGroup)]
+        public bool DisableSettingsWarning { get; set; } = false;
 
         private bool AssetsLoadable()
         {
@@ -62,9 +65,13 @@ namespace AssetPacksManager
         [SettingsUIButton]
         [SettingsUIConfirmation]
         [SettingsUISection(kMainSection, kActionsGroup)]
-        public bool DeleteModsCache
+        public bool DeleteCachedAssetPacks
         {
-            set { AssetPackLoaderSystem.DeleteModsCache(); }
+            set
+            {
+                AssetPackLoaderSystem.DeleteCachedAssetPacks();
+                AssetPackLoaderSystem.CloseGame();
+            }
         }
 
         [SettingsUIButton]
@@ -188,6 +195,7 @@ namespace AssetPacksManager
             text += $"\nEnableSubscribedAssetPacks: {EnableSubscribedAssetPacks}";
             text += $"\nEnableAssetPackLoadingOnStartup: {EnableAssetPackLoadingOnStartup}";
             text += $"\nAdaptiveAssetLoading: {AdaptiveAssetLoading}";
+            text += $"\nDisableSettingsWarning: {DisableSettingsWarning}";
             text += $"\nLoggingLevel: {LoggingLevel}";
             text += $"\nActualLoggingLevel: {KLogger.Logger.effectivenessLevel.name}";
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
@@ -245,6 +253,13 @@ namespace AssetPacksManager
                     $"Enables the loading of assets adaptively. Only assets that have not been loaded by the integrated PDX Asset Loader will be loaded, which may significantly reduce load times (up to 99%). Disable this option if you experience Black Screens, Crashes, Low FPS, missing assets or other issues."
                 },
 
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableSettingsWarning)), "Disable warning to enable/disable adaptive asset loading"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableSettingsWarning)),
+                    $"Enable this setting to disable the warning that asks for duplicate or missing assets."
+                },
+
+
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadAssetPacks)), "Load Asset Packs"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadAssetPacks)),
@@ -281,14 +296,14 @@ namespace AssetPacksManager
                     $"Sets the minimum time between log entries. This is to prevent the NullReferenceExceptions caused by the logger."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsCache)), "Delete Mods Cache"},
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteCachedAssetPacks)), "Delete Cached Asset Packs"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsCache)),
-                    $"Sometimes helps the issue of missing CID-Files. Deletes the cache of downloaded PDX Mods. This will close the game immediately. It will not change your playset, but will require to re-download all mods on the next startup. This might take a few minutes depending on the amount of subscribed mods."
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteCachedAssetPacks)),
+                    $"Deletes the folders of all your mods that contain assets (Asset Packs). This will force a re-download of all affected mods on the next startup. This may take a while, depending on your internet connection"
                 },
                 {
-                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteModsCache)),
-                    $"**WARNING. This will close your game!** Are you sure you want to delete the mods cache? This cannot be undone."
+                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteCachedAssetPacks)),
+                    $"**WARNING. This will close your game!** Are you sure you want to delete the asset packs cache? This cannot be undone."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsWithMissingCid)), "Delete Mods with missing CID-Files"},

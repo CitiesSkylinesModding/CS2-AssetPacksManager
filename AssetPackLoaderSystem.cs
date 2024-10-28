@@ -38,6 +38,7 @@ namespace AssetPacksManager
         public static bool AssetsLoaded = false;
         private static DateTime _assetLoadStartTime;
         public static string LoadedAssetPacksText { get; set; } = "";
+        private static NotificationUISystem.NotificationInfo adaptiveAssetsNotification;
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -90,6 +91,27 @@ namespace AssetPacksManager
                     NotificationSystem.Pop("APM-local", 30f, "Local Assets Found",
                         $"Found {localAssets} local assets in the user folder. These are loaded automatically.");
                 }
+            }
+
+            if (Setting.Instance.AdaptiveAssetLoading)
+            {
+                adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
+                    $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(DisableAdaptiveLoading)}",
+                    title: "Seeing gray boxes or missing assets? Click here",
+                    progressState: ProgressState.Warning,
+                    thumbnail: "coui://apm/notify_icon.png",
+                    text: "You can disable this hint in the settings",
+                    progress: 0, onClicked: DisableAdaptiveLoading);
+            }
+            else
+            {
+                adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
+                    $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(EnableAdaptiveLoading)}",
+                    title: "Seeing duplicate assets? Click here",
+                    progressState: ProgressState.Warning,
+                    thumbnail: "coui://apm/notify_icon.png",
+                    text: "You can disable this hint in the settings",
+                    progress: 0, onClicked: EnableAdaptiveLoading);
             }
         }
 
@@ -163,6 +185,9 @@ namespace AssetPacksManager
         private static int FindLocalAssets(string currentDir)
         {
             int localAssets = 0;
+            var currentDirectory = new DirectoryInfo(currentDir);
+            if (currentDirectory.Name.StartsWith("."))
+                return 0;
             if (!Directory.Exists(currentDir))
             {
                 return 0;
@@ -170,10 +195,7 @@ namespace AssetPacksManager
 
             foreach (var dir in Directory.GetDirectories(currentDir))
             {
-                if (dir.StartsWith("."))
-                    continue;
-                else
-                    localAssets += FindLocalAssets(dir);
+                localAssets += FindLocalAssets(dir);
             }
 
             foreach (var file in Directory.GetFiles(currentDir))
@@ -181,6 +203,7 @@ namespace AssetPacksManager
                 if (file.EndsWith(".Prefab"))
                 {
                     localAssets++;
+                    Logger.Debug("Local Asset found: " + file);
                 }
             }
 
@@ -392,8 +415,8 @@ namespace AssetPacksManager
                         sr.Close();
 
                         // The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
-                        if (Setting.Instance.AdaptiveAssetLoading)
-                        {
+                        //if (Setting.Instance.AdaptiveAssetLoading)
+                        //{
                             if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
                             {
                                 if (asset.state != LoadState.NotLoaded)
@@ -407,12 +430,12 @@ namespace AssetPacksManager
                                     Logger.Debug("Prefab asset already in database");
                                 }
                             }
-                        }
+                        /*}
                         else
                         {
                             AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
                             Logger.Debug("Prefab added to database successfully");
-                        }
+                        }*/
 
                     }
                     catch (Exception e)
@@ -455,7 +478,7 @@ namespace AssetPacksManager
 
             int currentIndex = 0;
             var prefabSystemStartTime = DateTime.Now;
-            var allPrefabs = AssetDatabase.global.GetAssets<PrefabAsset>();
+            var allPrefabs = AssetDatabase.user.GetAssets<PrefabAsset>();
             var prefabAssets = allPrefabs as PrefabAsset[] ?? allPrefabs.ToArray();
             Dictionary<string, int> times = new();
             foreach (PrefabAsset prefabAsset in prefabAssets)
@@ -578,7 +601,7 @@ namespace AssetPacksManager
         /// <returns></returns>
         private static bool CheckAsset(FileInfo file, string modName)
         {
-            AnalyzeAsset(file, modName);
+            //AnalyzeAsset(file, modName);
             if (!File.Exists(file.FullName + ".cid"))
             {
                 if (File.Exists(file.FullName + ".cid.backup"))
@@ -635,7 +658,7 @@ namespace AssetPacksManager
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Logger.Warn($"Error analyzing asset {file.Name}: {e.Message}");
             }
@@ -707,14 +730,37 @@ namespace AssetPacksManager
             }
         }
 
+        private static void EnableAdaptiveLoading()
+        {
+            Setting.Instance.AdaptiveAssetLoading = true;
+            _notificationUISystem.RemoveNotification(
+                identifier: adaptiveAssetsNotification.id,
+                delay: 5f,
+                text: $"Adaptive Loading has been enabled. Please restart the game.",
+                progressState: ProgressState.Warning
+            );
+        }
+
+        private static void DisableAdaptiveLoading()
+        {
+            Setting.Instance.AdaptiveAssetLoading = false;
+            _notificationUISystem.RemoveNotification(
+                identifier: adaptiveAssetsNotification.id,
+                delay: 5f,
+                text: $"Adaptive Loading has been disabled. Please restart the game.",
+                progressState: ProgressState.Warning
+            );
+        }
+
         public static void CloseGame()
         {
             Logger.Info("Closing Game...");
             Application.Quit(0);
         }
 
-        public static void DeleteModsCache()
+        public static void DeleteCachedAssetPacks()
         {
+            // TODO: Only delete folders that have an "assets" folder or include .Prefab files
             var foldersToDelete = new[]
             {
                 Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_subscribed"),
