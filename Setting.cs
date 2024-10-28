@@ -41,6 +41,9 @@ namespace AssetPacksManager
         [SettingsUISection(kMainSection, kSettingsGroup)]
         public bool AdaptiveAssetLoading { get; set; } = false;
 
+        [SettingsUISection(kMainSection, kSettingsGroup)]
+        public bool DisableTelemetry { get; set; } = false;
+
         private bool AssetsLoadable()
         {
             return AssetPackLoaderSystem.AssetsLoaded;
@@ -170,6 +173,7 @@ namespace AssetPacksManager
             ShowWarningForLocalAssets = true;
             EnableAssetPackLoadingOnStartup = true;
             LogCooldownTicks = 0;
+            DisableTelemetry = false;
         }
 
         public enum LogLevel
@@ -193,6 +197,7 @@ namespace AssetPacksManager
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
             text += $"\nLogCooldownTicks: {LogCooldownTicks}";
+            text += $"\nDisableTelemetry: {DisableTelemetry}";
             text += "\n======================";
             return text;
         }
@@ -243,6 +248,12 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.AdaptiveAssetLoading)),
                     $"Enables the loading of assets adaptively. Only assets that have not been loaded by the integrated PDX Asset Loader will be loaded, which may significantly reduce load times (up to 99%). Disable this option if you experience Black Screens, Crashes, Low FPS, missing assets or other issues."
+                },
+
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableTelemetry)), "Disable telemetry (APM only collects data about the number of asset packs and the adaptive loading setting, no personal data)"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableTelemetry)),
+                    $"Disables telemetry. APM only collects data about the number of asset packs and the adaptive loading setting. If a majority of users have adaptive loading enabled, the feature will be enabled by default in future versions."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadAssetPacks)), "Load Asset Packs"},

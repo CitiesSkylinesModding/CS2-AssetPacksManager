@@ -118,6 +118,8 @@ namespace AssetPacksManager
             }
             else
             {
+                string result = TelemetryTransmitter.Submit(-1, Setting.Instance.AdaptiveAssetLoading);
+                Logger.Info(result);
                 Logger.Info("Asset Pack Loading on Startup is disabled");
 
             }
@@ -565,6 +567,8 @@ namespace AssetPacksManager
             );
             var totalAssetTime = DateTime.Now - _assetLoadStartTime;
             KLogger.Logger.Info("Asset Time: " + totalAssetTime);
+            string result = TelemetryTransmitter.Submit(loaded, Setting.Instance.AdaptiveAssetLoading);
+            KLogger.Logger.Info(result);
         }
 
         /// <summary>
