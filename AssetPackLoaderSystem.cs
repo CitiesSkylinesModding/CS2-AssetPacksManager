@@ -203,7 +203,6 @@ namespace AssetPacksManager
                 if (file.EndsWith(".Prefab"))
                 {
                     localAssets++;
-                    Logger.Debug("Local Asset found: " + file);
                 }
             }
 
@@ -763,7 +762,7 @@ namespace AssetPacksManager
             // TODO: Only delete folders that have an "assets" folder or include .Prefab files
             var foldersToDelete = new[]
             {
-                Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_subscribed"),
+                //Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_subscribed"),
                 Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_unmanaged"),
                 Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_workInProgress")
             };
@@ -776,6 +775,23 @@ namespace AssetPacksManager
                     Directory.Delete(folder, true);
                     Logger.Info($"Deleted folder: {folder}");
                 }
+            }
+
+            var modsSubscribed = new DirectoryInfo(Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_subscribed"));
+            foreach (DirectoryInfo di in modsSubscribed.GetDirectories())
+            {
+                Logger.Debug("Looking for assets folder in " + di.FullName);
+                if (di.Name == "assets")
+                {
+                    Logger.Debug($"Found assets folder in {di.FullName}");
+                    Logger.Info($"Deleted folder: {di.FullName}");
+                    /*if (FindLocalAssets(di.FullName) > 0)
+                    {
+                        Directory.Delete(di.FullName, true);
+                        Logger.Info($"Deleted folder: {di.FullName}");
+                    }*/
+                }
+
             }
         }
 
