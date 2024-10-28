@@ -44,6 +44,9 @@ namespace AssetPacksManager
         [SettingsUISection(kMainSection, kSettingsGroup)]
         public bool DisableSettingsWarning { get; set; } = false;
 
+        [SettingsUISection(kMainSection, kSettingsGroup)]
+        public bool DisableTelemetry { get; set; } = false;
+
         private bool AssetsLoadable()
         {
             return AssetPackLoaderSystem.AssetsLoaded;
@@ -177,6 +180,7 @@ namespace AssetPacksManager
             ShowWarningForLocalAssets = true;
             EnableAssetPackLoadingOnStartup = true;
             LogCooldownTicks = 0;
+            DisableTelemetry = false;
         }
 
         public enum LogLevel
@@ -201,6 +205,7 @@ namespace AssetPacksManager
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
             text += $"\nLogCooldownTicks: {LogCooldownTicks}";
+            text += $"\nDisableTelemetry: {DisableTelemetry}";
             text += "\n======================";
             return text;
         }
@@ -260,6 +265,12 @@ namespace AssetPacksManager
                 },
 
 
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableTelemetry)), "Disable telemetry (APM only collects data about the number of asset packs and the adaptive loading setting, no personal data)"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableTelemetry)),
+                    $"Disables telemetry. APM only collects data about the number of asset packs and the adaptive loading setting. If a majority of users have adaptive loading enabled, the feature will be enabled by default in future versions."
+                },
+
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadAssetPacks)), "Load Asset Packs"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadAssetPacks)),
@@ -298,8 +309,8 @@ namespace AssetPacksManager
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteCachedAssetPacks)), "Delete Cached Asset Packs"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteCachedAssetPacks)),
-                    $"Deletes the folders of all your mods that contain assets (Asset Packs). This will force a re-download of all affected mods on the next startup. This may take a while, depending on your internet connection"
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsCache)),
+                    $"Sometimes helps the issue of missing CID-Files. Deletes the cache of downloaded PDX Mods. This will close the game immediately. It will not change your playset, but will require to re-download all mods on the next startup. This might take a few minutes depending on the amount of subscribed mods."
                 },
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteCachedAssetPacks)),
