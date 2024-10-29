@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Reflection;
 
 namespace AssetPacksManager;
 
@@ -15,15 +16,18 @@ public class TelemetryTransmitter
             return "Telemetry disabled";
         if (submitted)
             return "Already submitted";
+        string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         submitted = true;
-        string uri = Endpoint + ":" + Port + "/submit?assetCount=" + assetCount + "&adaptiveEnabled=" +
-                     adaptiveLoadingEnabled;
+        string uri = $"{Endpoint}:{Port}/submit?" +
+                     $"assetCount={assetCount}&" +
+                     $"adaptiveEnabled={adaptiveLoadingEnabled}&" +
+                     $"version={version}";
         try
         {
             var request = WebRequest.Create(uri);
             request.Method = "GET";
             request.GetResponse();
-            return "OK";
+            return $"{uri} -> Telemetry submit OK";
         }
         catch (Exception e)
         {

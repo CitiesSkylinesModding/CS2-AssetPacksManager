@@ -434,11 +434,12 @@ namespace AssetPacksManager
                         var guid = sr.ReadToEnd();
                         sr.Close();
 
-                        // The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
-                        //if (Setting.Instance.AdaptiveAssetLoading)
-                        //{
+                        //The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
+                        if (Setting.Instance.AdaptiveAssetLoading)
+                        {
                             if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
                             {
+                                autoLoaded++;
                                 if (asset.state != LoadState.NotLoaded)
                                 {
                                     // TODO: Find out why some assets are already loaded
@@ -446,16 +447,15 @@ namespace AssetPacksManager
                                 }
                                 else
                                 {
-                                    autoLoaded++;
                                     Logger.Debug("Prefab asset already in database");
                                 }
                             }
-                        /*}
+                        }
                         else
                         {
                             AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
                             Logger.Debug("Prefab added to database successfully");
-                        }*/
+                        }
 
                     }
                     catch (Exception e)
