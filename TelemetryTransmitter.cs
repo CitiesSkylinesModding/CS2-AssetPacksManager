@@ -4,20 +4,20 @@ using System.Reflection;
 
 namespace AssetPacksManager;
 
-public class TelemetryTransmitter
+public static class TelemetryTransmitter
 {
     private const string Endpoint = "http://server.webgadgets.de";
     private const int Port = 5001;
-    private static bool submitted = false;
+    private static bool _submitted;
 
     public static string Submit(int assetCount, bool adaptiveLoadingEnabled)
     {
         if (Setting.Instance.DisableTelemetry)
             return "Telemetry disabled";
-        if (submitted)
+        if (_submitted)
             return "Already submitted";
         string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        submitted = true;
+        _submitted = true;
         string uri = $"{Endpoint}:{Port}/submit?" +
                      $"assetCount={assetCount}&" +
                      $"adaptiveEnabled={adaptiveLoadingEnabled}&" +
@@ -31,7 +31,7 @@ public class TelemetryTransmitter
         }
         catch (Exception e)
         {
-            return uri + " -> " + e.Message;
+            return $"{uri} -> {e.Message}";
         }
     }
 }

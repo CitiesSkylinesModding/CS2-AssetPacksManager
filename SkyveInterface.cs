@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json;
 
@@ -47,11 +46,9 @@ public static class SkyveInterface
 
     public static void CheckPlaysetStatus(List<AssetPack> assetPacks)
     {
-        return;
         if (!Initialized)
             Init();
 
-        var status = new Dictionary<int, PackageStability>();
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         request.Headers.Add("API_KEY", "MPHIoIlbsrmDCYWFLDZaUaMGD0p1l282ARrXhHt4");
@@ -70,17 +67,27 @@ public static class SkyveInterface
                 if (mod.ContainsKey("stability"))
                 {
                     int stability = int.Parse(mod.TryGetValue("stability", out var value) ? value.ToString() : "-1");
-                    if (mod.TryGetValue("id", out var id))
-                        status.Add(int.Parse(id.ToString()), (PackageStability) stability);
+                    if (mod.TryGetValue("id", out var idString))
+                    {
+                        foreach (var pack in assetPacks)
+                        {
+                            int id = int.Parse(idString.ToString());
+                            if (pack.ID == id)
+                            {
+                                pack.Stability = (PackageStability) stability;
+                                break;
+                            }
+                        }
+                    }
+
                 }
             }
 
         }
         catch (Exception e)
         {
-
+            Logger.Info($"Skyve Playset status check failed: {e.Message}");
         }
-        //return PackageStability.Unspecified;
     }
 
     public static PackageStability CheckModStatus(int id)

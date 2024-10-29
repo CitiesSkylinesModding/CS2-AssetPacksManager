@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Colossal.IO.AssetDatabase;
 using Colossal.PSI.Common;
 using Colossal.PSI.Environment;
@@ -93,25 +94,28 @@ namespace AssetPacksManager
                 }
             }
 
-            if (Setting.Instance.AdaptiveAssetLoading)
+            if (!Setting.Instance.DisableSettingsWarning)
             {
-                _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
-                    $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(DisableAdaptiveLoading)}",
-                    title: "Seeing gray boxes or missing assets? Click here",
-                    progressState: ProgressState.Warning,
-                    thumbnail: "coui://apm/notify_icon.png",
-                    text: "You can disable this hint in the settings",
-                    progress: 0, onClicked: DisableAdaptiveLoading);
-            }
-            else
-            {
-                _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
-                    $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(EnableAdaptiveLoading)}",
-                    title: "Seeing duplicate assets? Click here",
-                    progressState: ProgressState.Warning,
-                    thumbnail: "coui://apm/notify_icon.png",
-                    text: "You can disable this hint in the settings",
-                    progress: 0, onClicked: EnableAdaptiveLoading);
+                if (Setting.Instance.AdaptiveAssetLoading)
+                {
+                    _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
+                        $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(DisableAdaptiveLoading)}",
+                        title: "Seeing gray boxes or missing assets? Click here",
+                        progressState: ProgressState.Warning,
+                        thumbnail: "coui://apm/notify_icon.png",
+                        text: "You can disable this hint in the settings",
+                        progress: 0, onClicked: DisableAdaptiveLoading);
+                }
+                else
+                {
+                    _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
+                        $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(EnableAdaptiveLoading)}",
+                        title: "Seeing duplicate assets? Click here",
+                        progressState: ProgressState.Warning,
+                        thumbnail: "coui://apm/notify_icon.png",
+                        text: "You can disable this hint in the settings",
+                        progress: 0, onClicked: EnableAdaptiveLoading);
+                }
             }
         }
 
@@ -312,18 +316,18 @@ namespace AssetPacksManager
                     Logger.Debug($"Skipping disabled mod {modInfo.name} (" + modInfo.name + ")");
                 }
 
-                Setting.LoadedAssetPacksTextVersion++;
-                SkyveInterface.CheckPlaysetStatus(AssetPacks);
-                foreach(AssetPack pack in AssetPacks)
-                {
-                    // TODO: Implement
-                    if (pack.Stability == PackageStability.Broken)
-                    {
-                        ShowAssetPackWarning(modInfo, pack.Stability);
-                    }
-                }
                 currentIndex++;
                 yield return null;
+            }
+
+            Setting.LoadedAssetPacksTextVersion++;
+            SkyveInterface.CheckPlaysetStatus(AssetPacks);
+            foreach(AssetPack pack in AssetPacks)
+            {
+                if (pack.Stability == PackageStability.Broken)
+                {
+                    ShowAssetPackWarning(pack);
+                }
             }
 
             WriteLoadedPacks();
@@ -351,10 +355,19 @@ namespace AssetPacksManager
             }
         }
 
-        private static void ShowAssetPackWarning(ModManager.ModInfo modInfo, PackageStability stability)
+        public static string ConvertCamelCaseToSpaces(string input)
         {
-            NotificationSystem.Push(Guid.NewGuid().ToString(), title: $"Broken Asset Pack",
-                text: $"{modInfo.name.Split(',')[0]} is {stability}, no support will be provided");
+            input = input.Replace("_", "");
+            return Regex.Replace(input, "(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])", " $1");
+        }
+
+        private static void ShowAssetPackWarning(AssetPack pack)
+        {
+            _notificationUISystem.AddOrUpdateNotification(
+                Guid.NewGuid().ToString(),
+                title: "Broken Asset Pack",
+                text: $"{pack.Name} is {pack.Stability}, no support will be provided",
+                progressState: ProgressState.Warning);
         }
         private static void WriteLoadedPacks()
         {
@@ -363,7 +376,7 @@ namespace AssetPacksManager
             sortedPacks.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
             foreach (var pack in sortedPacks)
             {
-                LoadedAssetPacksText += $"[{pack.Stability}] {pack.Name} ({pack.ID}) ({pack.AssetFiles.Count} Assets)\n";
+                LoadedAssetPacksText += $"[{pack.Stability}] {ConvertCamelCaseToSpaces(pack.Name)} ({pack.ID}) ({pack.AssetFiles.Count} Assets)\n";
                 Logger.Info($"Loaded Asset Pack: {LoadedAssetPacksText}");
                 //LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
             }
@@ -611,11 +624,10 @@ namespace AssetPacksManager
         /// This is only needed because PDX Mods deleted CID files when disabling a mod while ingame.
         /// </summary>
         /// <param name="file">Asset file to be checked</param>
-        /// <param name="modName">Current mod directory</param>
+        /// <param name="pack">Current pack</param>
         /// <returns></returns>
         private static bool CheckAsset(FileInfo file, AssetPack pack)
         {
-            // TODO: Remove mod name
             //AnalyzeAsset(file, modName);
             if (!File.Exists(file.FullName + ".cid"))
             {
