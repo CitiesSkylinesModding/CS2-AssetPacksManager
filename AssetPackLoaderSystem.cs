@@ -243,6 +243,7 @@ namespace AssetPacksManager
                 var assemblyName = modInfo.name.Split(',')[0];
                 Logger.Debug($"Checking mod {assemblyName}");
                 var modDir = Path.GetDirectoryName(modInfo.asset.path);
+                var modId = $"{modInfo.asset.subPath.Split('/')[1].Split('_')[0]}";
                 var mod = new DirectoryInfo(modDir);
                 if (modDir == null)
                     continue;
@@ -287,8 +288,19 @@ namespace AssetPacksManager
                         modAssets[mod.Name].AddRange(assetsFromMod);
                         packsFound++;
 
-                        LoadedPacks.Add(modInfo, assetsFromMod.Count);
+                        var stability = PackageStability.Unspecified;
+                        if (int.TryParse(modId, out var id))
+                        {
+                            stability = SkyveInterface.CheckModStatus(id);
+                        }
+                        LoadedPacks.Add(modInfo, (assetsFromMod.Count, stability));
                         Setting.LoadedAssetPacksTextVersion++;
+
+                        if (stability == PackageStability.Broken)
+                        {
+                            ShowAssetPackWarning(modInfo, stability);
+                        }
+
                     }
                     //var modTimeEnd = DateTime.Now - modTime;
                     //Logger.Info("Mod Time: " + modTimeEnd.TotalMilliseconds + "ms");
@@ -325,7 +337,13 @@ namespace AssetPacksManager
             }
         }
 
-        private static Dictionary<ModManager.ModInfo, int> LoadedPacks = new();
+        private static void ShowAssetPackWarning(ModManager.ModInfo modInfo, PackageStability stability)
+        {
+            NotificationSystem.Push(Guid.NewGuid().ToString(), title: $"Broken Asset Pack",
+                text: $"{modInfo.name.Split(',')[0]} is {stability}, no support will be provided");
+        }
+
+        private static Dictionary<ModManager.ModInfo, (int Count, PackageStability stability)> LoadedPacks = new();
         private static void WriteLoadedPacks()
         {
             List<ModManager.ModInfo> packs = new();
@@ -343,8 +361,8 @@ namespace AssetPacksManager
                 try
                 {
                     modId = $"[{modInfo.asset.subPath.Split('/')[1].Split('_')[0]}]";
-                    assetsByMod = $"({LoadedPacks[modInfo].ToString()} Asset";
-                    if(LoadedPacks[modInfo] != 1)
+                    assetsByMod += $"({LoadedPacks[modInfo].Count.ToString()} Asset";
+                    if(LoadedPacks[modInfo].Count != 1)
                         assetsByMod += "s";
                     assetsByMod += ")";
                 }
@@ -353,7 +371,8 @@ namespace AssetPacksManager
                     // ignored
                 }
 
-                LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}\n";
+                LoadedAssetPacksText += $"[{LoadedPacks[modInfo].stability}] {modName} {modId} {assetsByMod}\n";
+                Logger.Info($"Loaded Asset Pack: {LoadedAssetPacksText}");
                 //LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
             }
         }
@@ -763,10 +782,8 @@ namespace AssetPacksManager
 
         public static void DeleteCachedAssetPacks()
         {
-            // TODO: Only delete folders that have an "assets" folder or include .Prefab files
             var foldersToDelete = new[]
             {
-                //Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_subscribed"),
                 Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_unmanaged"),
                 Path.Combine(EnvPath.kUserDataPath, ".cache", "Mods", "mods_workInProgress")
             };
@@ -785,17 +802,21 @@ namespace AssetPacksManager
             foreach (DirectoryInfo di in modsSubscribed.GetDirectories())
             {
                 Logger.Debug("Looking for assets folder in " + di.FullName);
-                if (di.Name == "assets")
+                foreach (DirectoryInfo subfolder in di.GetDirectories())
                 {
-                    Logger.Debug($"Found assets folder in {di.FullName}");
-                    Logger.Info($"Deleted folder: {di.FullName}");
-                    /*if (FindLocalAssets(di.FullName) > 0)
+                    if (subfolder.Name == "assets")
                     {
+                        Logger.Debug($"Found assets folder in {di.FullName}");
                         Directory.Delete(di.FullName, true);
                         Logger.Info($"Deleted folder: {di.FullName}");
-                    }*/
+                        break;
+                        /*if (FindLocalAssets(di.FullName) > 0)
+                        {
+                            Directory.Delete(di.FullName, true);
+                            Logger.Info($"Deleted folder: {di.FullName}");
+                        }*/
+                    }
                 }
-
             }
         }
 

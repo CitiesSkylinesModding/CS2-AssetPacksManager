@@ -309,7 +309,7 @@ namespace AssetPacksManager
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteCachedAssetPacks)), "Delete Cached Asset Packs"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsCache)),
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteCachedAssetPacks)),
                     $"Sometimes helps the issue of missing CID-Files. Deletes the cache of downloaded PDX Mods. This will close the game immediately. It will not change your playset, but will require to re-download all mods on the next startup. This might take a few minutes depending on the amount of subscribed mods."
                 },
                 {
