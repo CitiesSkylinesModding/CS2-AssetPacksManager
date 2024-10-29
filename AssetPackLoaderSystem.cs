@@ -28,7 +28,6 @@ namespace AssetPacksManager
         private static NotificationUISystem _notificationUISystem;
 
         // Each mod has a dict entry that contains the missing cid prefabs
-        private static readonly Dictionary<string, List<string>> MissingCids = new();
         private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
         private static readonly string ThumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
         private static KLogger Logger;
@@ -38,7 +37,8 @@ namespace AssetPacksManager
         public static bool AssetsLoaded = false;
         private static DateTime _assetLoadStartTime;
         public static string LoadedAssetPacksText { get; set; } = "";
-        private static NotificationUISystem.NotificationInfo adaptiveAssetsNotification;
+        private static NotificationUISystem.NotificationInfo _adaptiveAssetsNotification;
+        public static readonly List<AssetPack> AssetPacks = new();
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -95,7 +95,7 @@ namespace AssetPacksManager
 
             if (Setting.Instance.AdaptiveAssetLoading)
             {
-                adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
+                _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
                     $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(DisableAdaptiveLoading)}",
                     title: "Seeing gray boxes or missing assets? Click here",
                     progressState: ProgressState.Warning,
@@ -105,7 +105,7 @@ namespace AssetPacksManager
             }
             else
             {
-                adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
+                _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
                     $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(EnableAdaptiveLoading)}",
                     title: "Seeing duplicate assets? Click here",
                     progressState: ProgressState.Warning,
@@ -161,26 +161,32 @@ namespace AssetPacksManager
         public static void DeleteModsWithMissingCid()
         {
             int successfulDeletions = 0;
-            foreach (string key in MissingCids.Keys)
+            foreach (var pack in AssetPacks)
             {
-                try
+                if (pack.MissingCids.Count == 0)
+                    continue;
+                foreach (string key in pack.MissingCids)
                 {
-                    string path = $"{EnvPath.kUserDataPath}/.cache/Mods/mods_subscribed/{key}";
-                    if (Directory.Exists(path))
+                    try
                     {
-                        Directory.Delete(path, true);
-                        Logger.Info($"Deleted mod cache for {key}");
-                        successfulDeletions++;
+                        string path = $"{EnvPath.kUserDataPath}/.cache/Mods/mods_subscribed/{key}";
+                        if (Directory.Exists(path))
+                        {
+                            Directory.Delete(path, true);
+                            Logger.Info($"Deleted mod cache for {key}");
+                            successfulDeletions++;
+                        }
                     }
-                }
-                catch (Exception x)
-                {
-                    Logger.Error($"Error deleting mod cache for mod {{key}}: {x.Message}");
+                    catch (Exception x)
+                    {
+                        Logger.Error($"Error deleting mod cache for mod {{key}}: {x.Message}");
+                    }
                 }
             }
 
+
             NotificationSystem.Push("APM-delete", "Deleted Mods",
-                $"Deleted {successfulDeletions}/{MissingCids.Count} mods with missing CID. Click to close game.",
+                $"Deleted {successfulDeletions} mods with missing CID. Click to close game.",
                 onClicked: CloseGame);
         }
 
@@ -235,7 +241,6 @@ namespace AssetPacksManager
             int currentIndex = 0;
             int packsFound = 0;
 
-            Dictionary<string, List<FileInfo>> modAssets = new();
             var assetFinderStartTime = DateTime.Now;
 
             foreach (var modInfo in GameManager.instance.modManager)
@@ -269,37 +274,34 @@ namespace AssetPacksManager
                             thumbnail: "coui://apm/notify_icon.png",
                             progress: (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100));
 
-                        var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
-                        if (modDir.Contains(localModsPath) && !Setting.Instance.EnableLocalAssetPacks)
+                        AssetPack currentPack = new AssetPack()
                         {
-                            Logger.Debug($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
-                            continue;
-                        }
+                            Path = modDir,
+                            AssetPath = assetDir.FullName,
+                            Name = assemblyName,
+                            ID = int.Parse(modId)
+                        };
 
+                        var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
+                        if (modDir.Contains(localModsPath))
+                        {
+                            currentPack.Type = AssetPackType.Local;
+                            if (!Setting.Instance.EnableLocalAssetPacks)
+                            {
+                                Logger.Debug($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
+                                continue;
+                            }
+                        }
                         if (!Setting.Instance.EnableSubscribedAssetPacks)
                             continue;
 
-                        if (!modAssets.ContainsKey(mod.Name))
-                            modAssets.Add(mod.Name, new List<FileInfo>());
 
-                        Logger.Debug($"Copying assets from {mod.Name} (" + modInfo.name + ")");
-                        var assetsFromMod = GetPrefabsFromDirectoryRecursively(assetDir.FullName, mod.Name);
-                        Logger.Debug($"Found {assetsFromMod.Count} assets from mod {modInfo.name}");
-                        modAssets[mod.Name].AddRange(assetsFromMod);
+
+                        Logger.Debug($"Copying assets from {currentPack.Name} (" + currentPack.ID + ")");
+                        currentPack.AddAssetFiles(GetPrefabsFromDirectoryRecursively(currentPack.AssetPath, currentPack));
+                        AssetPacks.Add(currentPack);
+                        Logger.Debug($"Found {currentPack.AssetFiles.Count} assets from mod {currentPack.Name}");
                         packsFound++;
-
-                        var stability = PackageStability.Unspecified;
-                        if (int.TryParse(modId, out var id))
-                        {
-                            stability = SkyveInterface.CheckModStatus(id);
-                        }
-                        LoadedPacks.Add(modInfo, (assetsFromMod.Count, stability));
-                        Setting.LoadedAssetPacksTextVersion++;
-
-                        if (stability == PackageStability.Broken)
-                        {
-                            ShowAssetPackWarning(modInfo, stability);
-                        }
 
                     }
                     //var modTimeEnd = DateTime.Now - modTime;
@@ -310,6 +312,16 @@ namespace AssetPacksManager
                     Logger.Debug($"Skipping disabled mod {modInfo.name} (" + modInfo.name + ")");
                 }
 
+                Setting.LoadedAssetPacksTextVersion++;
+                SkyveInterface.CheckPlaysetStatus(AssetPacks);
+                foreach(AssetPack pack in AssetPacks)
+                {
+                    // TODO: Implement
+                    if (pack.Stability == PackageStability.Broken)
+                    {
+                        ShowAssetPackWarning(modInfo, pack.Stability);
+                    }
+                }
                 currentIndex++;
                 yield return null;
             }
@@ -327,12 +339,14 @@ namespace AssetPacksManager
             var assetFinderEndTime = DateTime.Now - assetFinderStartTime;
             Logger.Info("Asset Collection Time: " + assetFinderEndTime.TotalMilliseconds + "ms");
             Logger.Debug("All mod prefabs have been collected. Adding to database now.");
-            _monoComponent.StartCoroutine(PrepareAssets(modAssets));
+            _monoComponent.StartCoroutine(PrepareAssets());
 
-            foreach (string key in MissingCids.Keys)
+            foreach (var pack in AssetPacks)
             {
-                NotificationSystem.Pop(key, 300f, title: $"Missing CID for {MissingCids[key].Count} prefabs",
-                    text: $"{key.Split(',')[0]} has {MissingCids[key].Count} missing CIDs. Click to delete cache",
+                if (pack.MissingCids.Count == 0)
+                    continue;
+                NotificationSystem.Pop($"MissingCID_{pack.ID}", 300f, title: $"Missing CID for {pack.MissingCids.Count} prefabs",
+                    text: $"{pack.Name} has {pack.MissingCids.Count} missing CIDs. Click to delete cache",
                     onClicked: DeleteModsWithMissingCid);
             }
         }
@@ -342,36 +356,14 @@ namespace AssetPacksManager
             NotificationSystem.Push(Guid.NewGuid().ToString(), title: $"Broken Asset Pack",
                 text: $"{modInfo.name.Split(',')[0]} is {stability}, no support will be provided");
         }
-
-        private static Dictionary<ModManager.ModInfo, (int Count, PackageStability stability)> LoadedPacks = new();
         private static void WriteLoadedPacks()
         {
-            List<ModManager.ModInfo> packs = new();
-            foreach(var mod in LoadedPacks)
-            {
-                packs.Add(mod.Key);
-            }
-            packs.Sort((a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
-            foreach (var modInfo in packs)
-            {
-                string modName = modInfo.name.Split(',')[0].Replace(" ", "_");
-                string modId = "";
-                string assetsByMod = "";
+            List<AssetPack> sortedPacks = new(AssetPacks);
 
-                try
-                {
-                    modId = $"[{modInfo.asset.subPath.Split('/')[1].Split('_')[0]}]";
-                    assetsByMod += $"({LoadedPacks[modInfo].Count.ToString()} Asset";
-                    if(LoadedPacks[modInfo].Count != 1)
-                        assetsByMod += "s";
-                    assetsByMod += ")";
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-
-                LoadedAssetPacksText += $"[{LoadedPacks[modInfo].stability}] {modName} {modId} {assetsByMod}\n";
+            sortedPacks.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+            foreach (var pack in sortedPacks)
+            {
+                LoadedAssetPacksText += $"[{pack.Stability}] {pack.Name} ({pack.ID}) ({pack.AssetFiles.Count} Assets)\n";
                 Logger.Info($"Loaded Asset Pack: {LoadedAssetPacksText}");
                 //LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
             }
@@ -383,7 +375,7 @@ namespace AssetPacksManager
         private static int autoLoaded;
         private static int notLoaded;
 
-        private static IEnumerator PrepareAssets(Dictionary<string, List<FileInfo>> modAssets)
+        private static IEnumerator PrepareAssets()
         {
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
                 $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(PrepareAssets)}",
@@ -398,19 +390,19 @@ namespace AssetPacksManager
             autoLoaded = 0;
             notLoaded = 0;
             var assetDatabaseStartTime = DateTime.Now;
-            foreach (var mod in modAssets)
+            foreach (var pack in AssetPacks)
             {
                 notificationInfo = _notificationUISystem.AddOrUpdateNotification(
                     $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(PrepareAssets)}",
                     title: "Step 2/3: Preparing Assets",
-                    text: $"Preparing Pack: {mod.Key}",
+                    text: $"Preparing Pack: {pack.Name}",
                     progressState: ProgressState.Progressing,
                     thumbnail: "coui://apm/notify_icon.png",
-                    progress: (int)(currentIndex / (float)modAssets.Count() * 100));
+                    progress: (int)(currentIndex / (float)pack.AssetFiles.Count * 100));
 
                 var modStartTime = DateTime.Now;
 
-                foreach (var file in mod.Value)
+                foreach (var file in pack.AssetFiles)
                 {
                     try
                     {
@@ -465,7 +457,7 @@ namespace AssetPacksManager
                 }
 
                 var modEndTime = DateTime.Now - modStartTime;
-                Logger.Debug($"Mod Time for {mod.Key}: {modEndTime.TotalMilliseconds} ms (average {modAssets.Count() / modEndTime.TotalMilliseconds} ms per asset)");
+                Logger.Debug($"Mod Time for {pack.Name}: {modEndTime.TotalMilliseconds} ms (average {pack.AssetFiles.Count / modEndTime.TotalMilliseconds} ms per asset)");
 
                 currentIndex++;
                 yield return null;
@@ -621,8 +613,9 @@ namespace AssetPacksManager
         /// <param name="file">Asset file to be checked</param>
         /// <param name="modName">Current mod directory</param>
         /// <returns></returns>
-        private static bool CheckAsset(FileInfo file, string modName)
+        private static bool CheckAsset(FileInfo file, AssetPack pack)
         {
+            // TODO: Remove mod name
             //AnalyzeAsset(file, modName);
             if (!File.Exists(file.FullName + ".cid"))
             {
@@ -634,15 +627,7 @@ namespace AssetPacksManager
                 }
 
                 Logger.Warn($"Asset has no CID: {file.FullName}. No CID Backup was found");
-                if (MissingCids.ContainsKey(modName))
-                {
-                    MissingCids[modName].Add(file.Name);
-                }
-                else
-                {
-                    MissingCids.Add(modName, [file.Name]);
-                }
-
+                pack.MissingCids.Add(file.Name);
                 return false;
             }
 
@@ -697,7 +682,7 @@ namespace AssetPacksManager
         }
 
         private static readonly List<string> AdditionalCidChecks = [".Geometry", ".Surface", ".Texture"];
-        private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, string modName)
+        private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, AssetPack currentPack)
         {
             List<FileInfo> files = new();
             var dir = new DirectoryInfo(directory);
@@ -709,23 +694,23 @@ namespace AssetPacksManager
             {
                 if (file.Extension == ".Prefab")
                 {
-                    if (CheckAsset(file, modName))
+                    if (CheckAsset(file, currentPack))
                         files.Add(file);
                 }
                 else if (AdditionalCidChecks.Contains(file.Extension))
                 {
-                    CheckAsset(file, modName);
+                    CheckAsset(file, currentPack);
                 }
 
                 if (SupportedThumbnailExtensions.Contains(file.Extension))
                 {
-                    CopyThumbnail(file, modName);
+                    CopyThumbnail(file, currentPack.Name);
                 }
             }
 
             foreach (DirectoryInfo subDir in dirs)
             {
-                files.AddRange(GetPrefabsFromDirectoryRecursively(subDir.FullName, modName));
+                files.AddRange(GetPrefabsFromDirectoryRecursively(subDir.FullName, currentPack));
             }
 
             return files;
@@ -756,7 +741,7 @@ namespace AssetPacksManager
         {
             Setting.Instance.AdaptiveAssetLoading = true;
             _notificationUISystem.RemoveNotification(
-                identifier: adaptiveAssetsNotification.id,
+                identifier: _adaptiveAssetsNotification.id,
                 delay: 5f,
                 text: $"Adaptive Loading has been enabled. Please restart the game.",
                 progressState: ProgressState.Warning
@@ -767,7 +752,7 @@ namespace AssetPacksManager
         {
             Setting.Instance.AdaptiveAssetLoading = false;
             _notificationUISystem.RemoveNotification(
-                identifier: adaptiveAssetsNotification.id,
+                identifier: _adaptiveAssetsNotification.id,
                 delay: 5f,
                 text: $"Adaptive Loading has been disabled. Please restart the game.",
                 progressState: ProgressState.Warning
