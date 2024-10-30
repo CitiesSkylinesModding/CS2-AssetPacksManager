@@ -283,8 +283,12 @@ namespace AssetPacksManager
                             Path = modDir,
                             AssetPath = assetDir.FullName,
                             Name = assemblyName,
-                            ID = int.Parse(modId)
                         };
+
+                        if (int.TryParse(modId, out int id))
+                        {
+                            currentPack.ID = id;
+                        }
 
                         var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
                         if (modDir.Contains(localModsPath))
@@ -301,7 +305,7 @@ namespace AssetPacksManager
 
 
 
-                        Logger.Debug($"Copying assets from {currentPack.Name} (" + currentPack.ID + ")");
+                        Logger.Debug($"Collecting assets from {currentPack.Name} (" + currentPack.ID + ")");
                         currentPack.AddAssetFiles(GetPrefabsFromDirectoryRecursively(currentPack.AssetPath, currentPack));
                         AssetPacks.Add(currentPack);
                         Logger.Debug($"Found {currentPack.AssetFiles.Count} assets from mod {currentPack.Name}");
@@ -377,16 +381,15 @@ namespace AssetPacksManager
             foreach (var pack in sortedPacks)
             {
                 LoadedAssetPacksText += $"[{pack.Stability}] {ConvertCamelCaseToSpaces(pack.Name)} ({pack.ID}) ({pack.AssetFiles.Count} Assets)\n";
-                Logger.Info($"Loaded Asset Pack: {LoadedAssetPacksText}");
-                //LoadedAssetPacksText += $"{modName} {modId} {assetsByMod}                                                                                               ----------------------------------------------------------------------------------------------- ";
             }
+            Logger.Info($"Loaded Asset Pack: {LoadedAssetPacksText}");
         }
 
 
-        private static int loaded;
-        private static int skipped;
-        private static int autoLoaded;
-        private static int notLoaded;
+        private static int _loaded;
+        private static int _skipped;
+        private static int _autoLoaded;
+        private static int _notLoaded;
 
         private static IEnumerator PrepareAssets()
         {
@@ -398,10 +401,10 @@ namespace AssetPacksManager
                 progress: 0);
             int currentIndex = 0;
 
-            loaded = 0;
-            skipped = 0;
-            autoLoaded = 0;
-            notLoaded = 0;
+            _loaded = 0;
+            _skipped = 0;
+            _autoLoaded = 0;
+            _notLoaded = 0;
             var assetDatabaseStartTime = DateTime.Now;
             foreach (var pack in AssetPacks)
             {
@@ -444,7 +447,7 @@ namespace AssetPacksManager
                         {
                             if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
                             {
-                                autoLoaded++;
+                                _autoLoaded++;
                                 if (asset.state != LoadState.NotLoaded)
                                 {
                                     // TODO: Find out why some assets are already loaded
@@ -520,9 +523,7 @@ namespace AssetPacksManager
                         progressState: ProgressState.Progressing,
                         thumbnail: "coui://apm/notify_icon.png",
                         progress: (int)(currentIndex / (float)prefabAssets.Count() * 100));
-                    var notificationTime = DateTime.Now - prefabStartTime;
-                    Logger.Debug("Asset Name: " + prefabAsset.name);
-                    Logger.Debug("Asset Path: " + prefabAsset.path);
+                    Logger.Debug($"Asset Name: {prefabAsset.name}, Path: {prefabAsset.path}");
                     var prefabBaseTime = DateTime.Now;
                     PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
                     var prefabBaseEndTime = DateTime.Now - prefabBaseTime;
@@ -532,11 +533,11 @@ namespace AssetPacksManager
                     Logger.Debug($"Added {prefabAsset.name} to Prefab System");
                     var prefabAddEndTime = DateTime.Now - prefabAddTime;
                     //Logger.Debug($"Added {prefabAsset.name} to Prefab System");
-                    loaded++;
+                    _loaded++;
                     var prefabEndTime = DateTime.Now - prefabStartTime;
                     Logger.Debug("Prefab Time: " + prefabEndTime.TotalMilliseconds + "ms");
-                    Logger.Debug("Notification Time: " + notificationTime.TotalMilliseconds + "ms");
-                    Logger.Debug("Prefab Base Time: " + prefabBaseEndTime.TotalMilliseconds + "ms");
+                    //Logger.Debug("Notification Time: " + notificationTime.TotalMilliseconds + "ms");
+                    //Logger.Debug("Prefab Base Time: " + prefabBaseEndTime.TotalMilliseconds + "ms");
                     Logger.Debug("Prefab Add Time: " + prefabAddEndTime.TotalMilliseconds + "ms");
                     if (times.ContainsKey(prefabAsset.name))
                     {
@@ -549,7 +550,7 @@ namespace AssetPacksManager
                 }
                 catch (Exception e)
                 {
-                    notLoaded++;
+                    _notLoaded++;
                     Logger.Info(
                         $"Please see AssetPacksManager Log for details. Asset {prefabAsset.name} could not be added to Database: {e.Message}Path: {prefabAsset.path}\nUnique Name: {prefabAsset.uniqueName}\nCID: {prefabAsset.guid}\nSubPath: {prefabAsset.subPath}");
                 }
@@ -590,18 +591,18 @@ namespace AssetPacksManager
             if (Setting.Instance.AutoHideNotifications)
                 delay = 30;
 
-            string text = $"{loaded} assets loaded by APM.";
-            if (skipped > 0)
+            string text = $"{_loaded} assets loaded by APM.";
+            if (_skipped > 0)
             {
-                text += $", {skipped} skipped";
+                text += $", {_skipped} skipped";
             }
-            if (notLoaded > 0)
+            if (_notLoaded > 0)
             {
-                text += $", {notLoaded} failed to load";
+                text += $", {_notLoaded} failed to load";
             }
-            if (autoLoaded > 0)
+            if (_autoLoaded > 0)
             {
-                text += $", {autoLoaded} loaded automatically";
+                text += $", {_autoLoaded} loaded automatically";
             }
 
             _notificationUISystem.RemoveNotification(
@@ -613,7 +614,7 @@ namespace AssetPacksManager
             );
             var totalAssetTime = DateTime.Now - _assetLoadStartTime;
             KLogger.Logger.Info("Asset Time: " + totalAssetTime);
-            string result = TelemetryTransmitter.Submit(loaded, Setting.Instance.AdaptiveAssetLoading);
+            string result = TelemetryTransmitter.Submit(_loaded, Setting.Instance.AdaptiveAssetLoading);
             KLogger.Logger.Info(result);
         }
 

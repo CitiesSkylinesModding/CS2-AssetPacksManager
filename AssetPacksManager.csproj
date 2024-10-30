@@ -53,9 +53,11 @@
         </Reference>
         <Reference Include="Newtonsoft.Json">
           <HintPath>D:\Games\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Newtonsoft.Json.dll</HintPath>
+            <Private>false</Private>
         </Reference>
         <Reference Include="System.Net.Http">
           <HintPath>D:\Games\steamapps\common\Cities Skylines II\Cities2_Data\Managed\System.Net.Http.dll</HintPath>
+            <Private>false</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule">
             <Private>false</Private>

@@ -50,7 +50,6 @@ namespace AssetPacksManager
 
         public void OnDispose()
         {
-            Logger.Debug(nameof(OnDispose));
             if (Setting.Instance != null)
             {
                 Setting.Instance.UnregisterInOptionsUI();

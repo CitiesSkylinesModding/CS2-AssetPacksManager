@@ -11,7 +11,7 @@ public enum AssetPackType
 
 public class AssetPack
 {
-    public int ID;
+    public int ID = 0;
     public string Name;
     public string Path;
     public string AssetPath;
