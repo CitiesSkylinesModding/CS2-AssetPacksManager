@@ -359,7 +359,7 @@ namespace AssetPacksManager
             }
         }
 
-        public static string ConvertCamelCaseToSpaces(string input)
+        private static string ConvertCamelCaseToSpaces(string input)
         {
             input = input.Replace("_", "");
             return Regex.Replace(input, "(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])", " $1");
@@ -368,11 +368,13 @@ namespace AssetPacksManager
         private static void ShowAssetPackWarning(AssetPack pack)
         {
             _notificationUISystem.AddOrUpdateNotification(
-                Guid.NewGuid().ToString(),
+                $"Broken_{pack.ID}",
                 title: "Broken Asset Pack",
                 text: $"{pack.Name} is {pack.Stability}, no support will be provided",
-                progressState: ProgressState.Warning);
+                progressState: ProgressState.Warning,
+                onClicked:() => _notificationUISystem.RemoveNotification($"Broken_{pack.ID}"));
         }
+
         private static void WriteLoadedPacks()
         {
             List<AssetPack> sortedPacks = new(AssetPacks);
@@ -380,7 +382,8 @@ namespace AssetPacksManager
             sortedPacks.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
             foreach (var pack in sortedPacks)
             {
-                LoadedAssetPacksText += $"[{pack.Stability}] {ConvertCamelCaseToSpaces(pack.Name)} ({pack.ID}) ({pack.AssetFiles.Count} Assets)\n";
+                string id = pack.ID == 0 ? "Local" : pack.ID.ToString();
+                LoadedAssetPacksText += $"[{pack.Stability}] {ConvertCamelCaseToSpaces(pack.Name)} ({id}) ({pack.AssetFiles.Count} Assets)\n";
             }
             Logger.Info($"Loaded Asset Pack: {LoadedAssetPacksText}");
         }
@@ -536,8 +539,6 @@ namespace AssetPacksManager
                     _loaded++;
                     var prefabEndTime = DateTime.Now - prefabStartTime;
                     Logger.Debug("Prefab Time: " + prefabEndTime.TotalMilliseconds + "ms");
-                    //Logger.Debug("Notification Time: " + notificationTime.TotalMilliseconds + "ms");
-                    //Logger.Debug("Prefab Base Time: " + prefabBaseEndTime.TotalMilliseconds + "ms");
                     Logger.Debug("Prefab Add Time: " + prefabAddEndTime.TotalMilliseconds + "ms");
                     if (times.ContainsKey(prefabAsset.name))
                     {
