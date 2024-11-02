@@ -736,10 +736,12 @@ namespace AssetPacksManager
             {
                 var fullPath = file.FullName.Replace('\\', '/');
                 // get everything of the path after modName
+                //var relativePath =
+                //    fullPath.Substring(fullPath.IndexOf(modName, StringComparison.Ordinal) + modName.Length + 1);
                 var relativePath =
-                    fullPath.Substring(fullPath.IndexOf(modName, StringComparison.Ordinal) + modName.Length + 1);
+                    fullPath.Substring(fullPath.IndexOf(modName, StringComparison.Ordinal));
                 // Remove "assets"
-                relativePath = relativePath.Substring(relativePath.IndexOf("/", StringComparison.Ordinal) + 1);
+                //relativePath = relativePath.Substring(relativePath.IndexOf("/", StringComparison.Ordinal) + 1);
                 FileInfo target = new FileInfo(Path.Combine(ThumbnailDir, relativePath));
                 if (!target.Directory.Exists)
                     target.Directory.Create();
