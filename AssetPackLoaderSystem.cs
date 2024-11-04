@@ -144,7 +144,7 @@ namespace AssetPacksManager
             }
             else
             {
-                string result = TelemetryTransmitter.Submit(-1, Setting.Instance.AdaptiveAssetLoading);
+                string result = TelemetryTransmitter.Submit(-1, -1, -1, Setting.Instance.AdaptiveAssetLoading);
                 Logger.Info(result);
                 Logger.Info("Asset Pack Loading on Startup is disabled");
 
@@ -615,7 +615,7 @@ namespace AssetPacksManager
             );
             var totalAssetTime = DateTime.Now - _assetLoadStartTime;
             KLogger.Logger.Info("Asset Time: " + totalAssetTime);
-            string result = TelemetryTransmitter.Submit(_loaded, Setting.Instance.AdaptiveAssetLoading);
+            string result = TelemetryTransmitter.Submit(_loaded, _autoLoaded, _notLoaded, Setting.Instance.AdaptiveAssetLoading);
             KLogger.Logger.Info(result);
         }
 
@@ -735,21 +735,16 @@ namespace AssetPacksManager
             try
             {
                 var fullPath = file.FullName.Replace('\\', '/');
-                // get everything of the path after modName
-                //var relativePath =
-                //    fullPath.Substring(fullPath.IndexOf(modName, StringComparison.Ordinal) + modName.Length + 1);
-                var relativePath =
-                    fullPath.Substring(fullPath.IndexOf(modName, StringComparison.Ordinal));
-                // Remove "assets"
-                //relativePath = relativePath.Substring(relativePath.IndexOf("/", StringComparison.Ordinal) + 1);
+                // Get all after /assets/ to get the relative path
+                var relativePath = fullPath.Substring(fullPath.IndexOf("/assets/", StringComparison.Ordinal) + 8);
                 FileInfo target = new FileInfo(Path.Combine(ThumbnailDir, relativePath));
-                if (!target.Directory.Exists)
+                if (target.Directory != null && !target.Directory.Exists)
                     target.Directory.Create();
                 File.Copy(file.FullName, target.FullName, true);
             }
             catch (Exception e)
             {
-                Logger.Error($"Error copying thumbnail for {file.Name}: " + e.Message);
+                Logger.Error($"Error copying thumbnail for {file.Name}: {e.Message}. Details: {file.FullName} should have been copied to mod name {modName}");
             }
         }
 

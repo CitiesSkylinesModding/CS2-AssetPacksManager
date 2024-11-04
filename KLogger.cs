@@ -35,15 +35,7 @@ public class KLogger
         while (cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
-
-        try
-        {
-            Logger.Debug(message);
-        }
-        catch (Exception)
-        {
-        }
-
+        Logger.Debug(message);
         nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
@@ -55,15 +47,7 @@ public class KLogger
         while (cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
-
-        try
-        {
-            Logger.Info(message);
-        }
-        catch (Exception)
-        {
-        }
-
+        Logger.Info(message);
         nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
@@ -75,15 +59,7 @@ public class KLogger
         while (cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
-
-        try
-        {
-            Logger.Warn(message);
-        }
-        catch (Exception)
-        {
-        }
-
+        Logger.Warn(message);
         nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
@@ -95,15 +71,7 @@ public class KLogger
         while (cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
-
-        try
-        {
-            Logger.Error(message);
-        }
-        catch (Exception)
-        {
-        }
-
+        Logger.Error(message);
         nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
@@ -115,15 +83,7 @@ public class KLogger
         while (cooldown > 0 && DateTime.Now < nextLogTime)
         {
         }
-
-        try
-        {
-            Logger.Critical(message);
-        }
-        catch (Exception)
-        {
-        }
-
+        Logger.Critical(message);
         nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 }

@@ -10,7 +10,7 @@ public static class TelemetryTransmitter
     private const int Port = 5001;
     private static bool _submitted;
 
-    public static string Submit(int assetCount, bool adaptiveLoadingEnabled)
+    public static string Submit(int loaded, int autoLoaded, int notLoaded, bool adaptiveLoadingEnabled)
     {
         if (Setting.Instance.DisableTelemetry)
             return "Telemetry disabled";
@@ -19,7 +19,9 @@ public static class TelemetryTransmitter
         string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         _submitted = true;
         string uri = $"{Endpoint}:{Port}/submit?" +
-                     $"assetCount={assetCount}&" +
+                     $"loaded={loaded}&" +
+                     $"autoLoaded={autoLoaded}&" +
+                     $"notLoaded={notLoaded}&" +
                      $"adaptiveEnabled={adaptiveLoadingEnabled}&" +
                      $"version={version}";
         try
