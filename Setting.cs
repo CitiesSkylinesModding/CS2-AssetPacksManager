@@ -12,15 +12,16 @@ using Game.UI.Menu;
 namespace AssetPacksManager
 {
     [FileLocation($"ModsSettings/{nameof(AssetPacksManager)}/{nameof(AssetPacksManager)}")]
-    [SettingsUIGroupOrder(kSettingsGroup, kActionsGroup, kMiscGroup, kLoadedPacks)]
-    [SettingsUIShowGroupName(kSettingsGroup, kActionsGroup, kMiscGroup, kLoadedPacks)]
+    [SettingsUIGroupOrder(kAssetPackLoadingGroup, kNotificationsGroup, kMiscGroup, kLoadedPacks)]
+    [SettingsUIShowGroupName(kAssetPackLoadingGroup, kNotificationsGroup, kLoggingGroup, kMiscGroup, kLoadedPacks)]
     public class Setting : ModSetting
     {
 
         public const string kMainSection = "Settings";
         public const string kPacksSection = "Packs";
-        public const string kSettingsGroup = "Synchronization";
-        public const string kActionsGroup = "Actions";
+        public const string kAssetPackLoadingGroup = "Asset Pack Loading";
+        public const string kNotificationsGroup = "Actions";
+        public const string kLoggingGroup = "Logging";
         public const string kMiscGroup = "Misc";
         public const string kLoadedPacks = "Loaded Asset Packs";
         public static Setting Instance;
@@ -29,30 +30,27 @@ namespace AssetPacksManager
 
         }
 
-        [SettingsUISection(kMainSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
         public bool EnableLocalAssetPacks { get; set; } = false;
 
-        [SettingsUISection(kMainSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
         public bool EnableSubscribedAssetPacks { get; set; } = true;
 
-        [SettingsUISection(kMainSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
         public bool EnableAssetPackLoadingOnStartup { get; set; } = true;
 
-        [SettingsUISection(kMainSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
         public bool AdaptiveAssetLoading { get; set; } = true;
 
-        [SettingsUISection(kMainSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kNotificationsGroup)]
         public bool DisableSettingsWarning { get; set; } = false;
-
-        [SettingsUISection(kMainSection, kSettingsGroup)]
-        public bool DisableTelemetry { get; set; } = false;
 
         private bool AssetsLoadable()
         {
             return AssetPackLoaderSystem.AssetsLoaded;
         }
 
-        [SettingsUISection(kMainSection, kSettingsGroup)]
+        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
         [SettingsUIDisableByCondition(typeof(Setting), nameof(AssetsLoadable))]
         public bool LoadAssetPacks
         {
@@ -67,7 +65,7 @@ namespace AssetPacksManager
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
-        [SettingsUISection(kMainSection, kActionsGroup)]
+        [SettingsUISection(kMainSection, kMiscGroup)]
         public bool DeleteCachedAssetPacks
         {
             set
@@ -79,7 +77,7 @@ namespace AssetPacksManager
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
-        [SettingsUISection(kMainSection, kActionsGroup)]
+        [SettingsUISection(kMainSection, kMiscGroup)]
         public bool DeleteModsWithMissingCid
         {
             set
@@ -89,20 +87,23 @@ namespace AssetPacksManager
             }
         }
 
+        [SettingsUISection(kMainSection, kMiscGroup)]
+        public bool DisableTelemetry { get; set; } = false;
+
         [SettingsUIButton]
-        [SettingsUISection(kMainSection, kActionsGroup)]
+        [SettingsUISection(kMainSection, kLoggingGroup)]
         public bool OpenLogFile
         {
             set { AssetPackLoaderSystem.OpenLogFile(); }
         }
 
         [SettingsUISlider(min=0, max=100000, step=1000, unit = "ms")]
-        [SettingsUISection(kMainSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kLoggingGroup)]
         public int LogCooldownTicks { get; set; }
 
         private LogLevel _loggingLevel;
 
-        [SettingsUISection(kMainSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kLoggingGroup)]
         public LogLevel LoggingLevel
         {
             get { return _loggingLevel; }
@@ -157,10 +158,10 @@ namespace AssetPacksManager
             }
         }
 
-        [SettingsUISection(kMainSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kNotificationsGroup)]
         public bool AutoHideNotifications { get; set; } = true;
 
-        [SettingsUISection(kMainSection, kMiscGroup)]
+        [SettingsUISection(kMainSection, kNotificationsGroup)]
         public bool ShowWarningForLocalAssets { get; set; } = true;
 
         public static int LoadedAssetPacksTextVersion { get; set; }
@@ -229,8 +230,9 @@ namespace AssetPacksManager
                 { m_Setting.GetOptionTabLocaleID(Setting.kMainSection), "Settings" },
                 { m_Setting.GetOptionTabLocaleID(Setting.kPacksSection), "Asset Packs" },
 
-                { m_Setting.GetOptionGroupLocaleID(Setting.kSettingsGroup), "Synchronization" },
-                { m_Setting.GetOptionGroupLocaleID(Setting.kActionsGroup), "Actions" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kAssetPackLoadingGroup), "Asset Pack Loading" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kNotificationsGroup), "Notifications" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kLoggingGroup), "Logging" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kMiscGroup), "Miscellaneous" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kLoadedPacks), "Loaded Asset Packs" },
 
