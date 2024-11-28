@@ -59,7 +59,6 @@ public static class SkyveInterface
             HttpResponseMessage response = _client.SendAsync(request).Result;
             response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
-            Logger.Info(responseBody);
             var data = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(responseBody);
 
             foreach (var mod in data)
