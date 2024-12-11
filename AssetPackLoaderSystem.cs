@@ -290,7 +290,7 @@ namespace AssetPacksManager
                             currentPack.ID = id;
                         }
 
-                        var localModsPath = EnvPath.kLocalModsPath.Replace("/", "\\");
+                        var localModsPath = Path.Combine(EnvPath.kUserDataPath, "Mods").Replace("/", "\\");
                         if (modDir.Contains(localModsPath))
                         {
                             currentPack.Type = AssetPackType.Local;
@@ -464,7 +464,7 @@ namespace AssetPacksManager
                         }
                         else
                         {
-                            AssetDatabase.user.AddAsset<PrefabAsset>(path, guid);
+                            AssetDatabase.user.AddAsset<PrefabAsset>(path, Hash128.Parse(guid));
                             Logger.Debug("Prefab added to database successfully");
                         }
 
