@@ -367,12 +367,14 @@ namespace AssetPacksManager
 
         private static void ShowAssetPackWarning(AssetPack pack)
         {
+            Logger.Warn($"Broken asset pack detected: {pack.Name} ({pack.ID}). No support will be provided unless this pack is removed from the playset.");
             _notificationUISystem.AddOrUpdateNotification(
                 $"Broken_{pack.ID}",
                 title: "Broken Asset Pack",
                 text: $"{pack.Name} is {pack.Stability}, no support will be provided",
                 progressState: ProgressState.Warning,
                 onClicked:() => _notificationUISystem.RemoveNotification($"Broken_{pack.ID}"));
+
         }
 
         private static void WriteLoadedPacks()
