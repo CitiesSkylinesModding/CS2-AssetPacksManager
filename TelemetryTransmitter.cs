@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace AssetPacksManager;
 
@@ -10,12 +11,18 @@ public static class TelemetryTransmitter
     private const int Port = 5001;
     private static bool _submitted;
 
-    public static string Submit(int loaded, int autoLoaded, int notLoaded, bool adaptiveLoadingEnabled)
+    public static async Task SubmitAsync(int loaded, int autoLoaded, int notLoaded, bool adaptiveLoadingEnabled)
     {
         if (Setting.Instance.DisableTelemetry)
-            return "Telemetry disabled";
+        {
+            KLogger.Instance.Info("Telemetry disabled");
+            return;
+        }
         if (_submitted)
-            return "Already submitted";
+        {
+            KLogger.Instance.Info("Telemetry already submitted");
+            return;
+        }
         string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         _submitted = true;
         string uri = $"{Endpoint}:{Port}/submit?" +
@@ -27,13 +34,14 @@ public static class TelemetryTransmitter
         try
         {
             var request = WebRequest.Create(uri);
+            request.Timeout = 3000;
             request.Method = "GET";
-            request.GetResponse();
-            return $"{uri} -> Telemetry submit OK";
+            await request.GetResponseAsync();
+            KLogger.Instance.Info($"{uri} -> Telemetry submit OK");
         }
         catch (Exception e)
         {
-            return $"{uri} -> {e.Message}";
+            KLogger.Instance.Error($"{uri} -> {e.Message}");
         }
     }
 }
