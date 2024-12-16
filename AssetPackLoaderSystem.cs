@@ -60,7 +60,7 @@ namespace AssetPacksManager
                 progressState: ProgressState.Indeterminate,
                 progress: 0,
                 thumbnail: "coui://apm/game_crash_warning.svg",
-                onClicked: OnMainMenu
+                onClicked: Initialize
             );
 
             try
@@ -117,6 +117,8 @@ namespace AssetPacksManager
                         progress: 0, onClicked: EnableAdaptiveLoading);
                 }
             }
+
+            GameManager.instance.RegisterUpdater(Initialize);
         }
 
         public static LocalizedString GetLoadedAssetPacksText()
@@ -124,16 +126,7 @@ namespace AssetPacksManager
             return LocalizedString.IdWithFallback("APM-LoadedAssetPacks", LoadedAssetPacksText);
         }
 
-        protected override void OnGameLoadingComplete(Purpose purpose, GameMode mode)
-        {
-            base.OnGameLoadingComplete(purpose, mode);
-            if (mode == GameMode.MainMenu)
-            {
-                OnMainMenu();
-            }
-        }
-
-        private void OnMainMenu()
+        private void Initialize()
         {
             _notificationUISystem.RemoveNotification("APM-NoLoad");
             Logger.Info("Main Menu entered");
