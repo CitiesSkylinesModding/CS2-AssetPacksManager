@@ -97,10 +97,6 @@ namespace AssetPacksManager
             set { AssetPackLoaderSystem.OpenLogFile(); }
         }
 
-        [SettingsUISlider(min=0, max=100000, step=1000, unit = "ms")]
-        [SettingsUISection(kMainSection, kLoggingGroup)]
-        public int LogCooldownTicks { get; set; }
-
         private LogLevel _loggingLevel;
 
         [SettingsUISection(kMainSection, kLoggingGroup)]
@@ -166,7 +162,6 @@ namespace AssetPacksManager
 
         public static int LoadedAssetPacksTextVersion { get; set; }
 
-        //[SettingsUIValueVersion(typeof(Setting), nameof(LoadedAssetPacksTextVersion))]
         [SettingsUIDisplayName(typeof(AssetPackLoaderSystem), nameof(AssetPackLoaderSystem.GetLoadedAssetPacksText))]
         [SettingsUISection(kPacksSection, kLoadedPacks)]
         [SettingsUIMultilineText]
@@ -180,7 +175,6 @@ namespace AssetPacksManager
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
             EnableAssetPackLoadingOnStartup = true;
-            LogCooldownTicks = 0;
             DisableTelemetry = false;
         }
 
@@ -205,7 +199,6 @@ namespace AssetPacksManager
             text += $"\nActualLoggingLevel: {ApmLogger.Logger.effectivenessLevel.name}";
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
-            text += $"\nLogCooldownTicks: {LogCooldownTicks}";
             text += $"\nDisableTelemetry: {DisableTelemetry}";
             text += "\n======================";
             return text;
@@ -301,12 +294,6 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.ShowWarningForLocalAssets)),
                     $"Displays a warning when APM detects local assets in the user folder. This is to prevent accidental loading of local assets."
-                },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LogCooldownTicks)), "Log Cooldown (10000 = 1ms)"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LogCooldownTicks)),
-                    $"Sets the minimum time between log entries. This is to prevent the NullReferenceExceptions caused by the logger."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteCachedAssetPacks)), "Delete Cached Asset Packs"},
