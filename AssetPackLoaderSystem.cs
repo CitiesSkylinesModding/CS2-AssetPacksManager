@@ -31,15 +31,15 @@ namespace AssetPacksManager
         // Each mod has a dict entry that contains the missing cid prefabs
         private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
         private static readonly string ThumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
-        private static KLogger Logger;
+        private static ApmLogger Logger;
         public static AssetPackLoaderSystem Instance;
         private static MonoComponent _monoComponent;
         private readonly GameObject _monoObject = new();
         public static bool AssetsLoaded = false;
         private static DateTime _assetLoadStartTime;
-        public static string LoadedAssetPacksText { get; set; } = "";
+        private static string LoadedAssetPacksText { get; set; } = "";
         private static NotificationUISystem.NotificationInfo _adaptiveAssetsNotification;
-        public static readonly List<AssetPack> AssetPacks = new();
+        private static readonly List<AssetPack> AssetPacks = new();
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -48,7 +48,7 @@ namespace AssetPacksManager
             _prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
             _notificationUISystem = World.GetOrCreateSystemManaged<NotificationUISystem>();
             _monoComponent = _monoObject.AddComponent<MonoComponent>();
-            Logger = KLogger.Instance;
+            Logger = ApmLogger.Instance;
 
             var migrationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                 "CustomAssets_backup");
@@ -608,7 +608,7 @@ namespace AssetPacksManager
                 progress: 100
             );
             var totalAssetTime = DateTime.Now - _assetLoadStartTime;
-            KLogger.Logger.Info("Asset Time: " + totalAssetTime);
+            ApmLogger.Logger.Info("Asset Time: " + totalAssetTime);
             _ = TelemetryTransmitter.SubmitAsync(_loaded, _autoLoaded, _notLoaded, Setting.Instance.AdaptiveAssetLoading);
         }
 

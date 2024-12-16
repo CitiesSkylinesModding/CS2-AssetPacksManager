@@ -5,21 +5,19 @@ using Colossal.PSI.Environment;
 
 namespace AssetPacksManager;
 
-public class KLogger
+public class ApmLogger
 {
     private static readonly string logFileName = $"{nameof(AssetPacksManager)}.{nameof(Mod)}";
 
     public static readonly ILog Logger = LogManager.GetLogger(logFileName)
         .SetShowsErrorsInUI(false);
 
-    public static KLogger Instance;
+    public static ApmLogger Instance;
     private static readonly bool DisableLogging = false;
-
-    public static DateTime nextLogTime = DateTime.MinValue;
 
     public static void Init()
     {
-        Instance = new KLogger();
+        Instance = new ApmLogger();
     }
 
     public void OpenLogFile()
@@ -31,59 +29,34 @@ public class KLogger
     {
         if (DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Debug)
             return;
-        var cooldown = Setting.Instance.LogCooldownTicks;
-        while (cooldown > 0 && DateTime.Now < nextLogTime)
-        {
-        }
         Logger.Debug(message);
-        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Info(string message)
     {
         if (DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Info)
             return;
-        var cooldown = Setting.Instance.LogCooldownTicks;
-        while (cooldown > 0 && DateTime.Now < nextLogTime)
-        {
-        }
         Logger.Info(message);
-        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Warn(string message)
     {
         if (DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Warning)
             return;
-        var cooldown = Setting.Instance.LogCooldownTicks;
-        while (cooldown > 0 && DateTime.Now < nextLogTime)
-        {
-        }
         Logger.Warn(message);
-        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Error(string message)
     {
         if (DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Error)
             return;
-        var cooldown = Setting.Instance.LogCooldownTicks;
-        while (cooldown > 0 && DateTime.Now < nextLogTime)
-        {
-        }
         Logger.Error(message);
-        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 
     public void Critical(string message)
     {
         if (DisableLogging || Setting.Instance.LoggingLevel > Setting.LogLevel.Critical)
             return;
-        var cooldown = Setting.Instance.LogCooldownTicks;
-        while (cooldown > 0 && DateTime.Now < nextLogTime)
-        {
-        }
         Logger.Critical(message);
-        nextLogTime = DateTime.Now.AddTicks(cooldown);
     }
 }

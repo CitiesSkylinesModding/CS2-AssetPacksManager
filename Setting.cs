@@ -113,19 +113,19 @@ namespace AssetPacksManager
                 switch (value)
                 {
                     case LogLevel.Debug:
-                        KLogger.Logger.effectivenessLevel = Level.Debug;
+                        ApmLogger.Logger.effectivenessLevel = Level.Debug;
                         break;
                     case LogLevel.Info:
-                        KLogger.Logger.effectivenessLevel = Level.Info;
+                        ApmLogger.Logger.effectivenessLevel = Level.Info;
                         break;
                     case LogLevel.Warning:
-                        KLogger.Logger.effectivenessLevel = Level.Warn;
+                        ApmLogger.Logger.effectivenessLevel = Level.Warn;
                         break;
                     case LogLevel.Error:
-                        KLogger.Logger.effectivenessLevel = Level.Error;
+                        ApmLogger.Logger.effectivenessLevel = Level.Error;
                         break;
                     case LogLevel.Critical:
-                        KLogger.Logger.effectivenessLevel = Level.Critical;
+                        ApmLogger.Logger.effectivenessLevel = Level.Critical;
                         break;
                 }
                 /*KLogger.Instance.Debug("Debug");
@@ -141,19 +141,19 @@ namespace AssetPacksManager
             switch (_loggingLevel)
             {
                 case LogLevel.Debug:
-                    KLogger.Logger.effectivenessLevel = Level.Debug;
+                    ApmLogger.Logger.effectivenessLevel = Level.Debug;
                     break;
                 case LogLevel.Info:
-                    KLogger.Logger.effectivenessLevel = Level.Info;
+                    ApmLogger.Logger.effectivenessLevel = Level.Info;
                     break;
                 case LogLevel.Warning:
-                    KLogger.Logger.effectivenessLevel = Level.Warn;
+                    ApmLogger.Logger.effectivenessLevel = Level.Warn;
                     break;
                 case LogLevel.Error:
-                    KLogger.Logger.effectivenessLevel = Level.Error;
+                    ApmLogger.Logger.effectivenessLevel = Level.Error;
                     break;
                 case LogLevel.Critical:
-                    KLogger.Logger.effectivenessLevel = Level.Critical;
+                    ApmLogger.Logger.effectivenessLevel = Level.Critical;
                     break;
             }
         }
@@ -202,7 +202,7 @@ namespace AssetPacksManager
             text += $"\nAdaptiveAssetLoading: {AdaptiveAssetLoading}";
             text += $"\nDisableSettingsWarning: {DisableSettingsWarning}";
             text += $"\nLoggingLevel: {LoggingLevel}";
-            text += $"\nActualLoggingLevel: {KLogger.Logger.effectivenessLevel.name}";
+            text += $"\nActualLoggingLevel: {ApmLogger.Logger.effectivenessLevel.name}";
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
             text += $"\nLogCooldownTicks: {LogCooldownTicks}";

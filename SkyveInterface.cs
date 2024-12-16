@@ -32,7 +32,7 @@ public enum PackageStability
 
 public static class SkyveInterface
 {
-    private static KLogger Logger;
+    private static ApmLogger Logger;
     private const bool Initialized = false;
     private static HttpClient _client;
     private static string url = $"https://skyve-mod.com/v2/api/CompatibilityData/";

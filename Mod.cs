@@ -23,11 +23,11 @@ namespace AssetPacksManager
     {
         public string ModPath { get; set; }
 
-        public static KLogger Logger = new();
+        public static ApmLogger Logger = new();
 
         public void OnLoad(UpdateSystem updateSystem)
         {
-            KLogger.Init();
+            ApmLogger.Init();
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
             {

@@ -15,12 +15,12 @@ public static class TelemetryTransmitter
     {
         if (Setting.Instance.DisableTelemetry)
         {
-            KLogger.Instance.Info("Telemetry disabled");
+            ApmLogger.Instance.Info("Telemetry disabled");
             return;
         }
         if (_submitted)
         {
-            KLogger.Instance.Info("Telemetry already submitted");
+            ApmLogger.Instance.Info("Telemetry already submitted");
             return;
         }
         string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -37,11 +37,11 @@ public static class TelemetryTransmitter
             request.Timeout = 3000;
             request.Method = "GET";
             await request.GetResponseAsync();
-            KLogger.Instance.Info($"{uri} -> Telemetry submit OK");
+            ApmLogger.Instance.Info($"{uri} -> Telemetry submit OK");
         }
         catch (Exception e)
         {
-            KLogger.Instance.Error($"{uri} -> {e.Message}");
+            ApmLogger.Instance.Error($"{uri} -> {e.Message}");
         }
     }
 }

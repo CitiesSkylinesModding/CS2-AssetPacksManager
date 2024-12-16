@@ -31,6 +31,9 @@ Disable Adaptive Asset Loading
 ### Custom assets appear twice
 Enable Adaptive Asset Loading
 
+### Errors on Startup
+The Cities: Skylines II Logging tool is known to produce errors, especially on startup. If your Error message contains the word "ApmLogger" at any point you can ignore the issue completely.
+
 ## Resources for Asset Creation
 For Resources on Asset Creation, visit the "CustomAssetPack" repository on my GitHub.
 
