@@ -50,10 +50,10 @@ namespace AssetPacksManager
             _monoComponent = _monoObject.AddComponent<MonoComponent>();
             Logger = ApmLogger.Instance;
 
-            var migrationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                "CustomAssets_backup");
+            // VERY old CustomAssets folder migration, shouldn't be needed anymore, but just in case
+            CheckForMigration();
 
-            var apmNotLoadedNotification = _notificationUISystem.AddOrUpdateNotification(
+            _notificationUISystem.AddOrUpdateNotification(
                 $"APM-NoLoad",
                 title: "Asset Packs Manager not loaded",
                 text: "Click here to load Asset Packs Manager.",
@@ -62,23 +62,6 @@ namespace AssetPacksManager
                 thumbnail: "coui://apm/game_crash_warning.svg",
                 onClicked: Initialize
             );
-
-            try
-            {
-                string customAssetsDir = $"{EnvPath.kUserDataPath}/CustomAssets";
-                if (Directory.Exists(customAssetsDir))
-                {
-                    Directory.Move(customAssetsDir, migrationPath);
-                    NotificationSystem.Push("APM-legacy", "Custom Assets folder migrated, restart game",
-                        "The Custom Assets is no longer being used and has been moved to Desktop. Please restart the game");
-                }
-            }
-            catch (Exception x)
-            {
-                NotificationSystem.Push("APM-legacy", "Error migrating Custom Assets folder",
-                    $"Please delete {migrationPath} manually.");
-                Logger.Error("Error moving Custom Assets folder: " + x.Message);
-            }
 
             if (!Directory.Exists(ThumbnailDir))
                 Directory.CreateDirectory(ThumbnailDir);
@@ -121,15 +104,13 @@ namespace AssetPacksManager
             GameManager.instance.RegisterUpdater(Initialize);
         }
 
-        public static LocalizedString GetLoadedAssetPacksText()
-        {
-            return LocalizedString.IdWithFallback("APM-LoadedAssetPacks", LoadedAssetPacksText);
-        }
-
+        /// <summary>
+        /// First time initialization of the AssetPackLoaderSystem, loads asset packs if enabled
+        /// </summary>
         private void Initialize()
         {
             _notificationUISystem.RemoveNotification("APM-NoLoad");
-            Logger.Info("Main Menu entered");
+            Logger.Info("Initializing Asset Pack Loader System");
             if (Setting.Instance.EnableAssetPackLoadingOnStartup)
             {
                 Logger.Info("Loading Asset Packs on Startup");
@@ -139,8 +120,40 @@ namespace AssetPacksManager
             {
                 _ = TelemetryTransmitter.SubmitAsync(-1, -1, -1, Setting.Instance.AdaptiveAssetLoading);
                 Logger.Info("Asset Pack Loading on Startup is disabled");
-
             }
+        }
+
+        /// <summary>
+        /// If player still has the old CustomAssets folder, move it to the desktop and notify the player.
+        /// This is to prevent the game from loading these assets by itself.
+        /// </summary>
+        private void CheckForMigration()
+        {
+            try
+            {
+                string customAssetsDir = $"{EnvPath.kUserDataPath}/CustomAssets";
+                if (Directory.Exists(customAssetsDir))
+                {
+                    var migrationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                        "CustomAssets_backup");
+                    Directory.Move(customAssetsDir, migrationPath);
+                    NotificationSystem.Push("APM-legacy", "Custom Assets folder migrated, restart game",
+                        "The Custom Assets is no longer being used and has been moved to Desktop. Please restart the game");
+                }
+            }
+            catch (Exception x)
+            {
+                var migrationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    "CustomAssets_backup");
+                NotificationSystem.Push("APM-legacy", "Error migrating Custom Assets folder",
+                    $"Please delete {migrationPath} manually.");
+                Logger.Error("Error moving Custom Assets folder: " + x.Message);
+            }
+        }
+
+        public static LocalizedString GetLoadedAssetPacksText()
+        {
+            return LocalizedString.IdWithFallback("APM-LoadedAssetPacks", LoadedAssetPacksText);
         }
 
         public void LoadAssetPacks()

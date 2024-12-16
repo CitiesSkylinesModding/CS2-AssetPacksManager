@@ -7,7 +7,7 @@ namespace AssetPacksManager;
 
 public static class TelemetryTransmitter
 {
-    private const string Endpoint = "http://server.webgadgets.de";
+    private const string Endpoint = "http://apmtelemetry.webgadgets.de";
     private const int Port = 5001;
     private static bool _submitted;
 
@@ -34,7 +34,7 @@ public static class TelemetryTransmitter
         try
         {
             var request = WebRequest.Create(uri);
-            request.Timeout = 3000;
+            request.Timeout = 10000;
             request.Method = "GET";
             await request.GetResponseAsync();
             ApmLogger.Instance.Info($"{uri} -> Telemetry submit OK");
