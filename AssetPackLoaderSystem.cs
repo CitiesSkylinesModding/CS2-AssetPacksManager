@@ -392,7 +392,7 @@ namespace AssetPacksManager
                 string id = pack.ID == 0 ? "Local" : pack.ID.ToString();
                 LoadedAssetPacksText += $"[{pack.Stability}] {ConvertCamelCaseToSpaces(pack.Name)} ({id}) ({pack.AssetFiles.Count} Assets)\n";
             }
-            Logger.Info($"Loaded Asset Pack: {LoadedAssetPacksText}");
+            Logger.Info($"Loaded Asset Packs: \n{LoadedAssetPacksText}");
         }
 
 

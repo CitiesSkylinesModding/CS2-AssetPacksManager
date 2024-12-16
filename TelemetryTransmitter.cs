@@ -39,9 +39,13 @@ public static class TelemetryTransmitter
             await request.GetResponseAsync();
             ApmLogger.Instance.Info($"{uri} -> Telemetry submit OK");
         }
+        catch (WebException e) when (e.Status == WebExceptionStatus.Timeout)
+        {
+            ApmLogger.Instance.Info("Telemetry submit timeout; Server is probably unavailable at this time. This is not an issue.");
+        }
         catch (Exception e)
         {
-            ApmLogger.Instance.Error($"{uri} -> {e.Message}");
+            ApmLogger.Instance.Warn($"{uri} -> {e}");
         }
     }
 }

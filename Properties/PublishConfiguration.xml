@@ -56,8 +56,10 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
+- Fixed APM not loading automatically in Main Menu
 - Rename KLogger to ApmLogger
-- APM should now correctly load when entering main menu
+- Fixed "Desktop access request" that was shown in rare cases by the antivirus (due to Migration logic, which has been refactored)
+- Fixed Telemetry causing errors in Log
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />
