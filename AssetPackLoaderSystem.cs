@@ -29,7 +29,7 @@ namespace AssetPacksManager
         private static NotificationUISystem _notificationUISystem;
 
         // Each mod has a dict entry that contains the missing cid prefabs
-        private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg" };
+        private static readonly string[] SupportedThumbnailExtensions = { ".png", ".svg", ".jpg" };
         private static readonly string ThumbnailDir = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/thumbnails";
         private static ApmLogger Logger;
         public static AssetPackLoaderSystem Instance;
