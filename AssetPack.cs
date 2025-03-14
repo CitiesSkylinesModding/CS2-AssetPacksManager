@@ -20,8 +20,9 @@ public class AssetPack
     public List<FileInfo> AssetFiles = new();
     public List<string> MissingCids = new();
 
-    public void AddAssetFiles(List<FileInfo> assetFiles)
+    public int AddAssetFiles(List<FileInfo> assetFiles)
     {
         AssetFiles.AddRange(assetFiles);
+        return assetFiles.Count;
     }
 }

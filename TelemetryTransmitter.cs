@@ -7,11 +7,11 @@ namespace AssetPacksManager;
 
 public static class TelemetryTransmitter
 {
-    private const string Endpoint = "http://apmtelemetry.webgadgets.de";
+    private const string Endpoint = "http://apm.mimonsi.de";
     private const int Port = 5001;
     private static bool _submitted;
 
-    public static async Task SubmitAsync(int loaded, int autoLoaded, int notLoaded, bool adaptiveLoadingEnabled)
+    public static async Task SubmitAsync(int packs, int assets)
     {
         if (Setting.Instance.DisableTelemetry)
         {
@@ -26,10 +26,8 @@ public static class TelemetryTransmitter
         string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         _submitted = true;
         string uri = $"{Endpoint}:{Port}/submit?" +
-                     $"loaded={loaded}&" +
-                     $"autoLoaded={autoLoaded}&" +
-                     $"notLoaded={notLoaded}&" +
-                     $"adaptiveEnabled={adaptiveLoadingEnabled}&" +
+                     $"packs={packs}&" +
+                     $"assets={assets}&" +
                      $"version={version}";
         try
         {
