@@ -97,7 +97,7 @@ namespace AssetPacksManager
             set { AssetPackLoaderSystem.OpenLogFile(); }
         }
 
-        private LogLevel _loggingLevel;
+        private LogLevel _loggingLevel = LogLevel.Warning;
 
         [SettingsUISection(kMainSection, kLoggingGroup)]
         public LogLevel LoggingLevel
@@ -156,6 +156,9 @@ namespace AssetPacksManager
 
         [SettingsUISection(kMainSection, kNotificationsGroup)]
         public bool AutoHideNotifications { get; set; } = true;
+        
+        [SettingsUISection(kMainSection, kNotificationsGroup)]
+        public bool DisableLoadingNotification { get; set; } = true;
 
         [SettingsUISection(kMainSection, kNotificationsGroup)]
         public bool ShowWarningForLocalAssets { get; set; } = true;
@@ -251,6 +254,12 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.AdaptiveAssetLoading)),
                     $"Enables the loading of assets adaptively. Only assets that have not been loaded by the integrated PDX Asset Loader will be loaded, which may significantly reduce load times (up to 99%). Disable this option if you experience Black Screens, Crashes, Low FPS, missing assets or other issues."
+                },
+                
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableLoadingNotification)), "Disable Loading Notification"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableLoadingNotification)),
+                    $"Disables status notifaction while loading packs (improves loading times)."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableSettingsWarning)), "Disable warning to enable/disable adaptive asset loading"},

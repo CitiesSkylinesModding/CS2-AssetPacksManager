@@ -45,7 +45,7 @@ public static class TelemetryTransmitter
         }
         catch (Exception e)
         {
-            ApmLogger.Instance.Warn($"{uri} -> {e}");
+            ApmLogger.Instance.Info($"This is not an issue and can be ignored. Telemetry could not be sent: {uri} -> {e}");
         }
     }
 }
