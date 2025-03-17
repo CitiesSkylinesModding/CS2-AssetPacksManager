@@ -37,8 +37,11 @@ namespace AssetPacksManager
         private readonly GameObject _monoObject = new();
         public static bool AssetsLoaded;
         private static string LoadedAssetPacksText { get; set; } = "";
+        private static string LocalAssetsText { get; set; } = "";
         private static NotificationUISystem.NotificationInfo _adaptiveAssetsNotification;
         private static readonly List<AssetPack> AssetPacks = new();
+        private static readonly List<string> LocalAssets = new();
+        private static int _eaiAssets;
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -68,15 +71,22 @@ namespace AssetPacksManager
 
             if (Setting.Instance.ShowWarningForLocalAssets)
             {
-                int localAssets = FindLocalAssets($"{EnvPath.kUserDataPath}");
-                if (localAssets > 0)
+                FindLocalAssets($"{EnvPath.kUserDataPath}");
+                if (LocalAssets.Count != 0)
                 {
-                    NotificationSystem.Pop("APM-local", 30f, "Local Assets Found",
-                        $"Found {localAssets} local assets in the user folder. These are loaded automatically.");
+                    NotificationSystem.Pop("APM-local", getHideDelay(), "Local Assets Found",
+                        $"Found {LocalAssets.Count} local assets in the user folder. These are loaded automatically.");
                 }
             }
 
             GameManager.instance.RegisterUpdater(Initialize);
+        }
+
+        private static float getHideDelay()
+        {
+            if (Setting.Instance.AutoHideNotifications)
+                return 30f;
+            return 100000f;
         }
 
         /// <summary>
@@ -131,6 +141,11 @@ namespace AssetPacksManager
         {
             return LocalizedString.IdWithFallback("APM-LoadedAssetPacks", LoadedAssetPacksText);
         }
+        
+        public static LocalizedString GetLocalAssetsText()
+        {
+            return LocalizedString.IdWithFallback("APM-LocalAssets", LocalAssetsText);
+        }
 
         public void LoadAssetPacks()
         {
@@ -175,31 +190,32 @@ namespace AssetPacksManager
                 onClicked: CloseGame);
         }
 
-        private static int FindLocalAssets(string currentDir)
+        private static void FindLocalAssets(string currentDir)
         {
-            int localAssets = 0;
             var currentDirectory = new DirectoryInfo(currentDir);
             if (currentDirectory.Name.StartsWith("."))
-                return 0;
+                return;
             if (!Directory.Exists(currentDir))
             {
-                return 0;
+                return;
             }
 
             foreach (var dir in Directory.GetDirectories(currentDir))
             {
-                localAssets += FindLocalAssets(dir);
+                FindLocalAssets(dir);
             }
 
             foreach (var file in Directory.GetFiles(currentDir))
             {
                 if (file.EndsWith(".Prefab"))
                 {
-                    localAssets++;
+                    string localPath = file.Replace(EnvPath.kUserDataPath, "").Replace("\\", "/");
+                    if (localPath.Contains("ModsData/ExtraAssetsImporter"))
+                        _eaiAssets++;
+                    else
+                        LocalAssets.Add(localPath);
                 }
             }
-
-            return localAssets;
         }
 
         public static void OpenLogFile()
@@ -289,8 +305,7 @@ namespace AssetPacksManager
                 currentIndex++;
                 yield return null;
             }
-
-            Setting.LoadedAssetPacksTextVersion++;
+            
             SkyveInterface.CheckPlaysetStatus(AssetPacks);
             foreach(AssetPack pack in AssetPacks)
             {
@@ -300,8 +315,11 @@ namespace AssetPacksManager
                 }
             }
 
-            WriteLoadedPacks();
-
+            WriteLoadedPacksText();            
+            Setting.LoadedAssetPacksTextVersion++;
+            WriteLocalAssetsText();
+            Setting.LocalAssetsTextVersion++;
+            
             _notificationUISystem.RemoveNotification(
                 identifier: notificationInfo.id,
                 delay: 30f,
@@ -317,7 +335,7 @@ namespace AssetPacksManager
             {
                 if (pack.MissingCids.Count == 0)
                     continue;
-                NotificationSystem.Pop($"MissingCID_{pack.ID}", 300f, title: $"Missing CID for {pack.MissingCids.Count} prefabs",
+                NotificationSystem.Pop($"MissingCID_{pack.ID}", getHideDelay(), title: $"Missing CID for {pack.MissingCids.Count} prefabs",
                     text: $"{pack.Name} has {pack.MissingCids.Count} missing CIDs. Click to delete cache",
                     onClicked: DeleteModsWithMissingCid);
             }
@@ -341,17 +359,43 @@ namespace AssetPacksManager
 
         }
 
-        private static void WriteLoadedPacks()
+        private static void WriteLoadedPacksText()
         {
             List<AssetPack> sortedPacks = new(AssetPacks);
 
             sortedPacks.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
             foreach (var pack in sortedPacks)
             {
-                string id = pack.ID == 0 ? "Local" : pack.ID.ToString();
+                string id = "";
+                if (pack.Type == AssetPackType.Local)
+                {
+                    id = "Local";
+                    if (pack.ID != 0)
+                        id += " " + pack.ID;
+                }
+                else
+                {
+                    if (pack.ID != 0)
+                        id = pack.ID.ToString();
+                    else
+                        id = "Local";
+                }
                 LoadedAssetPacksText += $"[{pack.Stability}] {ConvertCamelCaseToSpaces(pack.Name)} ({id}) ({pack.AssetFiles.Count} Assets)\n";
             }
             Logger.Info($"Loaded Asset Packs: \n{LoadedAssetPacksText}");
+        }
+
+        private static void WriteLocalAssetsText()
+        {
+            LocalAssets.Sort();
+            LocalAssetsText = "";
+            if (_eaiAssets > 0)
+                LocalAssetsText += $"{_eaiAssets} Assets found in Extra Asset Importer folder, these are handled by EAI\n";
+            foreach (var pack in LocalAssets)
+            {
+                LocalAssetsText += $"{pack}\n";
+            }
+            Logger.Info($"Local Assets Text: \n{LocalAssetsText}");
         }
 
         /// <summary>

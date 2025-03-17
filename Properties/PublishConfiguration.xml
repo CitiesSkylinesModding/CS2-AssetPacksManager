@@ -9,9 +9,7 @@
 	<!--LongDescription Value="This is a long description" /-->
 	<LongDescription>
 ## DISCLAIMER
-
-Unofficial Custom Assets are experimental. They might crash your game or throw errors. Create redundant copies of your save files and use at your own risk. Custom assets have been tested extensively and don't cause issues if used correctly and with care.
-
+		
 ## Asset Packs Manager
 This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the [Paradox Mods Website](https://mods.paradoxplaza.com/games/cities_skylines_2)  to find a list of currently available Asset Packs.
 Be careful using Custom Assets and this mod.
@@ -21,15 +19,10 @@ Be careful using Custom Assets and this mod.
 - Support for Thumbnails
 - Support for Localization (Using I18N Everywhere)
 - Asynchronous Asset Loading
+- Overview about loaded Packs and Local Assets
 - Create reports with broken/missing assets
 
 ## Troubleshooting
-
-### Assets are gray/white boxes
-Disable Adaptive Asset Loading
-
-### Custom assets appear twice
-Enable Adaptive Asset Loading
 
 ### Errors on Startup
 The Cities: Skylines II Logging tool is known to produce errors, especially on startup. If your Error message contains the word "ApmLogger" at any point you can ignore the issue completely.
@@ -59,6 +52,8 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 - Implement Loading Improvements
 - Set Default Log Level to Warning
 - Reduce Loading Time
+- Local Assets are now displayed in a separate tab
+	- Extra Asset Importer Assets are ignored
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />

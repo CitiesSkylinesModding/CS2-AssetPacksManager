@@ -12,18 +12,20 @@ using Game.UI.Menu;
 namespace AssetPacksManager
 {
     [FileLocation($"ModsSettings/{nameof(AssetPacksManager)}/{nameof(AssetPacksManager)}")]
-    [SettingsUIGroupOrder(kAssetPackLoadingGroup, kNotificationsGroup, kMiscGroup, kLoadedPacks)]
+    [SettingsUIGroupOrder(kAssetPackLoadingGroup, kNotificationsGroup, kMiscGroup, kLoadedPacks, kLocalAssets)]
     [SettingsUIShowGroupName(kAssetPackLoadingGroup, kNotificationsGroup, kLoggingGroup, kMiscGroup, kLoadedPacks)]
     public class Setting : ModSetting
     {
 
         public const string kMainSection = "Settings";
         public const string kPacksSection = "Packs";
+        public const string kLocalAssetsSection = "Local Assets";
         public const string kAssetPackLoadingGroup = "Asset Pack Loading";
         public const string kNotificationsGroup = "Actions";
         public const string kLoggingGroup = "Logging";
         public const string kMiscGroup = "Misc";
         public const string kLoadedPacks = "Loaded Asset Packs";
+        public const string kLocalAssets = "Local Assets";
         public static Setting Instance;
         public Setting(IMod mod) : base(mod)
         {
@@ -157,6 +159,13 @@ namespace AssetPacksManager
         [SettingsUISection(kPacksSection, kLoadedPacks)]
         [SettingsUIMultilineText]
         public string LoadedAssetPacksText => "";
+        
+        public static int LocalAssetsTextVersion { get; set; }
+
+        [SettingsUIDisplayName(typeof(AssetPackLoaderSystem), nameof(AssetPackLoaderSystem.GetLocalAssetsText))]
+        [SettingsUISection(kLocalAssetsSection, kLocalAssets)]
+        [SettingsUIMultilineText]
+        public string LocalAssetsText => "";
 
         public override void SetDefaults()
         {
@@ -207,6 +216,7 @@ namespace AssetPacksManager
                 {m_Setting.GetSettingsLocaleID(), "Asset Packs Manager"},
                 { m_Setting.GetOptionTabLocaleID(Setting.kMainSection), "Settings" },
                 { m_Setting.GetOptionTabLocaleID(Setting.kPacksSection), "Asset Packs" },
+                { m_Setting.GetOptionTabLocaleID(Setting.kLocalAssetsSection), "Local Assets" },
 
                 { m_Setting.GetOptionGroupLocaleID(Setting.kAssetPackLoadingGroup), "Asset Pack Loading" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kNotificationsGroup), "Notifications" },
@@ -292,6 +302,12 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadedAssetPacksText)),
                     $"Displays the loaded asset packs. This is a read-only field."
+                },
+                
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LocalAssetsText)), "Local Assets"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LocalAssetsText)),
+                    $"Displays the loaded local assets. This is a read-only field."
                 },
             };
         }
