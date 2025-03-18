@@ -4,21 +4,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Colossal.IO.AssetDatabase;
 using Colossal.PSI.Common;
 using Colossal.PSI.Environment;
 using Game;
-using Colossal.Serialization.Entities;
 using Colossal.UI;
-using Game.Modding;
 using Game.Prefabs;
 using Game.PSI;
 using Game.SceneFlow;
 using Game.UI.Localization;
 using Game.UI.Menu;
 using UnityEngine;
-using Hash128 = Colossal.Hash128;
-using StreamReader = System.IO.StreamReader;
 
 namespace AssetPacksManager
 {
@@ -309,6 +304,10 @@ namespace AssetPacksManager
             SkyveInterface.CheckPlaysetStatus(AssetPacks);
             foreach(AssetPack pack in AssetPacks)
             {
+                if (pack.Stability == PackageStability.Local)
+                {
+                    pack.Type = AssetPackType.Local;
+                }
                 if (pack.Stability == PackageStability.Broken)
                 {
                     ShowAssetPackWarning(pack);
