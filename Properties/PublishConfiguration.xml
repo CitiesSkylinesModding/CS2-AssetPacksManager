@@ -49,6 +49,7 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
+Compatibility fix for game update 1.2.5f1
 - Implement Loading Improvements
 - Set Default Log Level to Warning
 - Reduce Loading Time
