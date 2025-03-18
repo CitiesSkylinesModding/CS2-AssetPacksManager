@@ -53,8 +53,8 @@ Compatibility fix for game update 1.2.5f1
 - Implement Loading Improvements
 - Set Default Log Level to Warning
 - Reduce Loading Time
-- Local Assets are now displayed in a separate tab
-	- Extra Asset Importer Assets are ignored
+- Local Assets are now displayed in a separate tab (WIP)
+- Extra Asset Importer Assets are ignored
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />
