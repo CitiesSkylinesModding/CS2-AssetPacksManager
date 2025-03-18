@@ -12,38 +12,28 @@ using Game.UI.Menu;
 namespace AssetPacksManager
 {
     [FileLocation($"ModsSettings/{nameof(AssetPacksManager)}/{nameof(AssetPacksManager)}")]
-    [SettingsUIGroupOrder(kAssetPackLoadingGroup, kNotificationsGroup, kMiscGroup, kLoadedPacks)]
+    [SettingsUIGroupOrder(kAssetPackLoadingGroup, kNotificationsGroup, kMiscGroup, kLoadedPacks, kLocalAssets)]
     [SettingsUIShowGroupName(kAssetPackLoadingGroup, kNotificationsGroup, kLoggingGroup, kMiscGroup, kLoadedPacks)]
     public class Setting : ModSetting
     {
 
         public const string kMainSection = "Settings";
         public const string kPacksSection = "Packs";
+        public const string kLocalAssetsSection = "Local Assets";
         public const string kAssetPackLoadingGroup = "Asset Pack Loading";
         public const string kNotificationsGroup = "Actions";
         public const string kLoggingGroup = "Logging";
         public const string kMiscGroup = "Misc";
         public const string kLoadedPacks = "Loaded Asset Packs";
+        public const string kLocalAssets = "Local Assets";
         public static Setting Instance;
         public Setting(IMod mod) : base(mod)
         {
 
         }
-
-        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
-        public bool EnableLocalAssetPacks { get; set; } = false;
-
-        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
-        public bool EnableSubscribedAssetPacks { get; set; } = true;
-
+        
         [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
         public bool EnableAssetPackLoadingOnStartup { get; set; } = true;
-
-        [SettingsUISection(kMainSection, kAssetPackLoadingGroup)]
-        public bool AdaptiveAssetLoading { get; set; } = true;
-
-        [SettingsUISection(kMainSection, kNotificationsGroup)]
-        public bool DisableSettingsWarning { get; set; } = false;
 
         private bool AssetsLoadable()
         {
@@ -97,7 +87,7 @@ namespace AssetPacksManager
             set { AssetPackLoaderSystem.OpenLogFile(); }
         }
 
-        private LogLevel _loggingLevel;
+        private LogLevel _loggingLevel = LogLevel.Warning;
 
         [SettingsUISection(kMainSection, kLoggingGroup)]
         public LogLevel LoggingLevel
@@ -156,6 +146,9 @@ namespace AssetPacksManager
 
         [SettingsUISection(kMainSection, kNotificationsGroup)]
         public bool AutoHideNotifications { get; set; } = true;
+        
+        [SettingsUISection(kMainSection, kNotificationsGroup)]
+        public bool DisableLoadingNotification { get; set; } = true;
 
         [SettingsUISection(kMainSection, kNotificationsGroup)]
         public bool ShowWarningForLocalAssets { get; set; } = true;
@@ -166,12 +159,17 @@ namespace AssetPacksManager
         [SettingsUISection(kPacksSection, kLoadedPacks)]
         [SettingsUIMultilineText]
         public string LoadedAssetPacksText => "";
+        
+        public static int LocalAssetsTextVersion { get; set; }
+
+        [SettingsUIDisplayName(typeof(AssetPackLoaderSystem), nameof(AssetPackLoaderSystem.GetLocalAssetsText))]
+        [SettingsUISection(kLocalAssetsSection, kLocalAssets)]
+        [SettingsUIMultilineText]
+        public string LocalAssetsText => "";
 
         public override void SetDefaults()
         {
-            EnableLocalAssetPacks = false;
-            EnableSubscribedAssetPacks = true;
-            LoggingLevel = LogLevel.Info;
+            LoggingLevel = LogLevel.Warning;
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
             EnableAssetPackLoadingOnStartup = true;
@@ -190,11 +188,7 @@ namespace AssetPacksManager
         public override string ToString()
         {
             string text = "\n=====APM Settings=====";
-            text += $"\nEnableLocalAssetPacks: {EnableLocalAssetPacks}";
-            text += $"\nEnableSubscribedAssetPacks: {EnableSubscribedAssetPacks}";
             text += $"\nEnableAssetPackLoadingOnStartup: {EnableAssetPackLoadingOnStartup}";
-            text += $"\nAdaptiveAssetLoading: {AdaptiveAssetLoading}";
-            text += $"\nDisableSettingsWarning: {DisableSettingsWarning}";
             text += $"\nLoggingLevel: {LoggingLevel}";
             text += $"\nActualLoggingLevel: {ApmLogger.Logger.effectivenessLevel.name}";
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
@@ -222,43 +216,25 @@ namespace AssetPacksManager
                 {m_Setting.GetSettingsLocaleID(), "Asset Packs Manager"},
                 { m_Setting.GetOptionTabLocaleID(Setting.kMainSection), "Settings" },
                 { m_Setting.GetOptionTabLocaleID(Setting.kPacksSection), "Asset Packs" },
+                { m_Setting.GetOptionTabLocaleID(Setting.kLocalAssetsSection), "Local Assets" },
 
                 { m_Setting.GetOptionGroupLocaleID(Setting.kAssetPackLoadingGroup), "Asset Pack Loading" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kNotificationsGroup), "Notifications" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kLoggingGroup), "Logging" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kMiscGroup), "Miscellaneous" },
                 { m_Setting.GetOptionGroupLocaleID(Setting.kLoadedPacks), "Loaded Asset Packs" },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableLocalAssetPacks)), "Enable Local Asset Packs"},
+                
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableLoadingNotification)), "Disable Loading Notification"},
                 {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableLocalAssetPacks)),
-                    $"Enables the import of locally installed mods (Mods in the user/Mods folder). These will already be loaded by the game (without icons). Activating this option may cause duplicate assets"
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableLoadingNotification)),
+                    $"Disables status notifaction while loading packs (improves loading times)."
                 },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableSubscribedAssetPacks)), "Enable Subscribed Asset Packs"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableSubscribedAssetPacks)),
-                    $"Enables the import of subscribed asset packs."
-                },
-
+                
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.EnableAssetPackLoadingOnStartup)), "Enable Asset Pack Loading on Startup"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.EnableAssetPackLoadingOnStartup)),
                     $"Enables the loading of asset packs on startup. Turning this setting off will prevent the loading of asset packs on startup. You will have to load them manually."
                 },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.AdaptiveAssetLoading)), "Adaptive Asset Loading (Enable when you have double custom assets, disable when you are missing assets)"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.AdaptiveAssetLoading)),
-                    $"Enables the loading of assets adaptively. Only assets that have not been loaded by the integrated PDX Asset Loader will be loaded, which may significantly reduce load times (up to 99%). Disable this option if you experience Black Screens, Crashes, Low FPS, missing assets or other issues."
-                },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableSettingsWarning)), "Disable warning to enable/disable adaptive asset loading"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableSettingsWarning)),
-                    $"Enable this setting to disable the warning that asks for duplicate or missing assets."
-                },
-
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableTelemetry)), "Disable telemetry (APM only collects data about the number of asset packs and the adaptive loading setting, no personal data)"},
                 {
@@ -326,6 +302,12 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadedAssetPacksText)),
                     $"Displays the loaded asset packs. This is a read-only field."
+                },
+                
+                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LocalAssetsText)), "Local Assets"},
+                {
+                    m_Setting.GetOptionDescLocaleID(nameof(Setting.LocalAssetsText)),
+                    $"Displays the loaded local assets. This is a read-only field."
                 },
             };
         }

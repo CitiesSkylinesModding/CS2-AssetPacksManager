@@ -4,21 +4,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Colossal.IO.AssetDatabase;
 using Colossal.PSI.Common;
 using Colossal.PSI.Environment;
 using Game;
-using Colossal.Serialization.Entities;
 using Colossal.UI;
-using Game.Modding;
 using Game.Prefabs;
 using Game.PSI;
 using Game.SceneFlow;
 using Game.UI.Localization;
 using Game.UI.Menu;
 using UnityEngine;
-using Hash128 = Colossal.Hash128;
-using StreamReader = System.IO.StreamReader;
 
 namespace AssetPacksManager
 {
@@ -35,11 +30,13 @@ namespace AssetPacksManager
         public static AssetPackLoaderSystem Instance;
         private static MonoComponent _monoComponent;
         private readonly GameObject _monoObject = new();
-        public static bool AssetsLoaded = false;
-        private static DateTime _assetLoadStartTime;
+        public static bool AssetsLoaded;
         private static string LoadedAssetPacksText { get; set; } = "";
+        private static string LocalAssetsText { get; set; } = "";
         private static NotificationUISystem.NotificationInfo _adaptiveAssetsNotification;
         private static readonly List<AssetPack> AssetPacks = new();
+        private static readonly List<string> LocalAssets = new();
+        private static int _eaiAssets;
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -69,39 +66,22 @@ namespace AssetPacksManager
 
             if (Setting.Instance.ShowWarningForLocalAssets)
             {
-                int localAssets = FindLocalAssets($"{EnvPath.kUserDataPath}");
-                if (localAssets > 0)
+                FindLocalAssets($"{EnvPath.kUserDataPath}");
+                if (LocalAssets.Count != 0)
                 {
-                    NotificationSystem.Pop("APM-local", 30f, "Local Assets Found",
-                        $"Found {localAssets} local assets in the user folder. These are loaded automatically.");
-                }
-            }
-
-            if (!Setting.Instance.DisableSettingsWarning)
-            {
-                if (Setting.Instance.AdaptiveAssetLoading)
-                {
-                    _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
-                        $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(DisableAdaptiveLoading)}",
-                        title: "Seeing gray boxes or missing assets? Click here",
-                        progressState: ProgressState.Warning,
-                        thumbnail: "coui://apm/notify_icon.png",
-                        text: "You can disable this hint in the settings",
-                        progress: 0, onClicked: DisableAdaptiveLoading);
-                }
-                else
-                {
-                    _adaptiveAssetsNotification = _notificationUISystem.AddOrUpdateNotification(
-                        $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(EnableAdaptiveLoading)}",
-                        title: "Seeing duplicate assets? Click here",
-                        progressState: ProgressState.Warning,
-                        thumbnail: "coui://apm/notify_icon.png",
-                        text: "You can disable this hint in the settings",
-                        progress: 0, onClicked: EnableAdaptiveLoading);
+                    NotificationSystem.Pop("APM-local", getHideDelay(), "Local Assets Found",
+                        $"Found {LocalAssets.Count} local assets in the user folder. These are loaded automatically.");
                 }
             }
 
             GameManager.instance.RegisterUpdater(Initialize);
+        }
+
+        private static float getHideDelay()
+        {
+            if (Setting.Instance.AutoHideNotifications)
+                return 30f;
+            return 100000f;
         }
 
         /// <summary>
@@ -118,7 +98,6 @@ namespace AssetPacksManager
             }
             else
             {
-                _ = TelemetryTransmitter.SubmitAsync(-1, -1, -1, Setting.Instance.AdaptiveAssetLoading);
                 Logger.Info("Asset Pack Loading on Startup is disabled");
             }
         }
@@ -139,6 +118,8 @@ namespace AssetPacksManager
                     Directory.Move(customAssetsDir, migrationPath);
                     NotificationSystem.Push("APM-legacy", "Custom Assets folder migrated, restart game",
                         "The Custom Assets is no longer being used and has been moved to Desktop. Please restart the game");
+                    Logger.Error("Closing game due to APM-legacy migration");
+                    CloseGame();
                 }
             }
             catch (Exception x)
@@ -154,6 +135,11 @@ namespace AssetPacksManager
         public static LocalizedString GetLoadedAssetPacksText()
         {
             return LocalizedString.IdWithFallback("APM-LoadedAssetPacks", LoadedAssetPacksText);
+        }
+        
+        public static LocalizedString GetLocalAssetsText()
+        {
+            return LocalizedString.IdWithFallback("APM-LocalAssets", LocalAssetsText);
         }
 
         public void LoadAssetPacks()
@@ -199,31 +185,32 @@ namespace AssetPacksManager
                 onClicked: CloseGame);
         }
 
-        private static int FindLocalAssets(string currentDir)
+        private static void FindLocalAssets(string currentDir)
         {
-            int localAssets = 0;
             var currentDirectory = new DirectoryInfo(currentDir);
             if (currentDirectory.Name.StartsWith("."))
-                return 0;
+                return;
             if (!Directory.Exists(currentDir))
             {
-                return 0;
+                return;
             }
 
             foreach (var dir in Directory.GetDirectories(currentDir))
             {
-                localAssets += FindLocalAssets(dir);
+                FindLocalAssets(dir);
             }
 
             foreach (var file in Directory.GetFiles(currentDir))
             {
                 if (file.EndsWith(".Prefab"))
                 {
-                    localAssets++;
+                    string localPath = file.Replace(EnvPath.kUserDataPath, "").Replace("\\", "/");
+                    if (localPath.Contains("ModsData/ExtraAssetsImporter"))
+                        _eaiAssets++;
+                    else
+                        LocalAssets.Add(localPath);
                 }
             }
-
-            return localAssets;
         }
 
         public static void OpenLogFile()
@@ -233,22 +220,15 @@ namespace AssetPacksManager
 
         private static IEnumerator CollectAssets()
         {
-            if (!Setting.Instance.EnableLocalAssetPacks && !Setting.Instance.EnableSubscribedAssetPacks)
-            {
-                NotificationSystem.Pop("APM-status", 30f, "Asset Packs Disabled",
-                    "Both local and subscribed asset packs are disabled. No assets will be loaded.");
-                yield break;
-            }
-
-            _assetLoadStartTime = DateTime.Now;
             var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
                 $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(CollectAssets)}",
-                title: "Step 1/3: Collecting Asset Packs",
+                title: "Collecting Asset Packs",
                 progressState: ProgressState.Indeterminate,
                 thumbnail: "coui://apm/notify_icon.png",
                 progress: 0);
             int currentIndex = 0;
             int packsFound = 0;
+            int assetCount = 0;
 
             var assetFinderStartTime = DateTime.Now;
 
@@ -275,13 +255,16 @@ namespace AssetPacksManager
                     var assetDir = new DirectoryInfo(Path.Combine(modDir, "assets"));
                     if (assetDir.Exists)
                     {
-                        notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                            $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(CollectAssets)}",
-                            title: "Step 1/3: Collecting Asset Packs",
-                            text: $"Collecting: {modInfo.asset.name}",
-                            progressState: ProgressState.Progressing,
-                            thumbnail: "coui://apm/notify_icon.png",
-                            progress: (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100));
+                        if (!Setting.Instance.DisableLoadingNotification)
+                        {
+                            notificationInfo = _notificationUISystem.AddOrUpdateNotification(
+                                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(CollectAssets)}",
+                                title: "Collecting Asset Packs",
+                                text: $"Collecting: {modInfo.asset.name}",
+                                progressState: ProgressState.Progressing,
+                                thumbnail: "coui://apm/notify_icon.png",
+                                progress: (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100));
+                        }
 
                         AssetPack currentPack = new AssetPack()
                         {
@@ -299,23 +282,12 @@ namespace AssetPacksManager
                         if (modDir.Contains(localModsPath))
                         {
                             currentPack.Type = AssetPackType.Local;
-                            if (!Setting.Instance.EnableLocalAssetPacks)
-                            {
-                                Logger.Debug($"Skipping local mod {assemblyName} (" + modInfo.name + ")");
-                                continue;
-                            }
                         }
-                        if (!Setting.Instance.EnableSubscribedAssetPacks)
-                            continue;
-
-
-
                         Logger.Debug($"Collecting assets from {currentPack.Name} (" + currentPack.ID + ")");
-                        currentPack.AddAssetFiles(GetPrefabsFromDirectoryRecursively(currentPack.AssetPath, currentPack));
+                        assetCount += currentPack.AddAssetFiles(GetPrefabsFromDirectoryRecursively(currentPack.AssetPath, currentPack));
                         AssetPacks.Add(currentPack);
                         Logger.Debug($"Found {currentPack.AssetFiles.Count} assets from mod {currentPack.Name}");
                         packsFound++;
-
                     }
                     //var modTimeEnd = DateTime.Now - modTime;
                     //Logger.Info("Mod Time: " + modTimeEnd.TotalMilliseconds + "ms");
@@ -328,22 +300,28 @@ namespace AssetPacksManager
                 currentIndex++;
                 yield return null;
             }
-
-            Setting.LoadedAssetPacksTextVersion++;
+            
             SkyveInterface.CheckPlaysetStatus(AssetPacks);
             foreach(AssetPack pack in AssetPacks)
             {
+                if (pack.Stability == PackageStability.Local)
+                {
+                    pack.Type = AssetPackType.Local;
+                }
                 if (pack.Stability == PackageStability.Broken)
                 {
                     ShowAssetPackWarning(pack);
                 }
             }
 
-            WriteLoadedPacks();
-
+            WriteLoadedPacksText();            
+            Setting.LoadedAssetPacksTextVersion++;
+            WriteLocalAssetsText();
+            Setting.LocalAssetsTextVersion++;
+            
             _notificationUISystem.RemoveNotification(
                 identifier: notificationInfo.id,
-                delay: 1f,
+                delay: 30f,
                 text: $"Asset Pack collection complete. Found {packsFound} Asset Packs",
                 progressState: ProgressState.Complete,
                 progress: 100
@@ -351,14 +329,12 @@ namespace AssetPacksManager
 
             var assetFinderEndTime = DateTime.Now - assetFinderStartTime;
             Logger.Info("Asset Collection Time: " + assetFinderEndTime.TotalMilliseconds + "ms");
-            Logger.Debug("All mod prefabs have been collected. Adding to database now.");
-            _monoComponent.StartCoroutine(PrepareAssets());
 
             foreach (var pack in AssetPacks)
             {
                 if (pack.MissingCids.Count == 0)
                     continue;
-                NotificationSystem.Pop($"MissingCID_{pack.ID}", 300f, title: $"Missing CID for {pack.MissingCids.Count} prefabs",
+                NotificationSystem.Pop($"MissingCID_{pack.ID}", getHideDelay(), title: $"Missing CID for {pack.MissingCids.Count} prefabs",
                     text: $"{pack.Name} has {pack.MissingCids.Count} missing CIDs. Click to delete cache",
                     onClicked: DeleteModsWithMissingCid);
             }
@@ -382,247 +358,43 @@ namespace AssetPacksManager
 
         }
 
-        private static void WriteLoadedPacks()
+        private static void WriteLoadedPacksText()
         {
             List<AssetPack> sortedPacks = new(AssetPacks);
 
             sortedPacks.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
             foreach (var pack in sortedPacks)
             {
-                string id = pack.ID == 0 ? "Local" : pack.ID.ToString();
+                string id = "";
+                if (pack.Type == AssetPackType.Local)
+                {
+                    id = "Local";
+                    if (pack.ID != 0)
+                        id += " " + pack.ID;
+                }
+                else
+                {
+                    if (pack.ID != 0)
+                        id = pack.ID.ToString();
+                    else
+                        id = "Local";
+                }
                 LoadedAssetPacksText += $"[{pack.Stability}] {ConvertCamelCaseToSpaces(pack.Name)} ({id}) ({pack.AssetFiles.Count} Assets)\n";
             }
             Logger.Info($"Loaded Asset Packs: \n{LoadedAssetPacksText}");
         }
 
-
-        private static int _loaded;
-        private static int _skipped;
-        private static int _autoLoaded;
-        private static int _notLoaded;
-
-        private static IEnumerator PrepareAssets()
+        private static void WriteLocalAssetsText()
         {
-            var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(PrepareAssets)}",
-                title: "Step 2/3: Preparing Assets",
-                progressState: ProgressState.Indeterminate,
-                thumbnail: "coui://apm/notify_icon.png",
-                progress: 0);
-            int currentIndex = 0;
-
-            _loaded = 0;
-            _skipped = 0;
-            _autoLoaded = 0;
-            _notLoaded = 0;
-            var assetDatabaseStartTime = DateTime.Now;
-            foreach (var pack in AssetPacks)
+            LocalAssets.Sort();
+            LocalAssetsText = "";
+            if (_eaiAssets > 0)
+                LocalAssetsText += $"{_eaiAssets} Assets found in Extra Asset Importer folder, these are handled by EAI\n";
+            foreach (var pack in LocalAssets)
             {
-                notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                    $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(PrepareAssets)}",
-                    title: "Step 2/3: Preparing Assets",
-                    text: $"Preparing Pack: {pack.Name}",
-                    progressState: ProgressState.Progressing,
-                    thumbnail: "coui://apm/notify_icon.png",
-                    progress: (int)(currentIndex / (float)pack.AssetFiles.Count * 100));
-
-                var modStartTime = DateTime.Now;
-
-                foreach (var file in pack.AssetFiles)
-                {
-                    try
-                    {
-                        Logger.Debug("Loading File: " + file.FullName);
-
-                        var absolutePath = file.FullName;
-
-                        // Replace backslashes with forward slashes
-                        absolutePath = absolutePath.Replace('\\', '/');
-                        // get relative path from absolute path
-                        var relativePath = absolutePath.Replace(EnvPath.kUserDataPath + "/", "");
-                        // Remove content after last / from relative path
-                        relativePath = relativePath.Substring(0, relativePath.LastIndexOf('/'));
-
-                        var fileName = Path.GetFileNameWithoutExtension(file.FullName);
-
-                        var path = AssetDataPath.Create(relativePath, fileName);
-
-                        var cidFilename = EnvPath.kUserDataPath + "\\" + relativePath + "\\" + fileName + ".Prefab.cid";
-                        using StreamReader sr = new StreamReader(cidFilename);
-                        var guid = sr.ReadToEnd();
-                        sr.Close();
-
-                        //The game automatically loads assets from the PDX Mods folder in the AssetDatabase.PDX_MODS (dynamic) database
-                        if (Setting.Instance.AdaptiveAssetLoading)
-                        {
-                            if (AssetDatabase.global.TryGetAsset(Hash128.Parse(guid), out var asset))
-                            {
-                                _autoLoaded++;
-                                if (asset.state != LoadState.NotLoaded)
-                                {
-                                    // TODO: Find out why some assets are already loaded
-                                    Logger.Debug("Asset already loaded: " + asset.name);
-                                }
-                                else
-                                {
-                                    Logger.Debug("Prefab asset already in database");
-                                }
-                            }
-                        }
-                        else
-                        {
-                            AssetDatabase.user.AddAsset<PrefabAsset>(path, Hash128.Parse(guid));
-                            Logger.Debug("Prefab added to database successfully");
-                        }
-
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Warn($"Asset {file} could not be loaded: {e.Message}");
-                    }
-                }
-
-                var modEndTime = DateTime.Now - modStartTime;
-                Logger.Debug($"Mod Time for {pack.Name}: {modEndTime.TotalMilliseconds} ms (average {pack.AssetFiles.Count / modEndTime.TotalMilliseconds} ms per asset)");
-
-                currentIndex++;
-                yield return null;
+                LocalAssetsText += $"{pack}\n";
             }
-
-            //WriteAnalysisInfo();
-
-            var assetDatabaseEndTime = DateTime.Now - assetDatabaseStartTime;
-            Logger.Info("Asset Database Time: " + assetDatabaseEndTime.TotalMilliseconds + "ms");
-            _notificationUISystem.RemoveNotification(
-                identifier: notificationInfo.id,
-                delay: 1f,
-                text: $"Asset Preparing complete.",
-                progressState: ProgressState.Complete,
-                progress: 100
-            );
-
-            _monoComponent.StartCoroutine(LoadAssets());
-        }
-
-        private static IEnumerator LoadAssets()
-        {
-            var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadAssets)}",
-                title: "Step 3/3: Loading Assets",
-                progressState: ProgressState.Indeterminate,
-                thumbnail: "coui://apm/notify_icon.png",
-                progress: 0);
-
-
-            int currentIndex = 0;
-            var prefabSystemStartTime = DateTime.Now;
-            var allPrefabs = AssetDatabase.user.GetAssets<PrefabAsset>();
-            var prefabAssets = allPrefabs as PrefabAsset[] ?? allPrefabs.ToArray();
-            Dictionary<string, int> times = new();
-            foreach (PrefabAsset prefabAsset in prefabAssets)
-            {
-                try
-                {
-                    if (prefabAsset.path.Contains(EnvPath.kGameDataPath))
-                        continue;
-                    var prefabStartTime = DateTime.Now;
-                    notificationInfo = _notificationUISystem.AddOrUpdateNotification(
-                        $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(LoadAssets)}",
-                        title: "Step 3/3: Loading Assets",
-                        text: $"Loading: {prefabAsset.name}",
-                        progressState: ProgressState.Progressing,
-                        thumbnail: "coui://apm/notify_icon.png",
-                        progress: (int)(currentIndex / (float)prefabAssets.Count() * 100));
-                    Logger.Debug($"Asset Name: {prefabAsset.name}, Path: {prefabAsset.path}");
-                    var prefabBaseTime = DateTime.Now;
-                    PrefabBase prefabBase = prefabAsset.Load() as PrefabBase;
-                    var prefabBaseEndTime = DateTime.Now - prefabBaseTime;
-                    Logger.Debug("Loaded Prefab");
-                    var prefabAddTime = DateTime.Now;
-                    _prefabSystem.AddPrefab(prefabBase, null, null, null);
-                    Logger.Debug($"Added {prefabAsset.name} to Prefab System");
-                    var prefabAddEndTime = DateTime.Now - prefabAddTime;
-                    //Logger.Debug($"Added {prefabAsset.name} to Prefab System");
-                    _loaded++;
-                    var prefabEndTime = DateTime.Now - prefabStartTime;
-                    Logger.Debug("Prefab Time: " + prefabEndTime.TotalMilliseconds + "ms");
-                    Logger.Debug("Prefab Add Time: " + prefabAddEndTime.TotalMilliseconds + "ms");
-                    if (times.ContainsKey(prefabAsset.name))
-                    {
-                        times[prefabAsset.name] += (int)prefabEndTime.TotalMilliseconds;
-                    }
-                    else
-                    {
-                        times.Add(prefabAsset.name, (int)prefabEndTime.TotalMilliseconds);
-                    }
-                }
-                catch (Exception e)
-                {
-                    _notLoaded++;
-                    Logger.Info(
-                        $"Please see AssetPacksManager Log for details. Asset {prefabAsset.name} could not be added to Database: {e.Message}Path: {prefabAsset.path}\nUnique Name: {prefabAsset.uniqueName}\nCID: {prefabAsset.guid}\nSubPath: {prefabAsset.subPath}");
-                }
-
-                currentIndex++;
-                yield return null;
-            }
-
-            var prefabSystemEndTime = DateTime.Now - prefabSystemStartTime;
-            Logger.Info("Prefab System Time: " + prefabSystemEndTime.TotalMilliseconds + "ms");
-            Logger.Info($"Average: {prefabSystemEndTime.TotalMilliseconds / prefabAssets.Length}ms per asset");
-            string minAsset = "", maxAsset = "";
-            int min = Int32.MaxValue, max = -1;
-            foreach(var time in times)
-            {
-                if (time.Value < min)
-                {
-                    min = time.Value;
-                    minAsset = time.Key;
-                }
-                if (time.Value > max)
-                {
-                    max = time.Value;
-                    maxAsset = time.Key;
-                }
-            }
-            Logger.Info($"Min: {minAsset} - {min}ms");
-            Logger.Info($"Max: {maxAsset} - {max}ms");
-            using(StreamWriter sw = new StreamWriter(Path.Combine(EnvPath.kUserDataPath, "ModsData", nameof(AssetPacksManager), "AssetLoadTimes.txt")))
-            {
-                foreach (var time in times)
-                {
-                    sw.WriteLine($"{time.Key}: {time.Value}ms");
-                }
-            }
-
-            int delay = 100000;
-            if (Setting.Instance.AutoHideNotifications)
-                delay = 30;
-
-            string text = $"{_loaded} assets loaded by APM.";
-            if (_skipped > 0)
-            {
-                text += $", {_skipped} skipped";
-            }
-            if (_notLoaded > 0)
-            {
-                text += $", {_notLoaded} failed to load";
-            }
-            if (_autoLoaded > 0)
-            {
-                text += $", {_autoLoaded} loaded automatically";
-            }
-
-            _notificationUISystem.RemoveNotification(
-                identifier: notificationInfo.id,
-                delay: delay,
-                text: text,
-                progressState: ProgressState.Complete,
-                progress: 100
-            );
-            var totalAssetTime = DateTime.Now - _assetLoadStartTime;
-            ApmLogger.Logger.Info("Asset Time: " + totalAssetTime);
-            _ = TelemetryTransmitter.SubmitAsync(_loaded, _autoLoaded, _notLoaded, Setting.Instance.AdaptiveAssetLoading);
+            Logger.Info($"Local Assets Text: \n{LocalAssetsText}");
         }
 
         /// <summary>
@@ -655,50 +427,6 @@ namespace AssetPacksManager
             if (!File.Exists(file.FullName + ".cid.backup"))
                 File.Copy(file.FullName + ".cid", file.FullName + ".cid.backup", true);
             return true;
-        }
-
-        private static readonly Dictionary<string, int> ObsoleteIdentifiers = new();
-        private static void AnalyzeAsset(FileInfo file, string modName)
-        {
-            try
-            {
-                string prefabContent = File.ReadAllText(file.FullName);
-                if (prefabContent.Contains("ObsoleteIdentifiers"))
-                {
-                    int startIndex = prefabContent.IndexOf("ObsoleteIdentifiers", StringComparison.Ordinal);
-                    string obsoleteIdentifierWrapper = prefabContent.Substring(startIndex, 2000);
-                    int nameStartIndex = obsoleteIdentifierWrapper.IndexOf("\"m_Name\": \"", StringComparison.Ordinal);
-                    string obsoleteIdentifierCloseWrapper = obsoleteIdentifierWrapper.Substring(nameStartIndex);
-                    int nameEndIndex = obsoleteIdentifierCloseWrapper.IndexOf("\",", StringComparison.Ordinal);
-                    string obsoleteIdentifier = obsoleteIdentifierCloseWrapper.Substring(0, nameEndIndex);
-                    if (obsoleteIdentifier.Contains("\"m_Name\": \""))
-                    {
-                        obsoleteIdentifier = obsoleteIdentifier.Replace("\"m_Name\": \"", "");
-                    }
-                    if (ObsoleteIdentifiers.ContainsKey(obsoleteIdentifier))
-                    {
-                        ObsoleteIdentifiers[obsoleteIdentifier]++;
-                    }
-                    else
-                    {
-                        ObsoleteIdentifiers.Add(obsoleteIdentifier, 1);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                //Logger.Warn($"Error analyzing asset {file.Name}: {e.Message}");
-            }
-        }
-
-        private static void WriteAnalysisInfo()
-        {
-            string fileName = EnvPath.kUserDataPath + "/ModsData/AssetPacksManager/ObsoleteIdentifiers.txt";
-            using StreamWriter sw = new StreamWriter(fileName);
-            foreach (var identifier in ObsoleteIdentifiers)
-            {
-                sw.WriteLine($"{identifier.Key}: {identifier.Value}");
-            }
         }
 
         private static readonly List<string> AdditionalCidChecks = [".Geometry", ".Surface", ".Texture"];
@@ -752,28 +480,6 @@ namespace AssetPacksManager
             {
                 Logger.Error($"Error copying thumbnail for {file.Name}: {e.Message}. Details: {file.FullName} should have been copied to mod name {modName}");
             }
-        }
-
-        private static void EnableAdaptiveLoading()
-        {
-            Setting.Instance.AdaptiveAssetLoading = true;
-            _notificationUISystem.RemoveNotification(
-                identifier: _adaptiveAssetsNotification.id,
-                delay: 5f,
-                text: $"Adaptive Loading has been enabled. Please restart the game.",
-                progressState: ProgressState.Warning
-            );
-        }
-
-        private static void DisableAdaptiveLoading()
-        {
-            Setting.Instance.AdaptiveAssetLoading = false;
-            _notificationUISystem.RemoveNotification(
-                identifier: _adaptiveAssetsNotification.id,
-                delay: 5f,
-                text: $"Adaptive Loading has been disabled. Please restart the game.",
-                progressState: ProgressState.Warning
-            );
         }
 
         public static void CloseGame()

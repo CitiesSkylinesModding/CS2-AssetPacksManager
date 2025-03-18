@@ -9,9 +9,7 @@
 	<!--LongDescription Value="This is a long description" /-->
 	<LongDescription>
 ## DISCLAIMER
-
-Unofficial Custom Assets are experimental. They might crash your game or throw errors. Create redundant copies of your save files and use at your own risk. Custom assets have been tested extensively and don't cause issues if used correctly and with care.
-
+		
 ## Asset Packs Manager
 This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the [Paradox Mods Website](https://mods.paradoxplaza.com/games/cities_skylines_2)  to find a list of currently available Asset Packs.
 Be careful using Custom Assets and this mod.
@@ -21,15 +19,10 @@ Be careful using Custom Assets and this mod.
 - Support for Thumbnails
 - Support for Localization (Using I18N Everywhere)
 - Asynchronous Asset Loading
+- Overview about loaded Packs and Local Assets
 - Create reports with broken/missing assets
 
 ## Troubleshooting
-
-### Assets are gray/white boxes
-Disable Adaptive Asset Loading
-
-### Custom assets appear twice
-Enable Adaptive Asset Loading
 
 ### Errors on Startup
 The Cities: Skylines II Logging tool is known to produce errors, especially on startup. If your Error message contains the word "ApmLogger" at any point you can ignore the issue completely.
@@ -49,14 +42,19 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.6.2" />
+	<ModVersion Value="1.7.0" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.2.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Add support for jpg thumbnails (Mio Overpass Asset Pack)
+Compatibility fix for game update 1.2.5f1
+- Implement Loading Improvements
+- Set Default Log Level to Warning
+- Reduce Loading Time
+- Local Assets are now displayed in a separate tab
+	- Extra Asset Importer Assets are ignored
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />
