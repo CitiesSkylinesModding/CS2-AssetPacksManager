@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -338,6 +339,90 @@ namespace AssetPacksManager
                     text: $"{pack.Name} has {pack.MissingCids.Count} missing CIDs. Click to delete cache",
                     onClicked: DeleteModsWithMissingCid);
             }
+            
+            _monoComponent.StartCoroutine(CheckPrefabs());
+        }
+
+        private static IEnumerator CheckPrefabs()
+        {
+            var notificationInfo = _notificationUISystem.AddOrUpdateNotification(
+                $"{nameof(AssetPacksManager)}.{nameof(AssetPackLoaderSystem)}.{nameof(CheckPrefabs)}",
+                title: "Checking Prefab Data",
+                progressState: ProgressState.Indeterminate,
+                thumbnail: "coui://apm/notify_icon.png",
+                progress: 0);
+
+            
+            // Create empty for or empty it if it exists
+            File.WriteAllText(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"), "");
+            
+            foreach (var pack in AssetPacks)
+            {
+                foreach (var asset in pack.AssetFiles)
+                {
+                    CheckPrefabData(asset);
+                }
+
+                yield return null;
+            }
+
+            if (prefabIssues == 0)
+            {
+                _notificationUISystem.RemoveNotification(
+                    identifier: notificationInfo.id,
+                    delay: getHideDelay(),
+                    text: $"Prefab Data Check complete. No issues found",
+                    progressState: ProgressState.Complete,
+                    thumbnail: "coui://apm/notify_icon.png",
+                    progress: 100
+                );
+            }
+            else
+            {
+                _notificationUISystem.RemoveNotification(identifier: notificationInfo.id);
+                _notificationUISystem.AddOrUpdateNotification(
+                    identifier: notificationInfo.id,
+                    title: $"Prefab Data Check found {prefabIssues} issues",
+                    text: $"Click to show details",
+                    onClicked: () => OpenUnserializeableFile(),
+                    progressState: ProgressState.Warning,
+                    thumbnail: "coui://apm/notify_icon.png",
+                    progress: 0
+                );
+            }
+        }
+        
+        private static void OpenUnserializeableFile()
+        {
+            Process.Start(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"));
+        }
+
+        private static readonly string[] unwantedSubstrings = { "\"m_LargeIcon\"", "\"m_FireHazardModifier\"" };
+        private static int prefabIssues = 0;
+        private static void CheckPrefabData(FileInfo assetPath)
+        {
+            try
+            {
+                string content = File.ReadAllText(assetPath.FullName);
+                foreach (string substring in unwantedSubstrings)
+                {
+                    if (content.Contains(substring))
+                    {
+                        Logger.Warn($"Report to Asset Creator: Found unserializable {substring} in {assetPath.FullName}");
+                        prefabIssues++;
+                        
+                        using StreamWriter sw = File.AppendText(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"));
+                        var path = assetPath.FullName; // Cut everything before "Cities Skylines II"
+                        path = path.Substring(path.IndexOf("Cities Skylines II", StringComparison.Ordinal));
+                        var text = path + " contains unserializable substring " + substring;
+                        sw.WriteLine(text);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         private static string ConvertCamelCaseToSpaces(string input)
@@ -406,7 +491,7 @@ namespace AssetPacksManager
         /// <param name="file">Asset file to be checked</param>
         /// <param name="pack">Current pack</param>
         /// <returns></returns>
-        private static bool CheckAsset(FileInfo file, AssetPack pack)
+        private static bool CheckCid(FileInfo file, AssetPack pack)
         {
             //AnalyzeAsset(file, modName);
             if (!File.Exists(file.FullName + ".cid"))
@@ -442,12 +527,12 @@ namespace AssetPacksManager
             {
                 if (file.Extension == ".Prefab")
                 {
-                    if (CheckAsset(file, currentPack))
+                    if (CheckCid(file, currentPack))
                         files.Add(file);
                 }
                 else if (AdditionalCidChecks.Contains(file.Extension))
                 {
-                    CheckAsset(file, currentPack);
+                    CheckCid(file, currentPack);
                 }
 
                 if (SupportedThumbnailExtensions.Contains(file.Extension))
