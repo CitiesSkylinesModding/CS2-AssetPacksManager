@@ -4,25 +4,33 @@
 	<!--Name of the mod to display to players-->
 	<DisplayName Value="Asset Packs Manager" />
 	<!--Short description of the mod-->
-	<ShortDescription Value="This Mod allows to import Custom Asset Packs Shared on PDX by the Custom Asset Pack Template" />
+	<ShortDescription Value="This Mod allows to view Custom Asset Packs Shared on PDX by the Custom Asset Pack Template. Also provides support functionality for assets" />
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
 	<!--LongDescription Value="This is a long description" /-->
 	<LongDescription>
-## DISCLAIMER
-		
 ## Asset Packs Manager
-This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the [Paradox Mods Website](https://mods.paradoxplaza.com/games/cities_skylines_2)  to find a list of currently available Asset Packs.
-Be careful using Custom Assets and this mod.
+This mod used to be needed to import custom assets into the game. Since the Region Packs the game supports assets downloaded from PDX Mods by itself. This mod offers support functionality for using custom asset packs.
 
-## Features
+### Features
 - Support for Playsets
 - Support for Thumbnails
 - Support for Localization (Using I18N Everywhere)
-- Asynchronous Asset Loading
+- Asset Cid-Checks
+- Warnings when using broken Asset Packs (Skyve Database)
 - Overview about loaded Packs and Local Assets
 - Create reports with broken/missing assets
 
+### Locally installed assets
+APM is not made to provide support for locally installed assets, only some of the features work for local assets. Skyve Warnings, Reports and Overviews **might not work** with assets that are installed directly in your user folder. For this reason I recommend **against** using assets that have not been subscribed to on Paradox Mods.
+
 ## Troubleshooting
+
+### Gray Boxes
+If you are seeing gray boxes instead of buildings, vehicles or any other asset, you are missing the required files for these assets. They might be from a Region Pack or Asset pack. Subscribe 
+to the pack again to download the needed files automatically
+
+### Issues with Assets
+When having issues with assets, please contact the creator of the asset. APM is not responsible for issues caused by broken assets.
 
 ### Errors on Startup
 The Cities: Skylines II Logging tool is known to produce errors, especially on startup. If your Error message contains the word "ApmLogger" at any point you can ignore the issue completely.
