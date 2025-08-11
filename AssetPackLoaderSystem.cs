@@ -237,10 +237,21 @@ namespace AssetPacksManager
             {
                 var assemblyName = modInfo.name.Split(',')[0];
                 Logger.Debug($"Checking mod {assemblyName}");
-                var modDir = Path.GetDirectoryName(modInfo.asset.path);
-                var modId = $"{modInfo.asset.subPath.Split('/')[1].Split('_')[0]}";
-                var mod = new DirectoryInfo(modDir);
+                string? modDir = Path.GetDirectoryName(modInfo.asset.path);
                 if (modDir == null)
+                    continue;
+                string modId = "0";
+                Logger.Debug($"Trying to get mod ID for {modInfo.asset.subPath}");
+                try
+                {
+                    modId = $"{modInfo.asset.subPath.Split('/')[1].Split('_')[0]}";
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn($"Error getting mod ID for string {modInfo.asset.subPath}: {e.Message}");
+                }
+                var mod = new DirectoryInfo(modDir);
+                if (!mod.Exists)
                     continue;
                 if (assemblyName == "CustomAssetPack")
                 {
@@ -482,39 +493,7 @@ namespace AssetPacksManager
             Logger.Info($"Local Assets Text: \n{LocalAssetsText}");
         }
 
-        /// <summary>
-        /// Checks if the asset has a CID file. If not, it will try to restore it from the backup
-        /// Creates a backup file if it doesn't exist.
-        ///
-        /// This is only needed because PDX Mods deleted CID files when disabling a mod while ingame.
-        /// </summary>
-        /// <param name="file">Asset file to be checked</param>
-        /// <param name="pack">Current pack</param>
-        /// <returns></returns>
-        private static bool CheckCid(FileInfo file, AssetPack pack)
-        {
-            //AnalyzeAsset(file, modName);
-            if (!File.Exists(file.FullName + ".cid"))
-            {
-                if (File.Exists(file.FullName + ".cid.backup"))
-                {
-                    File.Copy(file.FullName + ".cid.backup", file.FullName + ".cid");
-                    Logger.Info($"Restored CID for {file.FullName}");
-                    return true;
-                }
-
-                Logger.Warn($"Asset has no CID: {file.FullName}. No CID Backup was found");
-                pack.MissingCids.Add(file.Name);
-                return false;
-            }
-
-            // Back up CID
-            if (!File.Exists(file.FullName + ".cid.backup"))
-                File.Copy(file.FullName + ".cid", file.FullName + ".cid.backup", true);
-            return true;
-        }
-
-        private static readonly List<string> AdditionalCidChecks = [".Geometry", ".Surface", ".Texture"];
+        private static readonly List<string> AdditionalCidChecks = new() {".Geometry", ".Surface", ".Texture"};
         private static List<FileInfo> GetPrefabsFromDirectoryRecursively(string directory, AssetPack currentPack)
         {
             List<FileInfo> files = new();
@@ -527,12 +506,11 @@ namespace AssetPacksManager
             {
                 if (file.Extension == ".Prefab")
                 {
-                    if (CheckCid(file, currentPack))
-                        files.Add(file);
+                    files.Add(file);
                 }
                 else if (AdditionalCidChecks.Contains(file.Extension))
                 {
-                    CheckCid(file, currentPack);
+
                 }
 
                 if (SupportedThumbnailExtensions.Contains(file.Extension))

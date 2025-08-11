@@ -1,11 +1,13 @@
 using UnityEngine;
 
-namespace AssetPacksManager;
-
-public class MonoComponent : MonoBehaviour
+namespace AssetPacksManager
 {
-    void Awake()
+    public class MonoComponent : MonoBehaviour
     {
-        DontDestroyOnLoad(transform.gameObject);
+        void Awake()
+        {
+            DontDestroyOnLoad(transform.gameObject);
+        }
     }
 }
+

@@ -11,7 +11,7 @@ using Game.UI.Menu;
 
 namespace AssetPacksManager
 {
-    [FileLocation($"ModsSettings/{nameof(AssetPacksManager)}/{nameof(AssetPacksManager)}")]
+    [FileLocation("ModsSettings/AssetPacksManager/AssetPacksManager")]
     [SettingsUIGroupOrder(kAssetPackLoadingGroup, kNotificationsGroup, kMiscGroup, kLoadedPacks, kLocalAssets)]
     [SettingsUIShowGroupName(kAssetPackLoadingGroup, kNotificationsGroup, kLoggingGroup, kMiscGroup, kLoadedPacks)]
     public class Setting : ModSetting
@@ -64,21 +64,6 @@ namespace AssetPacksManager
                 AssetPackLoaderSystem.CloseGame();
             }
         }
-
-        [SettingsUIButton]
-        [SettingsUIConfirmation]
-        [SettingsUISection(kMainSection, kMiscGroup)]
-        public bool DeleteModsWithMissingCid
-        {
-            set
-            {
-                AssetPackLoaderSystem.DeleteModsWithMissingCid();
-                AssetPackLoaderSystem.CloseGame();
-            }
-        }
-
-        [SettingsUISection(kMainSection, kMiscGroup)]
-        public bool DisableTelemetry { get; set; } = false;
 
         [SettingsUIButton]
         [SettingsUISection(kMainSection, kLoggingGroup)]
@@ -173,7 +158,6 @@ namespace AssetPacksManager
             AutoHideNotifications = true;
             ShowWarningForLocalAssets = true;
             EnableAssetPackLoadingOnStartup = true;
-            DisableTelemetry = false;
         }
 
         public enum LogLevel
@@ -193,7 +177,6 @@ namespace AssetPacksManager
             text += $"\nActualLoggingLevel: {ApmLogger.Logger.effectivenessLevel.name}";
             text += $"\nAutoHideNotifications: {AutoHideNotifications}";
             text += $"\nShowWarningForLocalAssets: {ShowWarningForLocalAssets}";
-            text += $"\nDisableTelemetry: {DisableTelemetry}";
             text += "\n======================";
             return text;
         }
@@ -236,12 +219,6 @@ namespace AssetPacksManager
                     $"Enables the loading of asset packs on startup. Turning this setting off will prevent the loading of asset packs on startup. You will have to load them manually."
                 },
 
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DisableTelemetry)), "Disable telemetry (APM only collects data about the number of asset packs and the adaptive loading setting, no personal data)"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DisableTelemetry)),
-                    $"Disables telemetry. APM only collects data about the number of asset packs and the adaptive loading setting. If a majority of users have adaptive loading enabled, the feature will be enabled by default in future versions."
-                },
-
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.LoadAssetPacks)), "Load Asset Packs"},
                 {
                     m_Setting.GetOptionDescLocaleID(nameof(Setting.LoadAssetPacks)),
@@ -280,16 +257,6 @@ namespace AssetPacksManager
                 {
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteCachedAssetPacks)),
                     $"**WARNING. This will close your game!** Are you sure you want to delete the asset packs cache? This cannot be undone."
-                },
-
-                {m_Setting.GetOptionLabelLocaleID(nameof(Setting.DeleteModsWithMissingCid)), "Delete Mods with missing CID-Files"},
-                {
-                    m_Setting.GetOptionDescLocaleID(nameof(Setting.DeleteModsWithMissingCid)),
-                    $"A less aggressive version of the Delete Mods Cache option. This will only delete mods that are missing the CID-File. This will close the game immediately. It will not change your playset, but will require to re-download all affected mods on the next startup."
-                },
-                {
-                    m_Setting.GetOptionWarningLocaleID(nameof(Setting.DeleteModsWithMissingCid)),
-                    $"**WARNING. This will close your game!** Are you sure you want to delete the affected mods cache? This cannot be undone."
                 },
 
                 {m_Setting.GetOptionLabelLocaleID(nameof(Setting.OpenLogFile)), "Open Log File"},

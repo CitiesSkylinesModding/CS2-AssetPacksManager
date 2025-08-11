@@ -8,27 +8,28 @@
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
 	<!--LongDescription Value="This is a long description" /-->
 	<LongDescription>
-## DISCLAIMER
-		
 ## Asset Packs Manager
-This mod allows you to import custom assets into the game. Custom Assets are already partially supported by the game and this mod allows to share Asset Packs on PDX Mods using Custom Asset Packs. Please visit the [Paradox Mods Website](https://mods.paradoxplaza.com/games/cities_skylines_2)  to find a list of currently available Asset Packs.
-Be careful using Custom Assets and this mod.
+This mod used to be needed to import custom assets into the game. Since the Region Packs the game supports assets downloaded from PDX Mods by itself. This mod offers support functionality for using custom asset packs.
 
 ## Features
 - Support for Playsets
-- Support for Thumbnails
-- Support for Localization (Using I18N Everywhere)
-- Asynchronous Asset Loading
+- Thumbnail Support for Legacy Asset Packs (new packs can have thumbnails set in the Editor)
+- Localization Support for Legacy Asset Packs (new packs can have localized names and descriptions set in the Editor)
 - Overview about loaded Packs and Local Assets
 - Create reports with broken/missing assets
+		
+## Locally installed assets
+
+APM is not made to provide support for locally installed assets, only some of the features work for local assets. Skyve Warnings, Reports and Overviews might not work with assets that are installed directly in your user folder. 
+For this reason, it is recommended to use assets subscribed from Paradox Mods instead of using local versions, and asset authors are encouraged to upload assets using the Modding Toolchain to Paradox Mods.
 
 ## Troubleshooting
 
 ### Errors on Startup
 The Cities: Skylines II Logging tool is known to produce errors, especially on startup. If your Error message contains the word "ApmLogger" at any point you can ignore the issue completely.
 
-## Resources for Asset Creation
-For Resources on Asset Creation, visit the "CustomAssetPack" repository on my GitHub.
+### Resources for Asset Creation
+For questions about assembling and uploading standalone assets, visit the #apm-general Cities: Skylines Modding Discord linked above.
 
 ## Credit
 The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
@@ -42,19 +43,17 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/asset-packs-manager-formerly-asset-importer.1666781/" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.7.0" />
+	<ModVersion Value="1.7.1" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.2.*" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-Compatibility fix for game update 1.2.5f1
-- Implement Loading Improvements
-- Set Default Log Level to Warning
-- Reduce Loading Time
-- Local Assets are now displayed in a separate tab (WIP)
-- Extra Asset Importer Assets are ignored
+- Updated mod description
+- Minor code refactor
+- Removed telemetry
+- Removed delete cache
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon-->
 	<ExternalLink Type="github" Url="https://github.com/CitiesSkylinesModding/CS2-AssetPacksManager" />

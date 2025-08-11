@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Net.Http;
 using Newtonsoft.Json;
 
-namespace AssetPacksManager;
-
-public enum PackageStability
+namespace AssetPacksManager
+{
+    public enum PackageStability
 {
     Unknown = -1,
     Stable = 1,
@@ -121,3 +121,5 @@ public static class SkyveInterface
         return PackageStability.Unknown;
     }
 }
+}
+
