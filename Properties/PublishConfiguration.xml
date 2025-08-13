@@ -45,7 +45,7 @@ The code of this mod was created by Konsi. Thanks to CityRat for the Thumbnail.
 	<!--Version of the mod-->
 	<ModVersion Value="1.7.1" />
 	<!--Recommended version of the base game to use the mod-->
-	<GameVersion Value="1.2.*" />
+	<GameVersion Value="1.3.3" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="75426" /> <!-- L18N Everywhere -->
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
