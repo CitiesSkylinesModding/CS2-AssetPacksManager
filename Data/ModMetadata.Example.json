@@ -1,0 +1,58 @@
+{
+  "Id":74286,
+  "Name":"17f78828-4a9d-449b-8b7b-c1daef1f2016",
+  "DisplayName":"FPS Limiter",
+  "Author":"krzychu124",
+  "ShortDescription":"Simple modification to limit FPS depending on the game state",
+  "LongDescription":"Simple modification to limit FPS depending on the game state",
+  "RequiredGameVersion":"1.2.*",
+  "UserModVersion":"0.1.2",
+  "LatestVersion":"3",
+  "Version":"3",
+  "ThumbnailPath":"https://modscontent.paradox-interactive.com/cities_skylines_2/17f78828-4a9d-449b-8b7b-c1daef1f2016/content/covers/cover_3.jpg",
+  "Size":15356,
+  "Tags":[
+    {
+      "Id":"Code Mod",
+      "DisplayName":"Code Mod"
+    }
+  ],
+  "Rating":5,
+  "RatingsTotal":268,
+  "State":"Published",
+  "LocalData":{
+    "LocalType":"Subscribed",
+    "FolderAbsolutePath":"C:/Users/Konsi/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Mods\\mods_subscribed\\74286_3",
+    "ContentFileOrFolder":"",
+    "ThumbnailFilename":".metadata\\cover_3.jpg",
+    "ScreenshotsFilenames":[
+
+    ]
+  },
+  "LatestUpdate":"06/11/2025 12:26:16",
+  "InstalledDate":"10/30/2024 15:05:01",
+  "Playsets":[
+    {
+      "PlaysetId":6266205,
+      "SubscribedDate":"10/30/2024 15:05:01",
+      "ModIsEnabled":true,
+      "Version":"",
+      "LoadOrder":0
+    },
+    {
+      "PlaysetId":6556152,
+      "SubscribedDate":"11/25/2024 15:36:57",
+      "ModIsEnabled":true,
+      "Version":"",
+      "LoadOrder":0
+    },
+    {
+      "PlaysetId":6614952,
+      "SubscribedDate":"12/02/2024 04:26:52",
+      "ModIsEnabled":true,
+      "Version":"",
+      "LoadOrder":0
+    }
+  ],
+  "HasLiked":false
+}

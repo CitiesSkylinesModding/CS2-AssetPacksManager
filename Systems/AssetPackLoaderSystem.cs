@@ -278,12 +278,7 @@ namespace AssetPacksManager
                                 progress: (int)(currentIndex / (float)GameManager.instance.modManager.Count() * 100));
                         }
 
-                        AssetPack currentPack = new AssetPack()
-                        {
-                            Path = modDir,
-                            AssetPath = assetDir.FullName,
-                            Name = assemblyName,
-                        };
+                        AssetPack currentPack = new AssetPack(modDir, assemblyName, assetDir.FullName);
 
                         if (int.TryParse(modId, out int id))
                         {
@@ -367,7 +362,8 @@ namespace AssetPacksManager
             // Create empty for or empty it if it exists
             File.WriteAllText(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"), "");
             
-            string fullIssueText = "Issues have been found when checking your prefabs. Please report these issues to their respective asset authors.\n\n";
+            string fullIssueText = "Issues have been found when checking your prefabs. Please report these issues to their respective asset authors.\n\n" +
+                                   "For Asset Authors: These issues can easily be fixed by re-saving the asset in the Asset Editor. StarQ's Workflow Kit mod can also help with fixing whole packages at once.\n\n";
             foreach (var pack in AssetPacks)
             {
                 string packIssues = "";
@@ -375,17 +371,28 @@ namespace AssetPacksManager
                 {
                     if (HasPrefabIssue(asset))
                     {
-                        Logger.Warn($"Report to Asset Creator: Found unserializable substring in {asset.FullName}");
+                        Logger.Warn($"Found unserializable substring in {asset.FullName}");
                         prefabIssues++;
                         
                         var path = asset.FullName; // Cut everything before "Cities Skylines II"
-                        path = path.Substring(path.IndexOf("Cities Skylines II", StringComparison.Ordinal));
-                        packIssues += path + " contains unserializable substring\n";
+                        path = path.Substring(path.IndexOf("Cities Skylines II", StringComparison.Ordinal)).Replace(@"Cities Skylines II\.cache\Mods\mods_subscribed", "");
+                        packIssues += "- '" + path + "' : Unserializable substring\n";
                     }
                 }
                 if (!string.IsNullOrEmpty(packIssues))
                 {
-                    fullIssueText += "Report to Asset Pack Creator of pack " + pack.Name + " (" + pack.ID + "):\n" + packIssues;
+                    var byText = "";
+                    if (!string.IsNullOrEmpty(pack.Author))
+                    {
+                        byText = $"by {pack.Author}";
+                    }
+
+                    var idText = "";
+                    if (pack.ID > 0)
+                    {
+                        idText = $" (ID: {pack.ID})";
+                    }
+                    fullIssueText += $"[{pack.Type}] {idText}: {pack.Name} {byText}:\n" + packIssues;
                 }
                 yield return null;
             }
@@ -410,7 +417,7 @@ namespace AssetPacksManager
                     identifier: notificationInfo.id,
                     title: $"Prefab Data Check found {prefabIssues} issues",
                     text: $"Click to show details",
-                    onClicked: () => OpenUnserializeableFile(),
+                    onClicked: () => OpenUnserializableFile(),
                     progressState: ProgressState.Warning,
                     thumbnail: "coui://apm/notify_icon.png",
                     progress: 0
@@ -418,7 +425,7 @@ namespace AssetPacksManager
             }
         }
         
-        private static void OpenUnserializeableFile()
+        private static void OpenUnserializableFile()
         {
             Process.Start(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"));
         }
