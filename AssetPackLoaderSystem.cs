@@ -367,15 +367,30 @@ namespace AssetPacksManager
             // Create empty for or empty it if it exists
             File.WriteAllText(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"), "");
             
+            string fullIssueText = "Issues have been found when checking your prefabs. Please report these issues to their respective asset authors.\n\n";
             foreach (var pack in AssetPacks)
             {
+                string packIssues = "";
                 foreach (var asset in pack.AssetFiles)
                 {
-                    CheckPrefabData(asset);
+                    if (HasPrefabIssue(asset))
+                    {
+                        Logger.Warn($"Report to Asset Creator: Found unserializable substring in {asset.FullName}");
+                        prefabIssues++;
+                        
+                        var path = asset.FullName; // Cut everything before "Cities Skylines II"
+                        path = path.Substring(path.IndexOf("Cities Skylines II", StringComparison.Ordinal));
+                        packIssues += path + " contains unserializable substring\n";
+                    }
                 }
-
+                if (!string.IsNullOrEmpty(packIssues))
+                {
+                    fullIssueText += "Report to Asset Pack Creator of pack " + pack.Name + " (" + pack.ID + "):\n" + packIssues;
+                }
                 yield return null;
             }
+            using StreamWriter sw = File.AppendText(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"));
+            sw.Write(fullIssueText);
 
             if (prefabIssues == 0)
             {
@@ -410,7 +425,7 @@ namespace AssetPacksManager
 
         private static readonly string[] unwantedSubstrings = { "\"m_LargeIcon\"", "\"m_FireHazardModifier\"" };
         private static int prefabIssues = 0;
-        private static void CheckPrefabData(FileInfo assetPath)
+        private static bool HasPrefabIssue(FileInfo assetPath)
         {
             try
             {
@@ -419,14 +434,7 @@ namespace AssetPacksManager
                 {
                     if (content.Contains(substring))
                     {
-                        Logger.Warn($"Report to Asset Creator: Found unserializable {substring} in {assetPath.FullName}");
-                        prefabIssues++;
-                        
-                        using StreamWriter sw = File.AppendText(Path.Combine(EnvPath.kUserDataPath, "ModsData", "AssetPacksManager", "Unserializable.txt"));
-                        var path = assetPath.FullName; // Cut everything before "Cities Skylines II"
-                        path = path.Substring(path.IndexOf("Cities Skylines II", StringComparison.Ordinal));
-                        var text = path + " contains unserializable substring " + substring;
-                        sw.WriteLine(text);
+                        return true;
                     }
                 }
             }
@@ -434,6 +442,8 @@ namespace AssetPacksManager
             {
                 // Do nothing
             }
+
+            return false;
         }
 
         private static string ConvertCamelCaseToSpaces(string input)
